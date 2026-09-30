@@ -1,0 +1,25 @@
+# --- secrets ---
+# The user asked to keep .env local-only; we git-ignore it so keys can never
+# be pushed by accident. Remove this line ONLY if you really want .env committed.
+.env
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+
+# --- node / astro ---
+node_modules/
+site/.astro/
+site/dist/
+
+# --- local scratch ---
+*.log
+.DS_Store
+Thumbs.db
