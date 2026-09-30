@@ -1,0 +1,79 @@
+---
+import Base from "../../layouts/Base.astro";
+import results from "../../data/results.json";
+
+export async function getStaticPaths() {
+  const meta = (results.providers_meta ?? {}) as Record<string, any>;
+  const summary = (results.summary?.providers ?? {}) as Record<string, any>;
+  const names = new Set([...Object.keys(meta), ...Object.keys(summary)]);
+  return Array.from(names).map((id) => ({ params: { id } }));
+}
+
+const { id } = Astro.params;
+const meta = (results.providers_meta?.[id] ?? {}) as any;
+const suites = (results.summary?.providers?.[id] ?? {}) as Record<string, any>;
+
+const fmtAcc = (v: number | null) => (v === null || v === undefined ? "–" : `${(v * 100).toFixed(1)}%`);
+const fmtMs = (v: number | null) => (v === null || v === undefined ? "–" : `${Math.round(v)}`);
+const fmtCost = (v: number | null) => {
+  if (v === null || v === undefined) return "n/a";
+  if (v < 0.01) return `$${v.toFixed(4)}`;
+  return `$${v.toFixed(3)}`;
+};
+const fmtEce = (v: number | null) => (v === null || v === undefined ? "–" : v.toFixed(3));
+const suiteName = (s: string) => s.replace("_", " ");
+---
+
+<Base title={`${meta.display_name ?? id} — Verdict`}>
+  <p style="margin-top:26px"><a href="/">&#8592; leaderboard</a></p>
+  <h1>{meta.display_name ?? id}</h1>
+  <p class="tagline">
+    <strong>{meta.vendor ?? "unknown vendor"}</strong>
+    &middot; model <code>{meta.model ?? id}</code>
+    {((meta.labels ?? []) as string[]).map((l) => <span class={`badge ${l}`}>{l}</span>)}
+  </p>
+  <p class="tagline">{meta.description ?? ""}</p>
+  {meta.url && <p><a href={meta.url} rel="noopener" target="_blank">provider page ↗</a></p>}
+
+  {Object.keys(suites).length === 0 && <div class="callout">No benchmark data recorded for this provider yet.</div>}
+
+  {Object.entries(suites).map(([suite, m]: [string, any]) => (
+    <>
+      <h2>{suiteName(suite)}</h2>
+      <table class="board">
+        <thead>
+          <tr><th>Metric</th><th>Value</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Accuracy</td><td class="num">{fmtAcc(m.accuracy)}</td><td>{m.n} items, {m.n_errors} errors excluded</td></tr>
+          <tr><td>Latency p50 / p95</td><td class="num">{fmtMs(m.latency_ms_p50)} / {fmtMs(m.latency_ms_p95)} ms</td><td>measured per decision</td></tr>
+          <tr><td>Cost per 1,000 decisions</td><td class="num">{fmtCost(m.cost_per_1k_usd)}</td><td>{meta.labels?.includes("openai") ? "estimated pricing" : "per-generation billing"}</td></tr>
+          <tr><td>Calibration (ECE)</td><td class="num">{fmtEce(m.ece)}</td><td>{m.n_with_confidence} items reported confidence</td></tr>
+        </tbody>
+      </table>
+
+      {m.escalation && Object.keys(m.escalation).length > 0 && (
+        <>
+          <h3 style="margin-top:22px; font-size:15px; color:var(--muted)">
+            Escalation curve — blend this provider with GPT-6 Luna when confidence &lt; threshold
+          </h3>
+          <table class="board">
+            <thead>
+              <tr><th>Threshold</th><th>Blended accuracy</th><th>Blended $/1k</th><th>Escalated</th></tr>
+            </thead>
+            <tbody>
+              {Object.entries(m.escalation).map(([t, e]: [string, any]) => (
+                <tr>
+                  <td class="num">{t}</td>
+                  <td class="num">{fmtAcc(e.accuracy)}</td>
+                  <td class="num">{fmtCost(e.cost_per_1k_usd)}</td>
+                  <td class="num">{e.escalated_pct}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </>
+  ))}
+</Base>

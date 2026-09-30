@@ -1,0 +1,96 @@
+---
+import Base from "../layouts/Base.astro";
+import results from "../data/results.json";
+
+const suites = (results.suites ?? {}) as Record<string, any>;
+
+// Compute table rows in frontmatter — conditional bare <tr> expressions break
+// Astro's HTML compiler (table elements get hoisted out of expressions).
+const srcFor = (name: string) =>
+  name === "classification"
+    ? "ag_news (HF)"
+    : name === "routing"
+      ? "customer-support-tickets (HF)"
+      : name === "moderation"
+        ? "tweet_eval/hate (HF)"
+        : "synthetic (seeded)";
+const suiteRows = Object.entries(suites).map(([name, s]: [string, any]) => ({
+  name,
+  n: s.n_items,
+  src: srcFor(name),
+  task: `${s.n_answers}-way choice`,
+}));
+const suiteRowsShown =
+  suiteRows.length > 0
+    ? suiteRows
+    : [{ name: "classification", n: 200, src: "ag_news (HF)", task: "4-way choice" }];
+---
+
+<Base title="Methodology — Verdict">
+  <h1>Methodology</h1>
+  <p class="tagline">
+    Verdict measures decision APIs on the same prompt, the same labeled items, and the same contract:
+    <em>given a question with a finite set of allowed answers and some context, choose exactly one answer</em>.
+    Everything on this site is reproducible from the repository with two commands.
+  </p>
+
+  <h2>The contract every provider must satisfy</h2>
+  <pre><code>{`DecisionRequest:
+  question:  str                  # the judgment to make
+  answers:   list[str]            # finite, predefined answer set (verbatim choice required)
+  context:   str | None           # text to judge
+
+DecisionResponse:
+  answer:      str | None         # must be one of the allowed answers
+  confidence:  float | None       # 0..1, optional
+  latency_ms, cost_usd            # measured per call`}</code></pre>
+  <p class="tagline">
+    All providers receive an identical system prompt and user prompt. Structured-output providers get a
+    strict JSON schema (<code>answer</code> enum + <code>confidence</code>); providers without schema
+    support (e.g. <code>jev-router</code> advertises no supported parameters) receive the same prompt as
+    plain text and their answer is extracted by a shared robust parser (embedded JSON → exact match →
+    quoted match → word-overlap fallback).
+  </p>
+
+  <h2>Suites</h2>
+  <p class="tagline">Fixed, seeded, versioned JSONL files shipped inside the package. Real data wherever a public labeled source was available:</p>
+  <table class="board">
+    <thead><tr><th>Suite</th><th>Items</th><th>Source</th><th>Task</th></tr></thead>
+    <tbody>
+      {suiteRowsShown.map((r: any) => (
+        <tr>
+          <td>{r.name.replace("_", " ")}</td>
+          <td class="num">{r.n}</td>
+          <td class="num">{r.src}</td>
+          <td class="num">{r.task}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <h2>Metrics</h2>
+  <ul class="tagline">
+    <li><strong>Accuracy</strong> — exact verbatim match against the labeled answer, over non-errored items.</li>
+    <li><strong>Latency p50/p95</strong> — wall-clock per call measured in the client (network included), sequential-by-default; the published run uses concurrency 4 (mild queueing possible at p95).</li>
+    <li><strong>Cost per 1,000 decisions</strong> — OpenRouter providers are billed at the authoritative per-generation amount returned by OpenRouter's <code>/generation</code> endpoint. OpenAI prices are our estimates (flagged in the harness) until confirmed against published pricing.</li>
+    <li><strong>ECE</strong> — expected calibration error over 10 equal-width confidence bins; lower means the stated confidence is more honest. Computed only over items that reported confidence.</li>
+    <li><strong>Escalation curves</strong> — offline simulation: items below a confidence threshold are "answered" by the escalation provider's already-recorded output (GPT-6 Luna by default), and we report blended accuracy and cost. No extra API calls are involved.</li>
+  </ul>
+
+  <h2>Disclosed caveats</h2>
+  <ul class="tagline">
+    <li><strong>Proxy labeling.</strong> The OpenAI Decisions API is in limited preview and not enabled for our key at measurement time. Any provider labeled <span class="badge proxy">proxy</span> implements the same contract on a standard chat model — it is <em>not</em> the real Decisions API. When access lands, the real adapter runs in the same slot and the badge disappears.</li>
+    <li><strong>jev-router opacity.</strong> Jev is a router: it picks an underlying model per request, and its listing price is unpublished. We report the charged amount per call and record the routed model.</li>
+    <li><strong>Confidence comparability.</strong> Some providers return no confidence (excluded from ECE); others derive it from free text. Treat ECE as provider-internal honesty, not cross-provider gospel.</li>
+    <li><strong>Snapshot pricing.</strong> Provider prices change; the cost table is dated and versioned in the repo (<code>cost.py</code>).</li>
+    <li><strong>Single-run variance.</strong> Temperature is 0 where supported, but routed providers can still vary. Nightly reruns smooth this out over time.</li>
+  </ul>
+
+  <h2>Reproduce it</h2>
+  <pre><code>{`cd python
+uv sync --extra dev
+uv run python scripts/build_datasets.py   # rebuild suites (seeded)
+uv run verdict bench --all --out ../results
+uv run verdict aggregate --results ../results --out ../site/src/data/results.json
+cd ../site && npm run build               # static site from real data`}</code></pre>
+</Base>

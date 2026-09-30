@@ -1,0 +1,42 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = "Independent benchmark for decision APIs: accuracy, latency, cost and calibration." } = Astro.props;
+const path = Astro.url.pathname;
+const nav = [
+  ["/", "Leaderboard"],
+  ["/methodology", "Methodology"],
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="site">
+        <a class="brand" href="/"><span class="scale">&#9878;</span> Verdict</a>
+        <nav>
+          {nav.map(([href, label]) => (
+            <a href={href} class={path === href ? "active" : ""}>{label}</a>
+          ))}
+        </nav>
+      </header>
+      <slot />
+      <footer class="site">
+        Verdict &middot; independent measurements, run nightly &middot; <a href="/methodology">methodology</a> &middot;
+        <a href="https://github.com/">source</a>
+      </footer>
+    </div>
+  </body>
+</html>

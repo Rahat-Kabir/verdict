@@ -2,7 +2,6 @@
 
 import pytest
 
-from verdict_router.cache import ExactCache
 from verdict_router.providers.base import Provider, ProviderError
 from verdict_router.router import Router
 from verdict_router.types import DecisionRequest, DecisionResponse
@@ -105,7 +104,7 @@ def test_cache_prevents_second_call(tmp_path):
     provider = FakeProvider("p", answers={REQ["question"]: "billing"})
     cache_file = tmp_path / "cache.jsonl"
     router = make_router([provider], cache=cache_file)
-    r1 = router.decide(**REQ)
+    router.decide(**REQ)
     r2 = router.decide(**REQ)
     assert provider.calls == 1
     assert r2.cache_hit is True

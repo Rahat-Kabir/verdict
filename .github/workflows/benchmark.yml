@@ -1,0 +1,49 @@
+name: Nightly benchmark
+
+# Runs the benchmark matrix against live providers, aggregates into the site's
+# results.json, and commits the fresh numbers. Budget-capped: the default
+# matrix (6 providers x 4 suites x ~200 items) costs well under $1 per run.
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # 03:00 UTC daily
+  workflow_dispatch: {}
+
+concurrency:
+  group: nightly-benchmark
+  cancel-in-progress: false
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        working-directory: python
+        run: uv sync --extra dev
+      - name: Run benchmark matrix
+        working-directory: python
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          uv run verdict bench --all \
+            --suite classification --suite routing \
+            --suite moderation --suite agent_next_action \
+            --concurrency 4 --out ../results
+      - name: Aggregate into site data
+        working-directory: python
+        run: uv run verdict aggregate --results ../results --out ../site/src/data/results.json
+      - name: Commit fresh results
+        run: |
+          git config user.name "verdict-bot"
+          git config user.email "verdict-bot@users.noreply.github.com"
+          git add results/ site/src/data/results.json
+          if git diff --cached --quiet; then
+            echo "No changes in results; skipping commit."
+          else
+            git commit -m "nightly benchmark results $(date -u +%F)"
+          fi

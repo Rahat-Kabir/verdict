@@ -107,8 +107,8 @@ AG_LABELS = ["World", "Sports", "Business", "Sci/Tech"]
 
 def build_classification(size: int, rng: random.Random) -> tuple[list[dict], str]:
     try:
-        rows = fetch_rows("ag_news", "default", "train", n_pages=8)
-        label_names = fetch_label_names("ag_news", "default", "train") or AG_LABELS
+        rows = fetch_rows("fancyzhx/ag_news", "default", "train", n_pages=8)
+        label_names = fetch_label_names("fancyzhx/ag_news", "default", "train") or AG_LABELS
         picked = balanced_sample(rows, label_names, size, rng)
         items = [
             {
@@ -147,69 +147,71 @@ def synthetic_classification(size: int, rng: random.Random) -> list[dict]:
 
 # ---------------------------------------------------------------- routing
 
-QUEUE_RULES: list[tuple[str, tuple[str, ...]]] = [
-    ("Top-ups & withdrawals", ("top_up", "topup", "withdrawal", "atm", "cash")),
-    ("Payments & transfers", ("card_payment", "transfer", "beneficiary", "balance", "exchange_rate", "fiat", "revert", "refund", "cancel")),
-    ("Cards & delivery", ("card", "pin", "passcode", "spare", "visa", "mastercard")),
-]
-FALLBACK_QUEUE = "Account & general"
-QUEUES = [q for q, _ in QUEUE_RULES] + [FALLBACK_QUEUE]
-
-
-def queue_for_intent(intent: str) -> str:
-    for queue, needles in QUEUE_RULES:
-        if any(n in intent for n in needles):
-            return queue
-    return FALLBACK_QUEUE
+# Real support-ticket routing: Tobi-Bueck/customer-support-tickets has a `queue`
+# column (subject+body -> team queue). PolyAI/banking77 is not exposed on the
+# datasets-server viewer, so we use this instead.
+ROUTING_DATASET = "Tobi-Bueck/customer-support-tickets"
+ROUTING_TOP_QUEUES = 4
 
 
 def build_routing(size: int, rng: random.Random) -> tuple[list[dict], str]:
     try:
-        label_names = fetch_label_names("PolyAI/banking77", "default", "train")
-        if not label_names:
-            raise ValueError("no ClassLabel names")
-        rows = fetch_rows("PolyAI/banking77", "default", "train", n_pages=4)
-        by_queue: dict[str, list[dict]] = {}
+        rows = fetch_rows(ROUTING_DATASET, "default", "train", n_pages=6)
+        cleaned = []
         for r in rows:
-            intent = label_names[r["row"]["label"]]
-            by_queue.setdefault(queue_for_intent(intent), []).append(
-                {"text": r["row"]["text"], "queue": queue_for_intent(intent)}
-            )
-        per = size // len(QUEUES)
+            row = r["row"]
+            if str(row.get("language", "en")).lower() != "en":
+                continue
+            subject = str(row.get("subject") or "").strip()
+            body = str(row.get("body") or "").strip()
+            queue = str(row.get("queue") or "").strip()
+            if queue and (subject or body):
+                cleaned.append({"text": f"{subject}\n{body}"[:600], "queue": queue})
+        if len(cleaned) < size:
+            raise ValueError(f"only {len(cleaned)} usable rows")
+        counts: dict[str, int] = {}
+        for r in cleaned:
+            counts[r["queue"]] = counts.get(r["queue"], 0) + 1
+        top = [q for q, _ in sorted(counts.items(), key=lambda kv: -kv[1])[:ROUTING_TOP_QUEUES]]
+        by_queue: dict[str, list[dict]] = {q: [] for q in top}
+        for r in cleaned:
+            if r["queue"] in by_queue:
+                by_queue[r["queue"]].append(r)
+        per = size // len(top)
         items: list[dict] = []
-        for q in QUEUES:
-            bucket = by_queue.get(q, [])
-            rng.shuffle(bucket)
-            for r in bucket[:per]:
+        for q in top:
+            rng.shuffle(by_queue[q])
+            for r in by_queue[q][:per]:
                 items.append(
                     {
                         "id": f"route-{len(items):04d}",
-                        "question": "Which support team should handle this customer message?",
-                        "answers": QUEUES,
-                        "context": r["text"][:500],
+                        "question": "Which support team queue should handle this customer ticket?",
+                        "answers": top,
+                        "context": r["text"],
                         "expected": q,
                     }
                 )
         if len(items) >= size * 0.9:
-            return items, "PolyAI/banking77 mapped to 4 queues (HuggingFace datasets-server)"
+            return items, f"{ROUTING_DATASET} top-{len(top)} queues (HuggingFace datasets-server)"
         print(f"[warn] routing coverage thin ({len(items)} items); topping up synthetically")
     except (httpx.HTTPError, KeyError, ValueError) as exc:
-        print(f"[warn] banking77 fetch failed ({exc}); using synthetic tickets")
+        print(f"[warn] {ROUTING_DATASET} fetch failed ({exc}); using synthetic tickets")
     return synthetic_routing(size, rng), "synthetic tickets (fallback)"
 
 
 def synthetic_routing(size: int, rng: random.Random) -> list[dict]:
+    queues = ["Billing", "Technical", "Account", "Shipping"]
     templates = {
-        "Top-ups & withdrawals": "I tried to withdraw cash at an ATM but the money left my balance instantly.",
-        "Payments & transfers": "The transfer to my friend has been pending for three days and the amount is still not showing.",
-        "Cards & delivery": "My new card said it would arrive last week but tracking shows nothing.",
-        "Account & general": "How do I change the email address linked to my profile?",
+        "Billing": "I was charged twice this month and need one of the charges reversed.",
+        "Technical": "The app crashes every time I try to export my data.",
+        "Account": "How do I change the email address linked to my profile?",
+        "Shipping": "My package has been stuck in transit for two weeks.",
     }
     items = []
     queues = list(templates) * (size // 4)
     rng.shuffle(queues)
     for i, q in enumerate(queues):
-        items.append({"id": f"route-{i:04d}", "question": "Which support team should handle this customer message?", "answers": QUEUES, "context": templates[q], "expected": q})
+        items.append({"id": f"route-{i:04d}", "question": "Which support team queue should handle this customer ticket?", "answers": queues, "context": templates[q], "expected": q})
     return items
 
 
@@ -218,9 +220,9 @@ def synthetic_routing(size: int, rng: random.Random) -> list[dict]:
 def build_moderation(size: int, rng: random.Random) -> tuple[list[dict], str]:
     answers = ["hate", "not_hate"]
     try:
-        rows = fetch_rows("tweet_eval", "hate", "train", n_pages=4)
-        label_names = fetch_label_names("tweet_eval", "hate", "train") or ["hate", "non-hate"]
-        mapping = {"hate": "hate", "non-hate": "not_hate", "not_hate": "not_hate"}
+        rows = fetch_rows("cardiffnlp/tweet_eval", "hate", "train", n_pages=4)
+        label_names = fetch_label_names("cardiffnlp/tweet_eval", "hate", "train") or ["hate", "non-hate"]
+        mapping = {"hate": "hate", "non_hate": "not_hate", "not_hate": "not_hate"}
         picked = balanced_sample(rows, label_names, size, rng)
         items = []
         for r in picked:

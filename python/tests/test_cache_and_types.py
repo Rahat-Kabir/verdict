@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from verdict_router.cache import ExactCache
 from verdict_router.types import DecisionRequest, DecisionResponse, Record
 

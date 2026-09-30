@@ -20,7 +20,13 @@ import httpx
 
 from ..cost import compute_cost
 from ..types import DecisionRequest, DecisionResponse
-from .base import DECISION_SYSTEM_PROMPT, Provider, ProviderError, build_decision_prompt, parse_answer
+from .base import (
+    DECISION_SYSTEM_PROMPT,
+    Provider,
+    ProviderError,
+    build_decision_prompt,
+    parse_answer,
+)
 
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 

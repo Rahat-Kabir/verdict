@@ -1,0 +1,108 @@
+:root {
+  --bg: #0b0e14;
+  --bg-soft: #11151f;
+  --panel: #161b28;
+  --border: #232a3b;
+  --text: #e6e9f2;
+  --muted: #8b93a7;
+  --accent: #7c9cff;
+  --accent-2: #9ce0c0;
+  --gold: #e8c064;
+  --red: #ef7a7a;
+  --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { color-scheme: dark; }
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 500px at 70% -10%, #17203a 0%, var(--bg) 55%);
+  color: var(--text);
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+  line-height: 1.55;
+  min-height: 100vh;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+
+header.site {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 26px 0 10px; flex-wrap: wrap; gap: 10px;
+}
+.brand { font-size: 22px; font-weight: 700; letter-spacing: 0.2px; color: var(--text); }
+.brand .scale { color: var(--gold); }
+nav a { margin-left: 18px; color: var(--muted); font-size: 14px; }
+nav a:hover, nav a.active { color: var(--text); text-decoration: none; }
+
+h1 { font-size: 34px; margin: 26px 0 6px; letter-spacing: -0.02em; }
+h2 { font-size: 20px; margin: 34px 0 10px; }
+.tagline { color: var(--muted); font-size: 16px; max-width: 720px; }
+.updated { color: var(--muted); font-size: 12.5px; margin-top: 4px; font-family: var(--mono); }
+
+.tabs { display: flex; gap: 8px; margin: 26px 0 14px; flex-wrap: wrap; }
+.tabs a {
+  padding: 7px 14px; border-radius: 999px; font-size: 13.5px;
+  border: 1px solid var(--border); color: var(--muted); background: var(--bg-soft);
+}
+.tabs a:hover { color: var(--text); text-decoration: none; }
+.tabs a.active { background: #1d2740; color: var(--text); border-color: #31405f; }
+
+table.board {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+}
+table.board th, table.board td { padding: 11px 14px; text-align: right; white-space: nowrap; }
+table.board th:first-child, table.board td:first-child,
+table.board th:nth-child(2), table.board td:nth-child(2) { text-align: left; }
+table.board th {
+  color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.06em; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+}
+table.board th:hover { color: var(--text); }
+table.board tbody tr { border-bottom: 1px solid #1d2432; }
+table.board tbody tr:last-child { border-bottom: none; }
+table.board tbody tr:hover { background: #1a2132; }
+table.board .rank { color: var(--muted); font-family: var(--mono); }
+table.board .rank.top { color: var(--gold); font-weight: 700; }
+table.board .prov { font-weight: 600; }
+table.board .prov a { color: var(--text); }
+table.board .num { font-family: var(--mono); font-size: 13.5px; }
+.good { color: var(--accent-2); }
+.bad { color: var(--red); }
+
+.badge {
+  display: inline-block; font-size: 10.5px; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--muted); margin-left: 8px; vertical-align: 1px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.badge.proxy { color: var(--gold); border-color: #5a4d2c; }
+.badge.frontier { color: var(--accent); border-color: #34457a; }
+.badge.decision-model { color: var(--accent-2); border-color: #2c5a48; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 18px; }
+.card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+}
+.card h3 { margin: 0 0 6px; font-size: 16px; }
+.card .vendor { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.card p { color: var(--muted); font-size: 13.5px; margin: 0; }
+
+.callout {
+  border: 1px solid #3d3320; background: #1c1810; border-radius: 10px;
+  padding: 12px 16px; font-size: 13.5px; color: #d8c9a3; margin: 16px 0;
+}
+
+footer.site { color: var(--muted); font-size: 12.5px; padding: 40px 0 10px; border-top: 1px solid var(--border); margin-top: 50px; }
+code, .mono { font-family: var(--mono); font-size: 13px; background: var(--bg-soft); padding: 1px 6px; border-radius: 6px; }
+pre { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 13px; }
+pre code { background: none; padding: 0; }
+
+@media (max-width: 720px) {
+  table.board th, table.board td { padding: 8px 8px; font-size: 12.5px; }
+  h1 { font-size: 26px; }
+}

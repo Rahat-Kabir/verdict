@@ -1,0 +1,188 @@
+---
+import Base from "../layouts/Base.astro";
+import results from "../data/results.json";
+
+const suites = Object.keys(results.leaderboards || {});
+const activeSuite = suites[0] || "";
+
+const fmtAcc = (v: number | null) => (v === null || v === undefined ? "–" : `${(v * 100).toFixed(1)}%`);
+const fmtMs = (v: number | null) => (v === null || v === undefined ? "–" : `${Math.round(v)}`);
+const fmtCost = (v: number | null) => {
+  if (v === null || v === undefined) return "n/a";
+  if (v < 0.01) return `$${v.toFixed(4)}`;
+  return `$${v.toFixed(3)}`;
+};
+const fmtEce = (v: number | null) => (v === null || v === undefined ? "–" : v.toFixed(3));
+
+function badgeClass(label: string) {
+  return ["proxy", "frontier", "decision-model"].includes(label) ? label : "";
+}
+
+// Auto-takeaways, computed defensively (all optional when data is missing).
+const takeaways: { title: string; body: string }[] = [];
+try {
+  const rows = (results.leaderboards?.[activeSuite] || []) as any[];
+  if (rows.length >= 2) {
+    const priced = rows.filter((r) => r.cost_per_1k_usd !== null && r.cost_per_1k_usd !== undefined);
+    const best = rows[0];
+    const bestAcc = best?.accuracy;
+    if (priced.length && bestAcc !== null) {
+      const cheapestAtTop = priced
+        .filter((r) => r.accuracy !== null && bestAcc - r.accuracy <= 0.01)
+        .sort((a, b) => a.cost_per_1k_usd - b.cost_per_1k_usd)[0];
+      if (cheapestAtTop) {
+        takeaways.push({
+          title: "Best value",
+          body: `${results.providers_meta[cheapestAtTop.provider]?.display_name ?? cheapestAtTop.provider} reaches top-tier accuracy on ${activeSuite} at ${fmtCost(cheapestAtTop.cost_per_1k_usd)} per 1,000 decisions.`,
+        });
+      }
+    }
+    const fastest = [...rows].filter((r) => r.latency_ms_p50).sort((a, b) => a.latency_ms_p50 - b.latency_ms_p50)[0];
+    if (fastest) {
+      takeaways.push({
+        title: "Fastest p50",
+        body: `${results.providers_meta[fastest.provider]?.display_name ?? fastest.provider} answers in ${fmtMs(fastest.latency_ms_p50)} ms at the median.`,
+      });
+    }
+    const calibrated = rows.filter((r) => r.ece !== null && r.ece !== undefined).sort((a, b) => a.ece - b.ece)[0];
+    if (calibrated) {
+      takeaways.push({
+        title: "Best calibrated",
+        body: `${results.providers_meta[calibrated.provider]?.display_name ?? calibrated.provider} reports the most honest confidence (ECE ${fmtEce(calibrated.ece)}) — trust its thresholds.`,
+      });
+    }
+  }
+} catch (e) {
+  // takeaways are decorative; never fail the page
+}
+const hasData = suites.length > 0;
+---
+
+<Base title="Verdict — decision API leaderboard">
+  <h1>The decision-API leaderboard</h1>
+  <p class="tagline">
+    Independent measurements for the fast judgment layer of agent stacks: which provider classifies,
+    routes and picks next actions with the best <strong>accuracy × latency × cost</strong> — and whose
+    confidence scores you can actually trust.
+  </p>
+  <p class="updated">
+    {results.generated_at ? `Last run: ${results.generated_at} (UTC)` : "First nightly run in progress…"}
+  </p>
+
+  {takeaways.length > 0 && (
+    <div class="cards">
+      {takeaways.map((t) => (
+        <div class="card"><h3>{t.title}</h3><p>{t.body}</p></div>
+      ))}
+    </div>
+  )}
+
+  {!hasData && (
+    <div class="callout">
+      No benchmark results yet. The harness runs via <code>verdict bench --all</code>; once
+      <code>verdict aggregate</code> writes <code>site/src/data/results.json</code>, this page fills in.
+    </div>
+  )}
+
+  {suites.length > 0 && (
+    <>
+      <div class="tabs">
+        {suites.map((s) => (
+          <a href={`#${s}`} class={s === activeSuite ? "active" : ""} data-tab={s}>
+            {s.replace("_", " ")} <span style="opacity:.6">({results.suites?.[s]?.n_items ?? "?"})</span>
+          </a>
+        ))}
+      </div>
+
+      {suites.map((s, i) => {
+        const rows = results.leaderboards[s] as any[];
+        return (
+          <section id={s} style={i === 0 ? "" : "display:none"}>
+            <table class="board" id={`board-${s}`}>
+              <thead>
+                <tr>
+                  <th>#</th><th>Provider</th>
+                  <th data-num>Accuracy ▾</th><th data-num>p50 ms</th><th data-num>p95 ms</th>
+                  <th data-num>$/1k decisions</th><th data-num>ECE ↓</th><th data-num>n</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const meta = results.providers_meta[r.provider] ?? {};
+                  const labels = (meta.labels ?? []) as string[];
+                  return (
+                    <tr>
+                      <td class={`rank ${r.rank === 1 ? "top" : ""}`}>{r.rank}</td>
+                      <td class="prov">
+                        <a href={`/providers/${r.provider}`}>{meta.display_name ?? r.provider}</a>
+                        {labels.map((l) => <span class={`badge ${badgeClass(l)}`}>{l}</span>)}
+                      </td>
+                      <td class={`num ${r.accuracy !== null && r.accuracy >= 0.9 ? "good" : ""}`}>{fmtAcc(r.accuracy)}</td>
+                      <td class="num">{fmtMs(r.latency_ms_p50)}</td>
+                      <td class="num">{fmtMs(r.latency_ms_p95)}</td>
+                      <td class="num">{fmtCost(r.cost_per_1k_usd)}</td>
+                      <td class="num">{fmtEce(r.ece)}</td>
+                      <td class="num">{r.n}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </section>
+        );
+      })}
+    </>
+  )}
+
+  <h2>What "cost" means here</h2>
+  <p class="tagline">
+    $/1k = average charged cost per 1,000 decisions on that suite. OpenRouter providers are billed at the
+    authoritative per-generation amount; OpenAI prices are estimates and marked as such on the
+    <a href="/methodology">methodology page</a>. "n/a" means the provider's price could not be resolved.
+  </p>
+
+  <script>
+    // Suite tabs: show one section at a time (static build, client-side toggle).
+    document.querySelectorAll<HTMLAnchorElement>("[data-tab]").forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        e.preventDefault();
+        const target = tab.dataset.tab!;
+        document.querySelectorAll<HTMLAnchorElement>("[data-tab]").forEach((t) =>
+          t.classList.toggle("active", t === tab)
+        );
+        document.querySelectorAll<HTMLElement>("section[id]").forEach((sec) => {
+          sec.style.display = sec.id === target ? "" : "none";
+        });
+        history.replaceState(null, "", `#${target}`);
+      });
+    });
+    // Open the tab matching the URL hash if present.
+    const hash = location.hash.slice(1);
+    if (hash) document.querySelector<HTMLAnchorElement>(`[data-tab="${hash}"]`)?.click();
+  </script>
+
+  <script>
+    // Click-to-sort on numeric columns.
+    document.querySelectorAll<HTMLTableElement>("table.board").forEach((table) => {
+      const headers = table.querySelectorAll<HTMLTableCellElement>("th[data-num]");
+      headers.forEach((th, colIdx) => {
+        th.addEventListener("click", () => {
+          const tbody = table.tBodies[0];
+          const rows = Array.from(tbody.rows);
+          const parse = (cell: string) => {
+            const s = cell.replace(/[$,%]/g, "").trim();
+            if (s === "–" || s === "n/a") return -Infinity;
+            const v = parseFloat(s);
+            return isNaN(v) ? -Infinity : v;
+          };
+          const dir = th.dataset.dir === "asc" ? -1 : 1;
+          th.dataset.dir = dir === 1 ? "asc" : "desc";
+          rows.sort(
+            (a, b) => dir * (parse(a.cells[colIdx].innerText) - parse(b.cells[colIdx].innerText))
+          );
+          rows.forEach((r) => tbody.appendChild(r));
+        });
+      });
+    });
+  </script>
+</Base>

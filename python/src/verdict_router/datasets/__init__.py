@@ -13,14 +13,14 @@ from __future__ import annotations
 
 import importlib.resources
 import json
-from functools import lru_cache
+from functools import cache
 
-from .types import DatasetItem
+from ..types import DatasetItem
 
 KNOWN_SUITES = ["classification", "routing", "moderation", "agent_next_action"]
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_suite(name: str) -> tuple[DatasetItem, ...]:
     if name not in KNOWN_SUITES:
         raise ValueError(f"unknown suite '{name}'; known: {KNOWN_SUITES}")

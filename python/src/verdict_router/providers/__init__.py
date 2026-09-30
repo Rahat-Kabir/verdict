@@ -9,7 +9,7 @@ from __future__ import annotations
 from .base import Provider, ProviderError, parse_answer
 from .ollama import OllamaProvider
 from .openai_chat import OpenAIChatProvider
-from .openai_decisions import OpenAIDecisionsProxyProvider, OpenAIDecisionsProvider
+from .openai_decisions import OpenAIDecisionsProvider, OpenAIDecisionsProxyProvider
 from .openrouter import OpenRouterProvider
 
 # Human-facing metadata rendered on the site. `label` values with "proxy" get a
@@ -137,13 +137,13 @@ BENCHMARK_PROVIDERS = [
 __all__ = [
     "BENCHMARK_PROVIDERS",
     "PROVIDER_META",
-    "Provider",
-    "ProviderError",
     "OllamaProvider",
     "OpenAIChatProvider",
-    "OpenAIDecisionsProxyProvider",
     "OpenAIDecisionsProvider",
+    "OpenAIDecisionsProxyProvider",
     "OpenRouterProvider",
+    "Provider",
+    "ProviderError",
     "build_provider",
     "parse_answer",
 ]

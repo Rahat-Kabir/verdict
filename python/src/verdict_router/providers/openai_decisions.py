@@ -14,7 +14,13 @@ import time
 import httpx
 
 from ..types import DecisionRequest, DecisionResponse
-from .base import DECISION_SYSTEM_PROMPT, Provider, ProviderError, build_decision_prompt, parse_answer
+from .base import (
+    DECISION_SYSTEM_PROMPT,
+    Provider,
+    ProviderError,
+    build_decision_prompt,
+    parse_answer,
+)
 
 DECISIONS_URL = "https://api.openai.com/v1/decisions"
 
@@ -109,9 +115,9 @@ class OpenAIDecisionsProxyProvider(Provider):
 
 __all__ = [
     "DECISIONS_URL",
+    "DECISION_SYSTEM_PROMPT",
     "OpenAIDecisionsProvider",
     "OpenAIDecisionsProxyProvider",
-    "DECISION_SYSTEM_PROMPT",
     "build_decision_prompt",
     "parse_answer",
 ]

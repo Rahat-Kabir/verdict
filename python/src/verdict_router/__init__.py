@@ -7,10 +7,10 @@ from .types import DecisionRequest, DecisionResponse, Record
 __version__ = "0.1.0"
 
 __all__ = [
-    "ExactCache",
-    "Router",
     "DecisionRequest",
     "DecisionResponse",
+    "ExactCache",
     "Record",
+    "Router",
     "__version__",
 ]

@@ -12,7 +12,13 @@ import time
 import httpx
 
 from ..types import DecisionRequest, DecisionResponse
-from .base import DECISION_SYSTEM_PROMPT, Provider, ProviderError, build_decision_prompt, parse_answer
+from .base import (
+    DECISION_SYSTEM_PROMPT,
+    Provider,
+    ProviderError,
+    build_decision_prompt,
+    parse_answer,
+)
 
 
 class OllamaProvider(Provider):

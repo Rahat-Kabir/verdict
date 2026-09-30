@@ -120,10 +120,9 @@ def _top_level_json_objects(text: str):
             if depth == 0:
                 start = i
             depth += 1
-        elif ch == "}":
-            if depth > 0:
-                depth -= 1
-                if depth == 0 and start >= 0:
+        elif ch == "}" and depth > 0:
+            depth -= 1
+            if depth == 0 and start >= 0:
                     snippet = text[start : i + 1]
                     try:
                         yield json.loads(snippet)

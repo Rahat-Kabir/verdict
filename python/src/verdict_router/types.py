@@ -5,11 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 @dataclass
@@ -84,6 +84,6 @@ class Record:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Record":
-        known = {f for f in cls.__dataclass_fields__}  # noqa: C416
+    def from_dict(cls, d: dict) -> Record:
+        known = {f for f in cls.__dataclass_fields__}
         return cls(**{k: v for k, v in d.items() if k in known})
