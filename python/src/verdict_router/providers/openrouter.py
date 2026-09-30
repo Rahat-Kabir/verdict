@@ -117,9 +117,23 @@ class OpenRouterProvider(Provider):
             )
 
     def _resolve_cost(self, generation_id: str | None, usage: dict) -> float | None:
-        """Prefer OpenRouter's authoritative per-generation cost; fall back to
-        our price table (which cannot price jev-router)."""
-        if self.exact_cost and generation_id:
+        """Resolve the true charged cost, in order of authority:
+        1. usage.cost (what the account was charged — 0 for BYOK/free routing)
+        2. usage.cost_details.upstream_inference_cost (real upstream spend, present
+           even when the account charge is 0; includes jev-router's routed model)
+        3. GET /generation (async, sometimes 404s right after the call)
+        4. our static price table (cannot price jev-router -> None)
+        """
+        if not self.exact_cost:
+            return compute_cost(self.model, usage.get("prompt_tokens", 0) or 0, usage.get("completion_tokens", 0) or 0)
+        charged = usage.get("cost")
+        if isinstance(charged, (int, float)) and charged > 0:
+            return float(charged)
+        details = usage.get("cost_details") or {}
+        upstream = details.get("upstream_inference_cost")
+        if isinstance(upstream, (int, float)) and upstream > 0:
+            return float(upstream)
+        if generation_id:
             try:
                 gen = httpx.get(
                     f"{self.base_url}/generation",
@@ -128,9 +142,9 @@ class OpenRouterProvider(Provider):
                     timeout=15.0,
                 )
                 if gen.status_code == 200:
-                    charged = gen.json().get("data", {}).get("total_cost")
-                    if isinstance(charged, (int, float)):
-                        return float(charged)
+                    charged_gen = gen.json().get("data", {}).get("total_cost")
+                    if isinstance(charged_gen, (int, float)) and charged_gen > 0:
+                        return float(charged_gen)
             except httpx.HTTPError:
                 pass
         return compute_cost(self.model, usage.get("prompt_tokens", 0) or 0, usage.get("completion_tokens", 0) or 0)
