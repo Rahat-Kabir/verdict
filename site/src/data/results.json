@@ -1,7 +1,2234 @@
 {
- "generated_at": null,
- "suites": {},
- "providers_meta": {},
- "summary": {"providers": {}},
- "leaderboards": {}
+ "generated_at": "2026-09-30T20:50:52Z",
+ "suites": {
+  "classification": {
+   "name": "classification",
+   "n_items": 200,
+   "n_answers": 4,
+   "answers": [
+    "World",
+    "Sports",
+    "Business",
+    "Sci/Tech"
+   ]
+  },
+  "routing": {
+   "name": "routing",
+   "n_items": 198,
+   "n_answers": 4,
+   "answers": [
+    "Technical Support",
+    "Product Support",
+    "Customer Service",
+    "Billing and Payments"
+   ]
+  },
+  "moderation": {
+   "name": "moderation",
+   "n_items": 193,
+   "n_answers": 2,
+   "answers": [
+    "hate",
+    "not_hate"
+   ]
+  },
+  "agent_next_action": {
+   "name": "agent_next_action",
+   "n_items": 200,
+   "n_answers": 6,
+   "answers": [
+    "lookup_order",
+    "issue_refund",
+    "check_payment_status",
+    "escalate_to_human",
+    "send_faq_link",
+    "update_shipping_address"
+   ]
+  }
+ },
+ "providers_meta": {
+  "jev-router": {
+   "display_name": "Jev Router",
+   "vendor": "TypeSafe (via OpenRouter)",
+   "model": "typesafe/jev-router",
+   "kind": "decision-model",
+   "description": "TypeSafe's System-One decision model, exposed on OpenRouter as a router that picks an underlying model per request. No structured outputs and no confidence scores; answers are parsed from free text.",
+   "url": "https://openrouter.ai/typesafe/jev-router",
+   "labels": [
+    "openrouter"
+   ]
+  },
+  "solar-mini4": {
+   "display_name": "Solar mini 4",
+   "vendor": "Upstage (via OpenRouter)",
+   "model": "upstage/solar-mini4",
+   "kind": "small-baseline",
+   "description": "Upstage's small fast model. The closest available stand-in for the 'Solar Decide' decision variant, which is not exposed as a separate ID.",
+   "url": "https://openrouter.ai/upstage/solar-mini4",
+   "labels": [
+    "openrouter",
+    "baseline"
+   ]
+  },
+  "gpt-5.4-nano": {
+   "display_name": "GPT-5.4 nano",
+   "vendor": "OpenAI",
+   "model": "gpt-5.4-nano",
+   "kind": "small-baseline",
+   "description": "OpenAI's cheapest current small model, driven through the same decision prompt with strict JSON-schema outputs.",
+   "url": "https://platform.openai.com/docs/models",
+   "labels": [
+    "openai",
+    "baseline"
+   ]
+  },
+  "gpt-5.4-mini": {
+   "display_name": "GPT-5.4 mini",
+   "vendor": "OpenAI",
+   "model": "gpt-5.4-mini",
+   "kind": "small-baseline",
+   "description": "Mid-tier OpenAI small model; the step-up option from nano.",
+   "url": "https://platform.openai.com/docs/models",
+   "labels": [
+    "openai",
+    "baseline"
+   ]
+  },
+  "gpt-6-luna": {
+   "display_name": "GPT-6 Luna",
+   "vendor": "OpenAI",
+   "model": "gpt-6-luna",
+   "kind": "frontier-reference",
+   "description": "The smallest member of the GPT-6 family (the model the Decisions API is built on). Included as a frontier reference point: what do you give up if you use a general frontier model instead of a decision model?",
+   "url": "https://platform.openai.com/docs/models",
+   "labels": [
+    "openai",
+    "frontier"
+   ]
+  },
+  "openai-decisions-proxy": {
+   "display_name": "OpenAI Decisions (proxy)",
+   "vendor": "Verdict harness",
+   "model": "gpt-5.4-nano",
+   "kind": "proxy",
+   "description": "The Decisions-API contract (question, finite answers, context) served by gpt-5.4-nano with structured outputs. This is NOT the real Decisions API — preview access is not enabled for our key yet — but it shows what the interface costs on an off-the-shelf chat model.",
+   "url": "https://openai.com/index/devday-2026-recap/",
+   "labels": [
+    "proxy"
+   ]
+  },
+  "openai-decisions": {
+   "display_name": "OpenAI Decisions API",
+   "vendor": "OpenAI",
+   "model": "luna (real endpoint)",
+   "kind": "decision-model",
+   "description": "The real /v1/decisions endpoint. Present in the registry for the day preview access is granted; the runner skips it cleanly while the key lacks access.",
+   "url": "https://openai.com/index/devday-2026-recap/",
+   "labels": [
+    "preview-gated"
+   ]
+  }
+ },
+ "summary": {
+  "providers": {
+   "gpt-5.4-mini": {
+    "agent_next_action": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.99,
+     "latency_ms_p50": 1132.8,
+     "latency_ms_p95": 1989.6,
+     "n_with_confidence": 200,
+     "ece": 0.0095,
+     "cost_per_1k_usd": 0.10102,
+     "escalation": {
+      "0.95": {
+       "accuracy": 0.985,
+       "cost_per_1k_usd": 0.10231,
+       "escalated_pct": 2.0
+      }
+     }
+    },
+    "classification": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.85,
+     "latency_ms_p50": 1137.8,
+     "latency_ms_p95": 1859.0,
+     "n_with_confidence": 200,
+     "ece": 0.1205,
+     "cost_per_1k_usd": 0.08726,
+     "escalation": {
+      "0.65": {
+       "accuracy": 0.85,
+       "cost_per_1k_usd": 0.08772,
+       "escalated_pct": 0.5
+      },
+      "0.7": {
+       "accuracy": 0.85,
+       "cost_per_1k_usd": 0.08772,
+       "escalated_pct": 0.5
+      },
+      "0.75": {
+       "accuracy": 0.855,
+       "cost_per_1k_usd": 0.08857,
+       "escalated_pct": 1.5
+      },
+      "0.8": {
+       "accuracy": 0.855,
+       "cost_per_1k_usd": 0.08934,
+       "escalated_pct": 2.5
+      },
+      "0.85": {
+       "accuracy": 0.855,
+       "cost_per_1k_usd": 0.08934,
+       "escalated_pct": 2.5
+      },
+      "0.9": {
+       "accuracy": 0.855,
+       "cost_per_1k_usd": 0.09015,
+       "escalated_pct": 4.0
+      },
+      "0.95": {
+       "accuracy": 0.87,
+       "cost_per_1k_usd": 0.09608,
+       "escalated_pct": 13.0
+      }
+     }
+    },
+    "moderation": {
+     "n": 193,
+     "n_errors": 0,
+     "accuracy": 0.6839,
+     "latency_ms_p50": 1180.2,
+     "latency_ms_p95": 2020.6,
+     "n_with_confidence": 193,
+     "ece": 0.2579,
+     "cost_per_1k_usd": 0.08291,
+     "escalation": {
+      "0.65": {
+       "accuracy": 0.6839,
+       "cost_per_1k_usd": 0.08337,
+       "escalated_pct": 0.5
+      },
+      "0.7": {
+       "accuracy": 0.6788,
+       "cost_per_1k_usd": 0.0842,
+       "escalated_pct": 1.0
+      },
+      "0.75": {
+       "accuracy": 0.6891,
+       "cost_per_1k_usd": 0.0863,
+       "escalated_pct": 3.1
+      },
+      "0.8": {
+       "accuracy": 0.6943,
+       "cost_per_1k_usd": 0.09054,
+       "escalated_pct": 8.8
+      },
+      "0.85": {
+       "accuracy": 0.6995,
+       "cost_per_1k_usd": 0.09383,
+       "escalated_pct": 11.9
+      },
+      "0.9": {
+       "accuracy": 0.7047,
+       "cost_per_1k_usd": 0.10118,
+       "escalated_pct": 21.2
+      },
+      "0.95": {
+       "accuracy": 0.6995,
+       "cost_per_1k_usd": 0.11343,
+       "escalated_pct": 37.3
+      }
+     }
+    },
+    "routing": {
+     "n": 198,
+     "n_errors": 0,
+     "accuracy": 0.4444,
+     "latency_ms_p50": 1131.2,
+     "latency_ms_p95": 2110.2,
+     "n_with_confidence": 198,
+     "ece": 0.4929,
+     "cost_per_1k_usd": 0.09586,
+     "escalation": {
+      "0.5": {
+       "accuracy": 0.4444,
+       "cost_per_1k_usd": 0.09709,
+       "escalated_pct": 1.5
+      },
+      "0.55": {
+       "accuracy": 0.4444,
+       "cost_per_1k_usd": 0.09709,
+       "escalated_pct": 1.5
+      },
+      "0.6": {
+       "accuracy": 0.4495,
+       "cost_per_1k_usd": 0.09802,
+       "escalated_pct": 2.5
+      },
+      "0.65": {
+       "accuracy": 0.4495,
+       "cost_per_1k_usd": 0.09878,
+       "escalated_pct": 3.5
+      },
+      "0.7": {
+       "accuracy": 0.4495,
+       "cost_per_1k_usd": 0.09878,
+       "escalated_pct": 3.5
+      },
+      "0.75": {
+       "accuracy": 0.4545,
+       "cost_per_1k_usd": 0.10083,
+       "escalated_pct": 5.6
+      },
+      "0.8": {
+       "accuracy": 0.4545,
+       "cost_per_1k_usd": 0.10169,
+       "escalated_pct": 6.6
+      },
+      "0.85": {
+       "accuracy": 0.4646,
+       "cost_per_1k_usd": 0.10368,
+       "escalated_pct": 9.1
+      },
+      "0.9": {
+       "accuracy": 0.4747,
+       "cost_per_1k_usd": 0.11028,
+       "escalated_pct": 16.7
+      },
+      "0.95": {
+       "accuracy": 0.4798,
+       "cost_per_1k_usd": 0.1202,
+       "escalated_pct": 28.8
+      }
+     }
+    }
+   },
+   "gpt-5.4-nano": {
+    "agent_next_action": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 1.0,
+     "latency_ms_p50": 1099.0,
+     "latency_ms_p95": 1919.3,
+     "n_with_confidence": 200,
+     "ece": 0.1266,
+     "cost_per_1k_usd": 0.02021,
+     "escalation": {
+      "0.7": {
+       "accuracy": 1.0,
+       "cost_per_1k_usd": 0.02049,
+       "escalated_pct": 0.5
+      },
+      "0.75": {
+       "accuracy": 1.0,
+       "cost_per_1k_usd": 0.02539,
+       "escalated_pct": 9.0
+      },
+      "0.8": {
+       "accuracy": 1.0,
+       "cost_per_1k_usd": 0.02886,
+       "escalated_pct": 15.0
+      },
+      "0.85": {
+       "accuracy": 1.0,
+       "cost_per_1k_usd": 0.03118,
+       "escalated_pct": 19.0
+      },
+      "0.9": {
+       "accuracy": 0.96,
+       "cost_per_1k_usd": 0.04243,
+       "escalated_pct": 36.5
+      },
+      "0.95": {
+       "accuracy": 0.84,
+       "cost_per_1k_usd": 0.08148,
+       "escalated_pct": 99.5
+      }
+     }
+    },
+    "classification": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.825,
+     "latency_ms_p50": 1182.2,
+     "latency_ms_p95": 2380.1,
+     "n_with_confidence": 200,
+     "ece": 0.055,
+     "cost_per_1k_usd": 0.01709,
+     "escalation": {
+      "0.5": {
+       "accuracy": 0.83,
+       "cost_per_1k_usd": 0.01947,
+       "escalated_pct": 3.5
+      },
+      "0.55": {
+       "accuracy": 0.83,
+       "cost_per_1k_usd": 0.01947,
+       "escalated_pct": 3.5
+      },
+      "0.6": {
+       "accuracy": 0.83,
+       "cost_per_1k_usd": 0.01947,
+       "escalated_pct": 3.5
+      },
+      "0.65": {
+       "accuracy": 0.83,
+       "cost_per_1k_usd": 0.02094,
+       "escalated_pct": 5.5
+      },
+      "0.7": {
+       "accuracy": 0.83,
+       "cost_per_1k_usd": 0.02122,
+       "escalated_pct": 6.0
+      },
+      "0.75": {
+       "accuracy": 0.84,
+       "cost_per_1k_usd": 0.02488,
+       "escalated_pct": 12.0
+      },
+      "0.8": {
+       "accuracy": 0.845,
+       "cost_per_1k_usd": 0.02891,
+       "escalated_pct": 18.5
+      },
+      "0.85": {
+       "accuracy": 0.85,
+       "cost_per_1k_usd": 0.03333,
+       "escalated_pct": 25.5
+      },
+      "0.9": {
+       "accuracy": 0.845,
+       "cost_per_1k_usd": 0.04067,
+       "escalated_pct": 39.5
+      },
+      "0.95": {
+       "accuracy": 0.85,
+       "cost_per_1k_usd": 0.0627,
+       "escalated_pct": 82.5
+      }
+     }
+    },
+    "moderation": {
+     "n": 193,
+     "n_errors": 0,
+     "accuracy": 0.7202,
+     "latency_ms_p50": 1111.2,
+     "latency_ms_p95": 2132.5,
+     "n_with_confidence": 193,
+     "ece": 0.1194,
+     "cost_per_1k_usd": 0.01602,
+     "escalation": {
+      "0.65": {
+       "accuracy": 0.7254,
+       "cost_per_1k_usd": 0.01845,
+       "escalated_pct": 2.6
+      },
+      "0.7": {
+       "accuracy": 0.715,
+       "cost_per_1k_usd": 0.02044,
+       "escalated_pct": 5.2
+      },
+      "0.75": {
+       "accuracy": 0.7098,
+       "cost_per_1k_usd": 0.03744,
+       "escalated_pct": 25.9
+      },
+      "0.8": {
+       "accuracy": 0.6995,
+       "cost_per_1k_usd": 0.04809,
+       "escalated_pct": 38.9
+      },
+      "0.85": {
+       "accuracy": 0.6995,
+       "cost_per_1k_usd": 0.05101,
+       "escalated_pct": 43.5
+      },
+      "0.9": {
+       "accuracy": 0.6943,
+       "cost_per_1k_usd": 0.06358,
+       "escalated_pct": 59.6
+      },
+      "0.95": {
+       "accuracy": 0.6632,
+       "cost_per_1k_usd": 0.08199,
+       "escalated_pct": 87.6
+      }
+     }
+    },
+    "routing": {
+     "n": 198,
+     "n_errors": 0,
+     "accuracy": 0.4444,
+     "latency_ms_p50": 1087.7,
+     "latency_ms_p95": 1833.9,
+     "n_with_confidence": 198,
+     "ece": 0.4064,
+     "cost_per_1k_usd": 0.01881,
+     "escalation": {
+      "0.5": {
+       "accuracy": 0.4444,
+       "cost_per_1k_usd": 0.0202,
+       "escalated_pct": 1.5
+      },
+      "0.55": {
+       "accuracy": 0.4444,
+       "cost_per_1k_usd": 0.0202,
+       "escalated_pct": 1.5
+      },
+      "0.6": {
+       "accuracy": 0.4444,
+       "cost_per_1k_usd": 0.0202,
+       "escalated_pct": 1.5
+      },
+      "0.65": {
+       "accuracy": 0.4596,
+       "cost_per_1k_usd": 0.02366,
+       "escalated_pct": 5.1
+      },
+      "0.7": {
+       "accuracy": 0.4596,
+       "cost_per_1k_usd": 0.02501,
+       "escalated_pct": 6.6
+      },
+      "0.75": {
+       "accuracy": 0.4697,
+       "cost_per_1k_usd": 0.03391,
+       "escalated_pct": 17.7
+      },
+      "0.8": {
+       "accuracy": 0.4798,
+       "cost_per_1k_usd": 0.03926,
+       "escalated_pct": 24.7
+      },
+      "0.85": {
+       "accuracy": 0.4848,
+       "cost_per_1k_usd": 0.04211,
+       "escalated_pct": 28.3
+      },
+      "0.9": {
+       "accuracy": 0.4848,
+       "cost_per_1k_usd": 0.05688,
+       "escalated_pct": 48.0
+      },
+      "0.95": {
+       "accuracy": 0.4949,
+       "cost_per_1k_usd": 0.0836,
+       "escalated_pct": 90.9
+      }
+     }
+    }
+   },
+   "gpt-6-luna": {
+    "agent_next_action": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.84,
+     "latency_ms_p50": 1460.0,
+     "latency_ms_p95": 2220.1,
+     "n_with_confidence": 200,
+     "ece": 0.1259,
+     "cost_per_1k_usd": 0.06156,
+     "escalation": {}
+    },
+    "classification": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.85,
+     "latency_ms_p50": 1613.1,
+     "latency_ms_p95": 3009.1,
+     "n_with_confidence": 200,
+     "ece": 0.1193,
+     "cost_per_1k_usd": 0.05432,
+     "escalation": {}
+    },
+    "moderation": {
+     "n": 193,
+     "n_errors": 0,
+     "accuracy": 0.6632,
+     "latency_ms_p50": 1982.4,
+     "latency_ms_p95": 3393.8,
+     "n_with_confidence": 193,
+     "ece": 0.2809,
+     "cost_per_1k_usd": 0.07217,
+     "escalation": {}
+    },
+    "routing": {
+     "n": 198,
+     "n_errors": 0,
+     "accuracy": 0.4949,
+     "latency_ms_p50": 2078.9,
+     "latency_ms_p95": 3390.1,
+     "n_with_confidence": 198,
+     "ece": 0.4193,
+     "cost_per_1k_usd": 0.07018,
+     "escalation": {}
+    }
+   },
+   "jev-router": {
+    "agent_next_action": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.81,
+     "latency_ms_p50": 2248.1,
+     "latency_ms_p95": 3701.4,
+     "n_with_confidence": 199,
+     "ece": 0.151,
+     "cost_per_1k_usd": 0.08456,
+     "escalation": {
+      "0.75": {
+       "accuracy": 0.81,
+       "cost_per_1k_usd": 0.085,
+       "escalated_pct": 0.5
+      },
+      "0.8": {
+       "accuracy": 0.825,
+       "cost_per_1k_usd": 0.08612,
+       "escalated_pct": 2.0
+      },
+      "0.85": {
+       "accuracy": 0.825,
+       "cost_per_1k_usd": 0.08647,
+       "escalated_pct": 2.5
+      },
+      "0.9": {
+       "accuracy": 0.84,
+       "cost_per_1k_usd": 0.08901,
+       "escalated_pct": 6.0
+      },
+      "0.95": {
+       "accuracy": 0.845,
+       "cost_per_1k_usd": 0.1029,
+       "escalated_pct": 26.5
+      }
+     }
+    },
+    "classification": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.865,
+     "latency_ms_p50": 2359.4,
+     "latency_ms_p95": 4215.9,
+     "n_with_confidence": 200,
+     "ece": 0.1026,
+     "cost_per_1k_usd": 0.06664,
+     "escalation": {
+      "0.65": {
+       "accuracy": 0.865,
+       "cost_per_1k_usd": 0.06711,
+       "escalated_pct": 0.5
+      },
+      "0.7": {
+       "accuracy": 0.865,
+       "cost_per_1k_usd": 0.06711,
+       "escalated_pct": 0.5
+      },
+      "0.75": {
+       "accuracy": 0.865,
+       "cost_per_1k_usd": 0.06754,
+       "escalated_pct": 1.0
+      },
+      "0.8": {
+       "accuracy": 0.86,
+       "cost_per_1k_usd": 0.06885,
+       "escalated_pct": 2.5
+      },
+      "0.85": {
+       "accuracy": 0.86,
+       "cost_per_1k_usd": 0.06983,
+       "escalated_pct": 4.0
+      },
+      "0.9": {
+       "accuracy": 0.855,
+       "cost_per_1k_usd": 0.07315,
+       "escalated_pct": 8.5
+      },
+      "0.95": {
+       "accuracy": 0.86,
+       "cost_per_1k_usd": 0.07656,
+       "escalated_pct": 14.0
+      }
+     }
+    },
+    "moderation": {
+     "n": 193,
+     "n_errors": 0,
+     "accuracy": 0.6943,
+     "latency_ms_p50": 2114.6,
+     "latency_ms_p95": 4191.3,
+     "n_with_confidence": 183,
+     "ece": 0.2134,
+     "cost_per_1k_usd": 0.4049,
+     "escalation": {
+      "0.7": {
+       "accuracy": 0.6891,
+       "cost_per_1k_usd": 0.40569,
+       "escalated_pct": 0.5
+      },
+      "0.75": {
+       "accuracy": 0.6891,
+       "cost_per_1k_usd": 0.41037,
+       "escalated_pct": 5.7
+      },
+      "0.8": {
+       "accuracy": 0.6891,
+       "cost_per_1k_usd": 0.41255,
+       "escalated_pct": 8.3
+      },
+      "0.85": {
+       "accuracy": 0.6891,
+       "cost_per_1k_usd": 0.41766,
+       "escalated_pct": 14.0
+      },
+      "0.9": {
+       "accuracy": 0.6943,
+       "cost_per_1k_usd": 0.43967,
+       "escalated_pct": 40.9
+      },
+      "0.95": {
+       "accuracy": 0.6839,
+       "cost_per_1k_usd": 0.44836,
+       "escalated_pct": 52.8
+      }
+     }
+    },
+    "routing": {
+     "n": 198,
+     "n_errors": 0,
+     "accuracy": 0.4697,
+     "latency_ms_p50": 2252.2,
+     "latency_ms_p95": 4313.1,
+     "n_with_confidence": 196,
+     "ece": 0.4287,
+     "cost_per_1k_usd": 0.21811,
+     "escalation": {
+      "0.65": {
+       "accuracy": 0.4697,
+       "cost_per_1k_usd": 0.2191,
+       "escalated_pct": 1.0
+      },
+      "0.7": {
+       "accuracy": 0.4697,
+       "cost_per_1k_usd": 0.22019,
+       "escalated_pct": 2.0
+      },
+      "0.75": {
+       "accuracy": 0.4747,
+       "cost_per_1k_usd": 0.22513,
+       "escalated_pct": 7.6
+      },
+      "0.8": {
+       "accuracy": 0.4747,
+       "cost_per_1k_usd": 0.22591,
+       "escalated_pct": 8.6
+      },
+      "0.85": {
+       "accuracy": 0.4798,
+       "cost_per_1k_usd": 0.23512,
+       "escalated_pct": 20.2
+      },
+      "0.9": {
+       "accuracy": 0.4798,
+       "cost_per_1k_usd": 0.24522,
+       "escalated_pct": 32.8
+      },
+      "0.95": {
+       "accuracy": 0.4848,
+       "cost_per_1k_usd": 0.25884,
+       "escalated_pct": 52.5
+      }
+     }
+    }
+   },
+   "openai-decisions-proxy": {
+    "agent_next_action": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 1.0,
+     "latency_ms_p50": 1066.8,
+     "latency_ms_p95": 1729.6,
+     "n_with_confidence": 200,
+     "ece": 0.1253,
+     "cost_per_1k_usd": 0.02021,
+     "escalation": {
+      "0.65": {
+       "accuracy": 1.0,
+       "cost_per_1k_usd": 0.02049,
+       "escalated_pct": 0.5
+      },
+      "0.7": {
+       "accuracy": 1.0,
+       "cost_per_1k_usd": 0.02078,
+       "escalated_pct": 1.0
+      },
+      "0.75": {
+       "accuracy": 1.0,
+       "cost_per_1k_usd": 0.02366,
+       "escalated_pct": 6.0
+      },
+      "0.8": {
+       "accuracy": 0.995,
+       "cost_per_1k_usd": 0.02843,
+       "escalated_pct": 14.0
+      },
+      "0.85": {
+       "accuracy": 0.995,
+       "cost_per_1k_usd": 0.02987,
+       "escalated_pct": 16.5
+      },
+      "0.9": {
+       "accuracy": 0.94,
+       "cost_per_1k_usd": 0.0462,
+       "escalated_pct": 41.5
+      },
+      "0.95": {
+       "accuracy": 0.84,
+       "cost_per_1k_usd": 0.08146,
+       "escalated_pct": 99.5
+      }
+     }
+    },
+    "classification": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.825,
+     "latency_ms_p50": 1093.1,
+     "latency_ms_p95": 1908.7,
+     "n_with_confidence": 200,
+     "ece": 0.0573,
+     "cost_per_1k_usd": 0.01709,
+     "escalation": {
+      "0.5": {
+       "accuracy": 0.83,
+       "cost_per_1k_usd": 0.01917,
+       "escalated_pct": 3.5
+      },
+      "0.55": {
+       "accuracy": 0.83,
+       "cost_per_1k_usd": 0.01917,
+       "escalated_pct": 3.5
+      },
+      "0.6": {
+       "accuracy": 0.83,
+       "cost_per_1k_usd": 0.0195,
+       "escalated_pct": 4.0
+      },
+      "0.65": {
+       "accuracy": 0.84,
+       "cost_per_1k_usd": 0.02113,
+       "escalated_pct": 6.5
+      },
+      "0.7": {
+       "accuracy": 0.84,
+       "cost_per_1k_usd": 0.02143,
+       "escalated_pct": 7.0
+      },
+      "0.75": {
+       "accuracy": 0.845,
+       "cost_per_1k_usd": 0.02704,
+       "escalated_pct": 15.0
+      },
+      "0.8": {
+       "accuracy": 0.85,
+       "cost_per_1k_usd": 0.03147,
+       "escalated_pct": 22.0
+      },
+      "0.85": {
+       "accuracy": 0.85,
+       "cost_per_1k_usd": 0.03343,
+       "escalated_pct": 25.5
+      },
+      "0.9": {
+       "accuracy": 0.85,
+       "cost_per_1k_usd": 0.04144,
+       "escalated_pct": 41.0
+      },
+      "0.95": {
+       "accuracy": 0.85,
+       "cost_per_1k_usd": 0.06316,
+       "escalated_pct": 83.5
+      }
+     }
+    },
+    "moderation": {
+     "n": 193,
+     "n_errors": 0,
+     "accuracy": 0.7047,
+     "latency_ms_p50": 1120.7,
+     "latency_ms_p95": 1822.9,
+     "n_with_confidence": 193,
+     "ece": 0.1266,
+     "cost_per_1k_usd": 0.01602,
+     "escalation": {
+      "0.65": {
+       "accuracy": 0.715,
+       "cost_per_1k_usd": 0.01896,
+       "escalated_pct": 4.1
+      },
+      "0.7": {
+       "accuracy": 0.7098,
+       "cost_per_1k_usd": 0.02093,
+       "escalated_pct": 6.7
+      },
+      "0.75": {
+       "accuracy": 0.6943,
+       "cost_per_1k_usd": 0.03715,
+       "escalated_pct": 25.9
+      },
+      "0.8": {
+       "accuracy": 0.6891,
+       "cost_per_1k_usd": 0.04898,
+       "escalated_pct": 39.9
+      },
+      "0.85": {
+       "accuracy": 0.6788,
+       "cost_per_1k_usd": 0.0557,
+       "escalated_pct": 48.7
+      },
+      "0.9": {
+       "accuracy": 0.6528,
+       "cost_per_1k_usd": 0.06894,
+       "escalated_pct": 67.9
+      },
+      "0.95": {
+       "accuracy": 0.6736,
+       "cost_per_1k_usd": 0.08091,
+       "escalated_pct": 87.0
+      }
+     }
+    },
+    "routing": {
+     "n": 198,
+     "n_errors": 0,
+     "accuracy": 0.4596,
+     "latency_ms_p50": 1164.8,
+     "latency_ms_p95": 1924.9,
+     "n_with_confidence": 198,
+     "ece": 0.3884,
+     "cost_per_1k_usd": 0.01881,
+     "escalation": {
+      "0.5": {
+       "accuracy": 0.4596,
+       "cost_per_1k_usd": 0.02091,
+       "escalated_pct": 2.5
+      },
+      "0.55": {
+       "accuracy": 0.4545,
+       "cost_per_1k_usd": 0.02212,
+       "escalated_pct": 3.5
+      },
+      "0.6": {
+       "accuracy": 0.4596,
+       "cost_per_1k_usd": 0.02255,
+       "escalated_pct": 4.0
+      },
+      "0.65": {
+       "accuracy": 0.4646,
+       "cost_per_1k_usd": 0.02427,
+       "escalated_pct": 6.1
+      },
+      "0.7": {
+       "accuracy": 0.4646,
+       "cost_per_1k_usd": 0.02549,
+       "escalated_pct": 7.6
+      },
+      "0.75": {
+       "accuracy": 0.4646,
+       "cost_per_1k_usd": 0.03338,
+       "escalated_pct": 17.2
+      },
+      "0.8": {
+       "accuracy": 0.4747,
+       "cost_per_1k_usd": 0.04205,
+       "escalated_pct": 27.8
+      },
+      "0.85": {
+       "accuracy": 0.4798,
+       "cost_per_1k_usd": 0.04619,
+       "escalated_pct": 33.3
+      },
+      "0.9": {
+       "accuracy": 0.4949,
+       "cost_per_1k_usd": 0.05738,
+       "escalated_pct": 49.0
+      },
+      "0.95": {
+       "accuracy": 0.4949,
+       "cost_per_1k_usd": 0.08405,
+       "escalated_pct": 91.9
+      }
+     }
+    }
+   },
+   "solar-mini4": {
+    "agent_next_action": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.95,
+     "latency_ms_p50": 795.4,
+     "latency_ms_p95": 1175.7,
+     "n_with_confidence": 200,
+     "ece": 0.015,
+     "cost_per_1k_usd": 0.01587,
+     "escalation": {
+      "0.9": {
+       "accuracy": 0.905,
+       "cost_per_1k_usd": 0.02223,
+       "escalated_pct": 9.0
+      },
+      "0.95": {
+       "accuracy": 0.885,
+       "cost_per_1k_usd": 0.02748,
+       "escalated_pct": 17.0
+      }
+     }
+    },
+    "classification": {
+     "n": 200,
+     "n_errors": 0,
+     "accuracy": 0.73,
+     "latency_ms_p50": 877.1,
+     "latency_ms_p95": 1274.3,
+     "n_with_confidence": 200,
+     "ece": 0.1727,
+     "cost_per_1k_usd": 0.01408,
+     "escalation": {
+      "0.6": {
+       "accuracy": 0.735,
+       "cost_per_1k_usd": 0.01434,
+       "escalated_pct": 0.5
+      },
+      "0.65": {
+       "accuracy": 0.74,
+       "cost_per_1k_usd": 0.01603,
+       "escalated_pct": 3.0
+      },
+      "0.7": {
+       "accuracy": 0.755,
+       "cost_per_1k_usd": 0.01723,
+       "escalated_pct": 5.0
+      },
+      "0.75": {
+       "accuracy": 0.77,
+       "cost_per_1k_usd": 0.02112,
+       "escalated_pct": 10.5
+      },
+      "0.8": {
+       "accuracy": 0.785,
+       "cost_per_1k_usd": 0.02298,
+       "escalated_pct": 13.5
+      },
+      "0.85": {
+       "accuracy": 0.79,
+       "cost_per_1k_usd": 0.02358,
+       "escalated_pct": 14.5
+      },
+      "0.9": {
+       "accuracy": 0.81,
+       "cost_per_1k_usd": 0.03032,
+       "escalated_pct": 26.0
+      },
+      "0.95": {
+       "accuracy": 0.84,
+       "cost_per_1k_usd": 0.03674,
+       "escalated_pct": 37.5
+      }
+     }
+    },
+    "moderation": {
+     "n": 193,
+     "n_errors": 0,
+     "accuracy": 0.6632,
+     "latency_ms_p50": 858.6,
+     "latency_ms_p95": 1282.7,
+     "n_with_confidence": 193,
+     "ece": 0.2575,
+     "cost_per_1k_usd": 0.01311,
+     "escalation": {
+      "0.55": {
+       "accuracy": 0.6632,
+       "cost_per_1k_usd": 0.01358,
+       "escalated_pct": 0.5
+      },
+      "0.6": {
+       "accuracy": 0.6632,
+       "cost_per_1k_usd": 0.01358,
+       "escalated_pct": 0.5
+      },
+      "0.65": {
+       "accuracy": 0.6632,
+       "cost_per_1k_usd": 0.01412,
+       "escalated_pct": 1.6
+      },
+      "0.7": {
+       "accuracy": 0.6632,
+       "cost_per_1k_usd": 0.01412,
+       "escalated_pct": 1.6
+      },
+      "0.75": {
+       "accuracy": 0.6684,
+       "cost_per_1k_usd": 0.01514,
+       "escalated_pct": 3.1
+      },
+      "0.8": {
+       "accuracy": 0.6684,
+       "cost_per_1k_usd": 0.01972,
+       "escalated_pct": 8.3
+      },
+      "0.85": {
+       "accuracy": 0.6684,
+       "cost_per_1k_usd": 0.02058,
+       "escalated_pct": 9.3
+      },
+      "0.9": {
+       "accuracy": 0.6788,
+       "cost_per_1k_usd": 0.03069,
+       "escalated_pct": 21.2
+      },
+      "0.95": {
+       "accuracy": 0.6425,
+       "cost_per_1k_usd": 0.04056,
+       "escalated_pct": 33.7
+      }
+     }
+    },
+    "routing": {
+     "n": 198,
+     "n_errors": 0,
+     "accuracy": 0.4394,
+     "latency_ms_p50": 899.6,
+     "latency_ms_p95": 2025.4,
+     "n_with_confidence": 198,
+     "ece": 0.397,
+     "cost_per_1k_usd": 0.0155,
+     "escalation": {
+      "0.5": {
+       "accuracy": 0.4495,
+       "cost_per_1k_usd": 0.0163,
+       "escalated_pct": 1.0
+      },
+      "0.55": {
+       "accuracy": 0.4495,
+       "cost_per_1k_usd": 0.0163,
+       "escalated_pct": 1.0
+      },
+      "0.6": {
+       "accuracy": 0.4545,
+       "cost_per_1k_usd": 0.01725,
+       "escalated_pct": 2.0
+      },
+      "0.65": {
+       "accuracy": 0.4545,
+       "cost_per_1k_usd": 0.02072,
+       "escalated_pct": 5.6
+      },
+      "0.7": {
+       "accuracy": 0.4596,
+       "cost_per_1k_usd": 0.02144,
+       "escalated_pct": 6.6
+      },
+      "0.75": {
+       "accuracy": 0.4747,
+       "cost_per_1k_usd": 0.02793,
+       "escalated_pct": 15.2
+      },
+      "0.8": {
+       "accuracy": 0.4697,
+       "cost_per_1k_usd": 0.0326,
+       "escalated_pct": 21.7
+      },
+      "0.85": {
+       "accuracy": 0.4747,
+       "cost_per_1k_usd": 0.03742,
+       "escalated_pct": 28.3
+      },
+      "0.9": {
+       "accuracy": 0.5,
+       "cost_per_1k_usd": 0.06598,
+       "escalated_pct": 68.2
+      },
+      "0.95": {
+       "accuracy": 0.5,
+       "cost_per_1k_usd": 0.07249,
+       "escalated_pct": 78.3
+      }
+     }
+    }
+   }
+  }
+ },
+ "leaderboards": {
+  "classification": [
+   {
+    "provider": "jev-router",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.865,
+    "latency_ms_p50": 2359.4,
+    "latency_ms_p95": 4215.9,
+    "n_with_confidence": 200,
+    "ece": 0.1026,
+    "cost_per_1k_usd": 0.06664,
+    "escalation": {
+     "0.65": {
+      "accuracy": 0.865,
+      "cost_per_1k_usd": 0.06711,
+      "escalated_pct": 0.5
+     },
+     "0.7": {
+      "accuracy": 0.865,
+      "cost_per_1k_usd": 0.06711,
+      "escalated_pct": 0.5
+     },
+     "0.75": {
+      "accuracy": 0.865,
+      "cost_per_1k_usd": 0.06754,
+      "escalated_pct": 1.0
+     },
+     "0.8": {
+      "accuracy": 0.86,
+      "cost_per_1k_usd": 0.06885,
+      "escalated_pct": 2.5
+     },
+     "0.85": {
+      "accuracy": 0.86,
+      "cost_per_1k_usd": 0.06983,
+      "escalated_pct": 4.0
+     },
+     "0.9": {
+      "accuracy": 0.855,
+      "cost_per_1k_usd": 0.07315,
+      "escalated_pct": 8.5
+     },
+     "0.95": {
+      "accuracy": 0.86,
+      "cost_per_1k_usd": 0.07656,
+      "escalated_pct": 14.0
+     }
+    },
+    "rank": 1
+   },
+   {
+    "provider": "gpt-6-luna",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.85,
+    "latency_ms_p50": 1613.1,
+    "latency_ms_p95": 3009.1,
+    "n_with_confidence": 200,
+    "ece": 0.1193,
+    "cost_per_1k_usd": 0.05432,
+    "escalation": {},
+    "rank": 2
+   },
+   {
+    "provider": "gpt-5.4-mini",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.85,
+    "latency_ms_p50": 1137.8,
+    "latency_ms_p95": 1859.0,
+    "n_with_confidence": 200,
+    "ece": 0.1205,
+    "cost_per_1k_usd": 0.08726,
+    "escalation": {
+     "0.65": {
+      "accuracy": 0.85,
+      "cost_per_1k_usd": 0.08772,
+      "escalated_pct": 0.5
+     },
+     "0.7": {
+      "accuracy": 0.85,
+      "cost_per_1k_usd": 0.08772,
+      "escalated_pct": 0.5
+     },
+     "0.75": {
+      "accuracy": 0.855,
+      "cost_per_1k_usd": 0.08857,
+      "escalated_pct": 1.5
+     },
+     "0.8": {
+      "accuracy": 0.855,
+      "cost_per_1k_usd": 0.08934,
+      "escalated_pct": 2.5
+     },
+     "0.85": {
+      "accuracy": 0.855,
+      "cost_per_1k_usd": 0.08934,
+      "escalated_pct": 2.5
+     },
+     "0.9": {
+      "accuracy": 0.855,
+      "cost_per_1k_usd": 0.09015,
+      "escalated_pct": 4.0
+     },
+     "0.95": {
+      "accuracy": 0.87,
+      "cost_per_1k_usd": 0.09608,
+      "escalated_pct": 13.0
+     }
+    },
+    "rank": 3
+   },
+   {
+    "provider": "gpt-5.4-nano",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.825,
+    "latency_ms_p50": 1182.2,
+    "latency_ms_p95": 2380.1,
+    "n_with_confidence": 200,
+    "ece": 0.055,
+    "cost_per_1k_usd": 0.01709,
+    "escalation": {
+     "0.5": {
+      "accuracy": 0.83,
+      "cost_per_1k_usd": 0.01947,
+      "escalated_pct": 3.5
+     },
+     "0.55": {
+      "accuracy": 0.83,
+      "cost_per_1k_usd": 0.01947,
+      "escalated_pct": 3.5
+     },
+     "0.6": {
+      "accuracy": 0.83,
+      "cost_per_1k_usd": 0.01947,
+      "escalated_pct": 3.5
+     },
+     "0.65": {
+      "accuracy": 0.83,
+      "cost_per_1k_usd": 0.02094,
+      "escalated_pct": 5.5
+     },
+     "0.7": {
+      "accuracy": 0.83,
+      "cost_per_1k_usd": 0.02122,
+      "escalated_pct": 6.0
+     },
+     "0.75": {
+      "accuracy": 0.84,
+      "cost_per_1k_usd": 0.02488,
+      "escalated_pct": 12.0
+     },
+     "0.8": {
+      "accuracy": 0.845,
+      "cost_per_1k_usd": 0.02891,
+      "escalated_pct": 18.5
+     },
+     "0.85": {
+      "accuracy": 0.85,
+      "cost_per_1k_usd": 0.03333,
+      "escalated_pct": 25.5
+     },
+     "0.9": {
+      "accuracy": 0.845,
+      "cost_per_1k_usd": 0.04067,
+      "escalated_pct": 39.5
+     },
+     "0.95": {
+      "accuracy": 0.85,
+      "cost_per_1k_usd": 0.0627,
+      "escalated_pct": 82.5
+     }
+    },
+    "rank": 4
+   },
+   {
+    "provider": "openai-decisions-proxy",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.825,
+    "latency_ms_p50": 1093.1,
+    "latency_ms_p95": 1908.7,
+    "n_with_confidence": 200,
+    "ece": 0.0573,
+    "cost_per_1k_usd": 0.01709,
+    "escalation": {
+     "0.5": {
+      "accuracy": 0.83,
+      "cost_per_1k_usd": 0.01917,
+      "escalated_pct": 3.5
+     },
+     "0.55": {
+      "accuracy": 0.83,
+      "cost_per_1k_usd": 0.01917,
+      "escalated_pct": 3.5
+     },
+     "0.6": {
+      "accuracy": 0.83,
+      "cost_per_1k_usd": 0.0195,
+      "escalated_pct": 4.0
+     },
+     "0.65": {
+      "accuracy": 0.84,
+      "cost_per_1k_usd": 0.02113,
+      "escalated_pct": 6.5
+     },
+     "0.7": {
+      "accuracy": 0.84,
+      "cost_per_1k_usd": 0.02143,
+      "escalated_pct": 7.0
+     },
+     "0.75": {
+      "accuracy": 0.845,
+      "cost_per_1k_usd": 0.02704,
+      "escalated_pct": 15.0
+     },
+     "0.8": {
+      "accuracy": 0.85,
+      "cost_per_1k_usd": 0.03147,
+      "escalated_pct": 22.0
+     },
+     "0.85": {
+      "accuracy": 0.85,
+      "cost_per_1k_usd": 0.03343,
+      "escalated_pct": 25.5
+     },
+     "0.9": {
+      "accuracy": 0.85,
+      "cost_per_1k_usd": 0.04144,
+      "escalated_pct": 41.0
+     },
+     "0.95": {
+      "accuracy": 0.85,
+      "cost_per_1k_usd": 0.06316,
+      "escalated_pct": 83.5
+     }
+    },
+    "rank": 5
+   },
+   {
+    "provider": "solar-mini4",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.73,
+    "latency_ms_p50": 877.1,
+    "latency_ms_p95": 1274.3,
+    "n_with_confidence": 200,
+    "ece": 0.1727,
+    "cost_per_1k_usd": 0.01408,
+    "escalation": {
+     "0.6": {
+      "accuracy": 0.735,
+      "cost_per_1k_usd": 0.01434,
+      "escalated_pct": 0.5
+     },
+     "0.65": {
+      "accuracy": 0.74,
+      "cost_per_1k_usd": 0.01603,
+      "escalated_pct": 3.0
+     },
+     "0.7": {
+      "accuracy": 0.755,
+      "cost_per_1k_usd": 0.01723,
+      "escalated_pct": 5.0
+     },
+     "0.75": {
+      "accuracy": 0.77,
+      "cost_per_1k_usd": 0.02112,
+      "escalated_pct": 10.5
+     },
+     "0.8": {
+      "accuracy": 0.785,
+      "cost_per_1k_usd": 0.02298,
+      "escalated_pct": 13.5
+     },
+     "0.85": {
+      "accuracy": 0.79,
+      "cost_per_1k_usd": 0.02358,
+      "escalated_pct": 14.5
+     },
+     "0.9": {
+      "accuracy": 0.81,
+      "cost_per_1k_usd": 0.03032,
+      "escalated_pct": 26.0
+     },
+     "0.95": {
+      "accuracy": 0.84,
+      "cost_per_1k_usd": 0.03674,
+      "escalated_pct": 37.5
+     }
+    },
+    "rank": 6
+   }
+  ],
+  "routing": [
+   {
+    "provider": "gpt-6-luna",
+    "n": 198,
+    "n_errors": 0,
+    "accuracy": 0.4949,
+    "latency_ms_p50": 2078.9,
+    "latency_ms_p95": 3390.1,
+    "n_with_confidence": 198,
+    "ece": 0.4193,
+    "cost_per_1k_usd": 0.07018,
+    "escalation": {},
+    "rank": 1
+   },
+   {
+    "provider": "jev-router",
+    "n": 198,
+    "n_errors": 0,
+    "accuracy": 0.4697,
+    "latency_ms_p50": 2252.2,
+    "latency_ms_p95": 4313.1,
+    "n_with_confidence": 196,
+    "ece": 0.4287,
+    "cost_per_1k_usd": 0.21811,
+    "escalation": {
+     "0.65": {
+      "accuracy": 0.4697,
+      "cost_per_1k_usd": 0.2191,
+      "escalated_pct": 1.0
+     },
+     "0.7": {
+      "accuracy": 0.4697,
+      "cost_per_1k_usd": 0.22019,
+      "escalated_pct": 2.0
+     },
+     "0.75": {
+      "accuracy": 0.4747,
+      "cost_per_1k_usd": 0.22513,
+      "escalated_pct": 7.6
+     },
+     "0.8": {
+      "accuracy": 0.4747,
+      "cost_per_1k_usd": 0.22591,
+      "escalated_pct": 8.6
+     },
+     "0.85": {
+      "accuracy": 0.4798,
+      "cost_per_1k_usd": 0.23512,
+      "escalated_pct": 20.2
+     },
+     "0.9": {
+      "accuracy": 0.4798,
+      "cost_per_1k_usd": 0.24522,
+      "escalated_pct": 32.8
+     },
+     "0.95": {
+      "accuracy": 0.4848,
+      "cost_per_1k_usd": 0.25884,
+      "escalated_pct": 52.5
+     }
+    },
+    "rank": 2
+   },
+   {
+    "provider": "openai-decisions-proxy",
+    "n": 198,
+    "n_errors": 0,
+    "accuracy": 0.4596,
+    "latency_ms_p50": 1164.8,
+    "latency_ms_p95": 1924.9,
+    "n_with_confidence": 198,
+    "ece": 0.3884,
+    "cost_per_1k_usd": 0.01881,
+    "escalation": {
+     "0.5": {
+      "accuracy": 0.4596,
+      "cost_per_1k_usd": 0.02091,
+      "escalated_pct": 2.5
+     },
+     "0.55": {
+      "accuracy": 0.4545,
+      "cost_per_1k_usd": 0.02212,
+      "escalated_pct": 3.5
+     },
+     "0.6": {
+      "accuracy": 0.4596,
+      "cost_per_1k_usd": 0.02255,
+      "escalated_pct": 4.0
+     },
+     "0.65": {
+      "accuracy": 0.4646,
+      "cost_per_1k_usd": 0.02427,
+      "escalated_pct": 6.1
+     },
+     "0.7": {
+      "accuracy": 0.4646,
+      "cost_per_1k_usd": 0.02549,
+      "escalated_pct": 7.6
+     },
+     "0.75": {
+      "accuracy": 0.4646,
+      "cost_per_1k_usd": 0.03338,
+      "escalated_pct": 17.2
+     },
+     "0.8": {
+      "accuracy": 0.4747,
+      "cost_per_1k_usd": 0.04205,
+      "escalated_pct": 27.8
+     },
+     "0.85": {
+      "accuracy": 0.4798,
+      "cost_per_1k_usd": 0.04619,
+      "escalated_pct": 33.3
+     },
+     "0.9": {
+      "accuracy": 0.4949,
+      "cost_per_1k_usd": 0.05738,
+      "escalated_pct": 49.0
+     },
+     "0.95": {
+      "accuracy": 0.4949,
+      "cost_per_1k_usd": 0.08405,
+      "escalated_pct": 91.9
+     }
+    },
+    "rank": 3
+   },
+   {
+    "provider": "gpt-5.4-nano",
+    "n": 198,
+    "n_errors": 0,
+    "accuracy": 0.4444,
+    "latency_ms_p50": 1087.7,
+    "latency_ms_p95": 1833.9,
+    "n_with_confidence": 198,
+    "ece": 0.4064,
+    "cost_per_1k_usd": 0.01881,
+    "escalation": {
+     "0.5": {
+      "accuracy": 0.4444,
+      "cost_per_1k_usd": 0.0202,
+      "escalated_pct": 1.5
+     },
+     "0.55": {
+      "accuracy": 0.4444,
+      "cost_per_1k_usd": 0.0202,
+      "escalated_pct": 1.5
+     },
+     "0.6": {
+      "accuracy": 0.4444,
+      "cost_per_1k_usd": 0.0202,
+      "escalated_pct": 1.5
+     },
+     "0.65": {
+      "accuracy": 0.4596,
+      "cost_per_1k_usd": 0.02366,
+      "escalated_pct": 5.1
+     },
+     "0.7": {
+      "accuracy": 0.4596,
+      "cost_per_1k_usd": 0.02501,
+      "escalated_pct": 6.6
+     },
+     "0.75": {
+      "accuracy": 0.4697,
+      "cost_per_1k_usd": 0.03391,
+      "escalated_pct": 17.7
+     },
+     "0.8": {
+      "accuracy": 0.4798,
+      "cost_per_1k_usd": 0.03926,
+      "escalated_pct": 24.7
+     },
+     "0.85": {
+      "accuracy": 0.4848,
+      "cost_per_1k_usd": 0.04211,
+      "escalated_pct": 28.3
+     },
+     "0.9": {
+      "accuracy": 0.4848,
+      "cost_per_1k_usd": 0.05688,
+      "escalated_pct": 48.0
+     },
+     "0.95": {
+      "accuracy": 0.4949,
+      "cost_per_1k_usd": 0.0836,
+      "escalated_pct": 90.9
+     }
+    },
+    "rank": 4
+   },
+   {
+    "provider": "gpt-5.4-mini",
+    "n": 198,
+    "n_errors": 0,
+    "accuracy": 0.4444,
+    "latency_ms_p50": 1131.2,
+    "latency_ms_p95": 2110.2,
+    "n_with_confidence": 198,
+    "ece": 0.4929,
+    "cost_per_1k_usd": 0.09586,
+    "escalation": {
+     "0.5": {
+      "accuracy": 0.4444,
+      "cost_per_1k_usd": 0.09709,
+      "escalated_pct": 1.5
+     },
+     "0.55": {
+      "accuracy": 0.4444,
+      "cost_per_1k_usd": 0.09709,
+      "escalated_pct": 1.5
+     },
+     "0.6": {
+      "accuracy": 0.4495,
+      "cost_per_1k_usd": 0.09802,
+      "escalated_pct": 2.5
+     },
+     "0.65": {
+      "accuracy": 0.4495,
+      "cost_per_1k_usd": 0.09878,
+      "escalated_pct": 3.5
+     },
+     "0.7": {
+      "accuracy": 0.4495,
+      "cost_per_1k_usd": 0.09878,
+      "escalated_pct": 3.5
+     },
+     "0.75": {
+      "accuracy": 0.4545,
+      "cost_per_1k_usd": 0.10083,
+      "escalated_pct": 5.6
+     },
+     "0.8": {
+      "accuracy": 0.4545,
+      "cost_per_1k_usd": 0.10169,
+      "escalated_pct": 6.6
+     },
+     "0.85": {
+      "accuracy": 0.4646,
+      "cost_per_1k_usd": 0.10368,
+      "escalated_pct": 9.1
+     },
+     "0.9": {
+      "accuracy": 0.4747,
+      "cost_per_1k_usd": 0.11028,
+      "escalated_pct": 16.7
+     },
+     "0.95": {
+      "accuracy": 0.4798,
+      "cost_per_1k_usd": 0.1202,
+      "escalated_pct": 28.8
+     }
+    },
+    "rank": 5
+   },
+   {
+    "provider": "solar-mini4",
+    "n": 198,
+    "n_errors": 0,
+    "accuracy": 0.4394,
+    "latency_ms_p50": 899.6,
+    "latency_ms_p95": 2025.4,
+    "n_with_confidence": 198,
+    "ece": 0.397,
+    "cost_per_1k_usd": 0.0155,
+    "escalation": {
+     "0.5": {
+      "accuracy": 0.4495,
+      "cost_per_1k_usd": 0.0163,
+      "escalated_pct": 1.0
+     },
+     "0.55": {
+      "accuracy": 0.4495,
+      "cost_per_1k_usd": 0.0163,
+      "escalated_pct": 1.0
+     },
+     "0.6": {
+      "accuracy": 0.4545,
+      "cost_per_1k_usd": 0.01725,
+      "escalated_pct": 2.0
+     },
+     "0.65": {
+      "accuracy": 0.4545,
+      "cost_per_1k_usd": 0.02072,
+      "escalated_pct": 5.6
+     },
+     "0.7": {
+      "accuracy": 0.4596,
+      "cost_per_1k_usd": 0.02144,
+      "escalated_pct": 6.6
+     },
+     "0.75": {
+      "accuracy": 0.4747,
+      "cost_per_1k_usd": 0.02793,
+      "escalated_pct": 15.2
+     },
+     "0.8": {
+      "accuracy": 0.4697,
+      "cost_per_1k_usd": 0.0326,
+      "escalated_pct": 21.7
+     },
+     "0.85": {
+      "accuracy": 0.4747,
+      "cost_per_1k_usd": 0.03742,
+      "escalated_pct": 28.3
+     },
+     "0.9": {
+      "accuracy": 0.5,
+      "cost_per_1k_usd": 0.06598,
+      "escalated_pct": 68.2
+     },
+     "0.95": {
+      "accuracy": 0.5,
+      "cost_per_1k_usd": 0.07249,
+      "escalated_pct": 78.3
+     }
+    },
+    "rank": 6
+   }
+  ],
+  "moderation": [
+   {
+    "provider": "gpt-5.4-nano",
+    "n": 193,
+    "n_errors": 0,
+    "accuracy": 0.7202,
+    "latency_ms_p50": 1111.2,
+    "latency_ms_p95": 2132.5,
+    "n_with_confidence": 193,
+    "ece": 0.1194,
+    "cost_per_1k_usd": 0.01602,
+    "escalation": {
+     "0.65": {
+      "accuracy": 0.7254,
+      "cost_per_1k_usd": 0.01845,
+      "escalated_pct": 2.6
+     },
+     "0.7": {
+      "accuracy": 0.715,
+      "cost_per_1k_usd": 0.02044,
+      "escalated_pct": 5.2
+     },
+     "0.75": {
+      "accuracy": 0.7098,
+      "cost_per_1k_usd": 0.03744,
+      "escalated_pct": 25.9
+     },
+     "0.8": {
+      "accuracy": 0.6995,
+      "cost_per_1k_usd": 0.04809,
+      "escalated_pct": 38.9
+     },
+     "0.85": {
+      "accuracy": 0.6995,
+      "cost_per_1k_usd": 0.05101,
+      "escalated_pct": 43.5
+     },
+     "0.9": {
+      "accuracy": 0.6943,
+      "cost_per_1k_usd": 0.06358,
+      "escalated_pct": 59.6
+     },
+     "0.95": {
+      "accuracy": 0.6632,
+      "cost_per_1k_usd": 0.08199,
+      "escalated_pct": 87.6
+     }
+    },
+    "rank": 1
+   },
+   {
+    "provider": "openai-decisions-proxy",
+    "n": 193,
+    "n_errors": 0,
+    "accuracy": 0.7047,
+    "latency_ms_p50": 1120.7,
+    "latency_ms_p95": 1822.9,
+    "n_with_confidence": 193,
+    "ece": 0.1266,
+    "cost_per_1k_usd": 0.01602,
+    "escalation": {
+     "0.65": {
+      "accuracy": 0.715,
+      "cost_per_1k_usd": 0.01896,
+      "escalated_pct": 4.1
+     },
+     "0.7": {
+      "accuracy": 0.7098,
+      "cost_per_1k_usd": 0.02093,
+      "escalated_pct": 6.7
+     },
+     "0.75": {
+      "accuracy": 0.6943,
+      "cost_per_1k_usd": 0.03715,
+      "escalated_pct": 25.9
+     },
+     "0.8": {
+      "accuracy": 0.6891,
+      "cost_per_1k_usd": 0.04898,
+      "escalated_pct": 39.9
+     },
+     "0.85": {
+      "accuracy": 0.6788,
+      "cost_per_1k_usd": 0.0557,
+      "escalated_pct": 48.7
+     },
+     "0.9": {
+      "accuracy": 0.6528,
+      "cost_per_1k_usd": 0.06894,
+      "escalated_pct": 67.9
+     },
+     "0.95": {
+      "accuracy": 0.6736,
+      "cost_per_1k_usd": 0.08091,
+      "escalated_pct": 87.0
+     }
+    },
+    "rank": 2
+   },
+   {
+    "provider": "jev-router",
+    "n": 193,
+    "n_errors": 0,
+    "accuracy": 0.6943,
+    "latency_ms_p50": 2114.6,
+    "latency_ms_p95": 4191.3,
+    "n_with_confidence": 183,
+    "ece": 0.2134,
+    "cost_per_1k_usd": 0.4049,
+    "escalation": {
+     "0.7": {
+      "accuracy": 0.6891,
+      "cost_per_1k_usd": 0.40569,
+      "escalated_pct": 0.5
+     },
+     "0.75": {
+      "accuracy": 0.6891,
+      "cost_per_1k_usd": 0.41037,
+      "escalated_pct": 5.7
+     },
+     "0.8": {
+      "accuracy": 0.6891,
+      "cost_per_1k_usd": 0.41255,
+      "escalated_pct": 8.3
+     },
+     "0.85": {
+      "accuracy": 0.6891,
+      "cost_per_1k_usd": 0.41766,
+      "escalated_pct": 14.0
+     },
+     "0.9": {
+      "accuracy": 0.6943,
+      "cost_per_1k_usd": 0.43967,
+      "escalated_pct": 40.9
+     },
+     "0.95": {
+      "accuracy": 0.6839,
+      "cost_per_1k_usd": 0.44836,
+      "escalated_pct": 52.8
+     }
+    },
+    "rank": 3
+   },
+   {
+    "provider": "gpt-5.4-mini",
+    "n": 193,
+    "n_errors": 0,
+    "accuracy": 0.6839,
+    "latency_ms_p50": 1180.2,
+    "latency_ms_p95": 2020.6,
+    "n_with_confidence": 193,
+    "ece": 0.2579,
+    "cost_per_1k_usd": 0.08291,
+    "escalation": {
+     "0.65": {
+      "accuracy": 0.6839,
+      "cost_per_1k_usd": 0.08337,
+      "escalated_pct": 0.5
+     },
+     "0.7": {
+      "accuracy": 0.6788,
+      "cost_per_1k_usd": 0.0842,
+      "escalated_pct": 1.0
+     },
+     "0.75": {
+      "accuracy": 0.6891,
+      "cost_per_1k_usd": 0.0863,
+      "escalated_pct": 3.1
+     },
+     "0.8": {
+      "accuracy": 0.6943,
+      "cost_per_1k_usd": 0.09054,
+      "escalated_pct": 8.8
+     },
+     "0.85": {
+      "accuracy": 0.6995,
+      "cost_per_1k_usd": 0.09383,
+      "escalated_pct": 11.9
+     },
+     "0.9": {
+      "accuracy": 0.7047,
+      "cost_per_1k_usd": 0.10118,
+      "escalated_pct": 21.2
+     },
+     "0.95": {
+      "accuracy": 0.6995,
+      "cost_per_1k_usd": 0.11343,
+      "escalated_pct": 37.3
+     }
+    },
+    "rank": 4
+   },
+   {
+    "provider": "solar-mini4",
+    "n": 193,
+    "n_errors": 0,
+    "accuracy": 0.6632,
+    "latency_ms_p50": 858.6,
+    "latency_ms_p95": 1282.7,
+    "n_with_confidence": 193,
+    "ece": 0.2575,
+    "cost_per_1k_usd": 0.01311,
+    "escalation": {
+     "0.55": {
+      "accuracy": 0.6632,
+      "cost_per_1k_usd": 0.01358,
+      "escalated_pct": 0.5
+     },
+     "0.6": {
+      "accuracy": 0.6632,
+      "cost_per_1k_usd": 0.01358,
+      "escalated_pct": 0.5
+     },
+     "0.65": {
+      "accuracy": 0.6632,
+      "cost_per_1k_usd": 0.01412,
+      "escalated_pct": 1.6
+     },
+     "0.7": {
+      "accuracy": 0.6632,
+      "cost_per_1k_usd": 0.01412,
+      "escalated_pct": 1.6
+     },
+     "0.75": {
+      "accuracy": 0.6684,
+      "cost_per_1k_usd": 0.01514,
+      "escalated_pct": 3.1
+     },
+     "0.8": {
+      "accuracy": 0.6684,
+      "cost_per_1k_usd": 0.01972,
+      "escalated_pct": 8.3
+     },
+     "0.85": {
+      "accuracy": 0.6684,
+      "cost_per_1k_usd": 0.02058,
+      "escalated_pct": 9.3
+     },
+     "0.9": {
+      "accuracy": 0.6788,
+      "cost_per_1k_usd": 0.03069,
+      "escalated_pct": 21.2
+     },
+     "0.95": {
+      "accuracy": 0.6425,
+      "cost_per_1k_usd": 0.04056,
+      "escalated_pct": 33.7
+     }
+    },
+    "rank": 5
+   },
+   {
+    "provider": "gpt-6-luna",
+    "n": 193,
+    "n_errors": 0,
+    "accuracy": 0.6632,
+    "latency_ms_p50": 1982.4,
+    "latency_ms_p95": 3393.8,
+    "n_with_confidence": 193,
+    "ece": 0.2809,
+    "cost_per_1k_usd": 0.07217,
+    "escalation": {},
+    "rank": 6
+   }
+  ],
+  "agent_next_action": [
+   {
+    "provider": "gpt-5.4-nano",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 1.0,
+    "latency_ms_p50": 1099.0,
+    "latency_ms_p95": 1919.3,
+    "n_with_confidence": 200,
+    "ece": 0.1266,
+    "cost_per_1k_usd": 0.02021,
+    "escalation": {
+     "0.7": {
+      "accuracy": 1.0,
+      "cost_per_1k_usd": 0.02049,
+      "escalated_pct": 0.5
+     },
+     "0.75": {
+      "accuracy": 1.0,
+      "cost_per_1k_usd": 0.02539,
+      "escalated_pct": 9.0
+     },
+     "0.8": {
+      "accuracy": 1.0,
+      "cost_per_1k_usd": 0.02886,
+      "escalated_pct": 15.0
+     },
+     "0.85": {
+      "accuracy": 1.0,
+      "cost_per_1k_usd": 0.03118,
+      "escalated_pct": 19.0
+     },
+     "0.9": {
+      "accuracy": 0.96,
+      "cost_per_1k_usd": 0.04243,
+      "escalated_pct": 36.5
+     },
+     "0.95": {
+      "accuracy": 0.84,
+      "cost_per_1k_usd": 0.08148,
+      "escalated_pct": 99.5
+     }
+    },
+    "rank": 1
+   },
+   {
+    "provider": "openai-decisions-proxy",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 1.0,
+    "latency_ms_p50": 1066.8,
+    "latency_ms_p95": 1729.6,
+    "n_with_confidence": 200,
+    "ece": 0.1253,
+    "cost_per_1k_usd": 0.02021,
+    "escalation": {
+     "0.65": {
+      "accuracy": 1.0,
+      "cost_per_1k_usd": 0.02049,
+      "escalated_pct": 0.5
+     },
+     "0.7": {
+      "accuracy": 1.0,
+      "cost_per_1k_usd": 0.02078,
+      "escalated_pct": 1.0
+     },
+     "0.75": {
+      "accuracy": 1.0,
+      "cost_per_1k_usd": 0.02366,
+      "escalated_pct": 6.0
+     },
+     "0.8": {
+      "accuracy": 0.995,
+      "cost_per_1k_usd": 0.02843,
+      "escalated_pct": 14.0
+     },
+     "0.85": {
+      "accuracy": 0.995,
+      "cost_per_1k_usd": 0.02987,
+      "escalated_pct": 16.5
+     },
+     "0.9": {
+      "accuracy": 0.94,
+      "cost_per_1k_usd": 0.0462,
+      "escalated_pct": 41.5
+     },
+     "0.95": {
+      "accuracy": 0.84,
+      "cost_per_1k_usd": 0.08146,
+      "escalated_pct": 99.5
+     }
+    },
+    "rank": 2
+   },
+   {
+    "provider": "gpt-5.4-mini",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.99,
+    "latency_ms_p50": 1132.8,
+    "latency_ms_p95": 1989.6,
+    "n_with_confidence": 200,
+    "ece": 0.0095,
+    "cost_per_1k_usd": 0.10102,
+    "escalation": {
+     "0.95": {
+      "accuracy": 0.985,
+      "cost_per_1k_usd": 0.10231,
+      "escalated_pct": 2.0
+     }
+    },
+    "rank": 3
+   },
+   {
+    "provider": "solar-mini4",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.95,
+    "latency_ms_p50": 795.4,
+    "latency_ms_p95": 1175.7,
+    "n_with_confidence": 200,
+    "ece": 0.015,
+    "cost_per_1k_usd": 0.01587,
+    "escalation": {
+     "0.9": {
+      "accuracy": 0.905,
+      "cost_per_1k_usd": 0.02223,
+      "escalated_pct": 9.0
+     },
+     "0.95": {
+      "accuracy": 0.885,
+      "cost_per_1k_usd": 0.02748,
+      "escalated_pct": 17.0
+     }
+    },
+    "rank": 4
+   },
+   {
+    "provider": "gpt-6-luna",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.84,
+    "latency_ms_p50": 1460.0,
+    "latency_ms_p95": 2220.1,
+    "n_with_confidence": 200,
+    "ece": 0.1259,
+    "cost_per_1k_usd": 0.06156,
+    "escalation": {},
+    "rank": 5
+   },
+   {
+    "provider": "jev-router",
+    "n": 200,
+    "n_errors": 0,
+    "accuracy": 0.81,
+    "latency_ms_p50": 2248.1,
+    "latency_ms_p95": 3701.4,
+    "n_with_confidence": 199,
+    "ece": 0.151,
+    "cost_per_1k_usd": 0.08456,
+    "escalation": {
+     "0.75": {
+      "accuracy": 0.81,
+      "cost_per_1k_usd": 0.085,
+      "escalated_pct": 0.5
+     },
+     "0.8": {
+      "accuracy": 0.825,
+      "cost_per_1k_usd": 0.08612,
+      "escalated_pct": 2.0
+     },
+     "0.85": {
+      "accuracy": 0.825,
+      "cost_per_1k_usd": 0.08647,
+      "escalated_pct": 2.5
+     },
+     "0.9": {
+      "accuracy": 0.84,
+      "cost_per_1k_usd": 0.08901,
+      "escalated_pct": 6.0
+     },
+     "0.95": {
+      "accuracy": 0.845,
+      "cost_per_1k_usd": 0.1029,
+      "escalated_pct": 26.5
+     }
+    },
+    "rank": 6
+   }
+  ]
+ }
 }

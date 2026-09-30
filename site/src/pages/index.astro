@@ -66,7 +66,7 @@ const hasData = suites.length > 0;
     confidence scores you can actually trust.
   </p>
   <p class="updated">
-    {results.generated_at ? `Last run: ${results.generated_at} (UTC)` : "First nightly run in progress…"}
+    {results.generated_at ? `Last run: ${results.generated_at.replace(/Z$/, "")} (UTC)` : "First nightly run in progress…"}
   </p>
 
   {takeaways.length > 0 && (
