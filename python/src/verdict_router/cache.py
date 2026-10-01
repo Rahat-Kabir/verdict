@@ -8,6 +8,7 @@ persistence, optional TTL. Semantic caching is a later upgrade.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import threading
 import time
@@ -30,10 +31,10 @@ class ExactCache:
                 except (json.JSONDecodeError, KeyError):
                     continue
 
-    def get(self, request: DecisionRequest) -> DecisionResponse | None:
+    def get(self, request: DecisionRequest, *, policy: dict | None = None) -> DecisionResponse | None:
         started = time.perf_counter()
         with self._lock:
-            entry = self._entries.get(request.cache_key())
+            entry = self._entries.get(self._key(request, policy))
         if entry is None:
             return None
         if self.ttl is not None and time.time() - entry["stored_at"] >= self.ttl:
@@ -46,17 +47,29 @@ class ExactCache:
         resp.escalated = False
         return resp
 
-    def put(self, request: DecisionRequest, response: DecisionResponse) -> None:
+    def put(self, request: DecisionRequest, response: DecisionResponse, *, policy: dict | None = None) -> None:
+        key = self._key(request, policy)
         entry = {
-            "key": request.cache_key(),
+            "key": key,
             "stored_at": time.time(),
             "response": response.__dict__.copy(),
         }
         with self._lock:
-            self._entries[request.cache_key()] = entry
+            self._entries[key] = entry
         if self.path:
             with self.path.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
+
+    @staticmethod
+    def _key(request: DecisionRequest, policy: dict | None) -> str:
+        request_key = request.cache_key()
+        if policy is None:
+            return request_key
+        canonical = json.dumps(
+            {"request_key": request_key, "policy": policy},
+            sort_keys=True, ensure_ascii=False, allow_nan=False,
+        )
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     def __len__(self) -> int:
         with self._lock:

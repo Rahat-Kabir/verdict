@@ -48,6 +48,22 @@ class Provider(ABC):
     def describe(self) -> dict:
         return {"name": self.name, "model": self.model}
 
+    def cache_identity(self) -> dict:
+        """Describe nonsecret settings that affect a cached decision.
+
+        Custom providers should extend this with their own decision settings.
+        Never include credentials or runtime state such as request counters.
+        """
+        return {
+            "type": f"{type(self).__module__}.{type(self).__qualname__}",
+            "name": self.name,
+            "model": self.model,
+            "base_url": getattr(self, "base_url", None),
+            "structured": getattr(self, "structured", None),
+            "exact_cost": getattr(self, "exact_cost", None),
+            "timeout": getattr(self, "_timeout", None),
+        }
+
 
 def parse_answer(text: str, answers: list[str]) -> tuple[str | None, float | None]:
     """Accept one explicit choice, never infer a choice from mentioned labels.

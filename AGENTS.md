@@ -86,6 +86,8 @@ See `docs/testing.md` for focused tests, previews, aggregation, and live command
 
 - Preserve the existing synchronous provider API and canonical dataclasses in
   `types.py`; add new contracts only within an approved slice.
+- Provider `cache_identity()` must capture nonsecret decision settings; extend it
+  for new custom settings. Never include credentials or per-call runtime state.
 - Keep provider identity/metadata in `providers/__init__.py`. Label native APIs,
   chat baselines, proxies, and complete routing pipelines accurately.
 - Treat unknown cost or confidence as unknown; do not claim zero cost or a

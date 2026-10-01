@@ -115,6 +115,9 @@ class OpenAIDecisionsProxyProvider(Provider):
         self.name = name
         self.model = backend.model
 
+    def cache_identity(self) -> dict:
+        return {**super().cache_identity(), "backend": self._backend.cache_identity()}
+
     def decide(self, request: DecisionRequest) -> DecisionResponse:
         response = self._backend.decide(request)
         response.provider = self.name

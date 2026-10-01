@@ -176,7 +176,7 @@ def test_persisted_cache_hit_has_no_new_spend_or_escalation(clock, tmp_path, ori
         threshold=0.8,
         escalate_to=escalation,
     ).decide(**REQUEST)
-    router = Router([primary], cache=cache_path, usage_log=log)
+    router = Router([primary], cache=cache_path, threshold=0.8, escalate_to=escalation, usage_log=log)
     hit = router.decide(**REQUEST)
     assert hit.cache_hit and hit.ok and not hit.escalated
     assert hit.cost_usd == 0.0 and hit.latency_ms == 0.0
@@ -212,9 +212,9 @@ def test_router_latency_includes_cache_persistence(clock, monkeypatch):
     router = Router([primary], cache=True)
     original_put = router._cache.put
 
-    def delayed_put(request, response):
+    def delayed_put(request, response, **kwargs):
         clock.now += 0.025
-        original_put(request, response)
+        original_put(request, response, **kwargs)
 
     monkeypatch.setattr(router._cache, "put", delayed_put)
     assert router.decide(**REQUEST).latency_ms == pytest.approx(125.0)

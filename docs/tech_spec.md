@@ -87,14 +87,24 @@ falls through. Low reported confidence can trigger the configured escalation
 provider. A valid escalation replaces the primary answer; failure retains it.
 Missing confidence bypasses escalation. Valid results may be cached and logged.
 
-`ExactCache` hashes question, ordered answers, and context. It ignores provider,
-model, threshold policy, and metadata. It stores response dictionaries in memory
+`ExactCache` hashes question, ordered answers, context, and request metadata.
+The Router additionally scopes keys to a versioned routing policy: ordered provider
+identities, threshold, and escalation-provider identity. Provider identity includes
+adapter class, name, model, endpoint, structured-output mode, billing mode, and
+timeout where configured. The Decisions proxy includes its backend identity.
+`Provider.cache_identity()` can be extended by custom providers with nonsecret,
+JSON-serializable settings; runtime counters and API keys are excluded. Credentials
+do not isolate accounts: use separate cache files for accounts requiring isolation.
+Metadata and identity must be JSON-serializable, with finite numeric values.
+The policy is recomputed per decision, so changing settings between calls causes
+a miss. Old keys without policy are left in the file but not reused by the Router.
+Standalone ExactCache get/put still supports requests without an explicit policy.
+It stores response dictionaries in memory
 and optionally appends them to JSONL, with optional TTL. `cache_ttl_seconds`
 applies to both `cache=True` and file-backed caches; expiry uses the original
 write time, including after reload. Age >= TTL is expired; zero/negative TTL
 prevents reuse, and None means no expiry. Hits do not refresh the write time.
-Reusing a cache across
-policies can reuse old decisions. Cache hits return zero API cost, fresh lookup
+Cache hits return zero API cost, fresh lookup
 latency, no new token usage, and `escalated=False`; provider attribution identifies
 the source of the cached answer. Cache snapshots copy response fields rather than
 sharing the returned object. The SDK validates answers against the allowed set.

@@ -2,9 +2,9 @@
 
 ## Current state — 2026-10-01
 
-The first public version, benchmark summaries, and parser/cache corrections are
-on GitHub. Leaderboard numeric sorting corrections are now implemented locally.
-Session entries record implementation evidence.
+The first public version, benchmark summaries, parser/cache corrections, and
+leaderboard sorting are on GitHub. Routing-policy cache isolation is implemented
+locally. Session entries record implementation evidence.
 
 ### Implemented
 
@@ -137,7 +137,7 @@ checks does not validate the historical leaderboard or native API contracts.
   Duplicate keys are rejected; invalid confidence is missing, never certain.
 - Memory-cache TTL: repaired in the parser/cache slice below. Memory and
   persisted caches now use the same expiry policy and original write time.
-- Existing items remain: cache keys ignore routing policy, root .env lookup,
+- Existing items remain: root .env lookup,
   suite-specific cards, dataset provenance/quality,
   malformed HTTP response handling, and native Jev integration.
 
@@ -145,6 +145,23 @@ Only this progress record was edited during the initial review. Runtime, dataset
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-01 — Cache isolation by routing policy
+
+- Published the verified numeric sorting slice as 9457725 on main.
+- Router keys include ordered provider identities, escalation target, threshold,
+  and a policy version. Recompute the policy per decision to cover changed settings.
+- Request metadata is included in the canonical request hash. Built-in provider
+  identity captures endpoint/output/billing/timeout settings; proxy identity includes
+  its backend. Custom providers can extend cache_identity with nonsecret settings.
+- Leave legacy entries untouched but do not reuse entries without router policy.
+  Same settings can reuse persisted decisions; API keys and runtime counters are
+  excluded. Cache inputs must be JSON-serializable with finite numeric values.
+- Validation: 211 offline tests passed and Ruff passed. Isolation/compatibility
+  tests include persisted reuse, policy changes between calls, metadata-dependent
+  decisions, identity extensions, old unscoped entries, and credential exclusion.
+  Existing TTL/accounting regressions still pass. Raw records and site data are
+  unchanged. No paid calls, dependency changes, or publication of this cache slice.
 
 ### 2026-10-01 — Leaderboard numeric sorting
 

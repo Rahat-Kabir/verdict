@@ -23,9 +23,10 @@ class DecisionRequest:
 
     def cache_key(self) -> str:
         canonical = json.dumps(
-            {"q": self.question, "a": self.answers, "c": self.context or ""},
+            {"q": self.question, "a": self.answers, "c": self.context or "", "metadata": self.metadata},
             sort_keys=True,
             ensure_ascii=False,
+            allow_nan=False,
         )
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 

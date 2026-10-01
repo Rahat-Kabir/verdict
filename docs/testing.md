@@ -36,6 +36,9 @@ uv run pytest tests/test_datasets.py
   primary/escalation/cached answers. Fake clocks verify memory/file TTL before and
   at expiry, refresh after a new decision, persisted write time after reload,
   immediate expiry, and no expiry. Invalid confidence cannot trigger escalation.
+  Policy tests cover shared-file isolation for provider/model/class, endpoint,
+  fallback order, threshold, escalation target, and output mode; mutation between
+  calls, metadata-dependent decisions, custom identity extensions, and old keys.
 - `test_decision_validation.py`: mocked chat/native adapter contracts, reasoning-only
   rejection, duplicate decisions, invalid native confidence, proxy validation,
   and benchmark rejection of out-of-set answers.
@@ -43,7 +46,8 @@ uv run pytest tests/test_datasets.py
   incomplete billing coverage, known zero and empty suites, and escalation failures,
   missing observations, unknown costs, and invalid imported confidence. These offline fixtures verify arithmetic,
   not whether the metrics or datasets are sufficient for a buying decision.
-- `test_cache_and_types.py`: cache persistence and schema roundtrips.
+- `test_cache_and_types.py`: cache persistence and schema roundtrips, metadata/key
+  canonicalization, policy namespaces, backend identity, and credential exclusion.
 - `test_accounting.py`: deterministic-clock checks for total elapsed time, failed
   and invalid attempts, missing costs, raised errors, persisted cache hits, usage
   logs, and independent cache/provider response snapshots.

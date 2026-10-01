@@ -116,7 +116,7 @@ def test_cache_persists_across_router_instances(tmp_path):
     provider = FakeProvider("p", answers={REQ["question"]: "billing"})
     cache_file = tmp_path / "cache.jsonl"
     make_router([provider], cache=cache_file).decide(**REQ)
-    provider2 = FakeProvider("p2", answers={REQ["question"]: "tech"})
+    provider2 = FakeProvider("p", answers={REQ["question"]: "tech"})
     router2 = make_router([provider2], cache=cache_file)
     hit = router2.decide(**REQ)
     assert hit.cache_hit is True
@@ -155,10 +155,10 @@ def test_persisted_ttl_uses_original_write_time_after_reload(tmp_path, monkeypat
     now = [100.0]
     monkeypatch.setattr("verdict_router.cache.time.time", lambda: now[0])
     path = tmp_path / "cache.jsonl"
-    original = FakeProvider("original", answers={REQ["question"]: "billing"})
+    original = FakeProvider("p", answers={REQ["question"]: "billing"})
     make_router([original], cache=path, cache_ttl_seconds=10).decide(**REQ)
     now[0] = 105.0
-    replacement = FakeProvider("replacement", answers={REQ["question"]: "tech"})
+    replacement = FakeProvider("p", answers={REQ["question"]: "tech"})
     router = make_router([replacement], cache=path, cache_ttl_seconds=10)
     assert router.decide(**REQ).answer == "billing"
     assert replacement.calls == 0
@@ -194,7 +194,7 @@ def test_cached_nonfinite_confidence_is_sanitized():
     provider = FakeProvider("p", answers={REQ["question"]: "billing"})
     router = make_router([provider], cache=True)
     router._cache.put(DecisionRequest(**REQ), DecisionResponse("billing", "old", "old", 1.0,
-                                                            confidence=float("nan")))
+                                                            confidence=float("nan")), policy=router._cache_policy())
     result = router.decide(**REQ)
     assert result.cache_hit and result.confidence is None
     assert provider.calls == 0
@@ -247,7 +247,109 @@ def test_invalid_cached_answer_is_ignored():
     router._cache.put(
         DecisionRequest(**REQ),
         DecisionResponse("unknown", "old", "old", 1.0),
+        policy=router._cache_policy(),
     )
     result = router.decide(**REQ)
     assert result.ok and result.answer == "billing"
     assert not result.cache_hit and good.calls == 1
+
+
+@pytest.mark.parametrize("changed_setting", [
+    "provider", "model", "order", "threshold", "escalation", "endpoint", "structured", "adapter_type",
+])
+def test_persisted_cache_isolated_by_current_routing_policy(tmp_path, changed_setting):
+    primary = FakeProvider("primary", answers={REQ["question"]: "billing"}, confidence=0.4)
+    fallback = FakeProvider("fallback", answers={REQ["question"]: "tech"})
+    escalation = FakeProvider("escalation", answers={REQ["question"]: "tech"})
+    path = tmp_path / "shared.jsonl"
+    make_router([primary, fallback], cache=path, threshold=0.2, escalate_to=escalation).decide(**REQ)
+    providers = [primary, fallback]
+    threshold = 0.2
+    if changed_setting == "provider":
+        primary.name = "other"
+    elif changed_setting == "model":
+        primary.model = "different-model"
+    elif changed_setting == "order":
+        providers.reverse()
+    elif changed_setting == "threshold":
+        threshold = 0.8
+    elif changed_setting == "escalation":
+        escalation = FakeProvider("different-escalation", answers={REQ["question"]: "tech"})
+    elif changed_setting == "endpoint":
+        primary.base_url = "https://other.example/v1"
+    elif changed_setting == "structured":
+        primary.structured = False
+    elif changed_setting == "adapter_type":
+        class OtherFakeProvider(FakeProvider):
+            pass
+        providers[0] = OtherFakeProvider("primary", answers={REQ["question"]: "tech"}, confidence=0.4)
+    router = make_router(providers, cache=path, threshold=threshold, escalate_to=escalation)
+    assert not router.decide(**REQ).cache_hit
+    assert router.decide(**REQ).cache_hit
+
+
+def test_changing_live_router_threshold_does_not_reuse_old_decision():
+    primary = FakeProvider("primary", answers={REQ["question"]: "billing"}, confidence=0.4)
+    escalation = FakeProvider("escalation", answers={REQ["question"]: "tech"})
+    router = make_router([primary], cache=True, threshold=0.2, escalate_to=escalation)
+    assert router.decide(**REQ).answer == "billing"
+    router.threshold = 0.8
+    escalated = router.decide(**REQ)
+    assert escalated.answer == "tech" and escalated.escalated and not escalated.cache_hit
+    router.threshold = 0.2
+    assert router.decide(**REQ).cache_hit
+    assert primary.calls == 2 and escalation.calls == 1
+
+
+def test_legacy_unscoped_cache_entry_is_not_reused(tmp_path):
+    import json
+
+    from verdict_router.cache import ExactCache
+
+    path = tmp_path / "old.jsonl"
+    old_response = DecisionResponse("tech", "old", "old", 1.0)
+    ExactCache(path).put(DecisionRequest(**REQ), old_response)
+    old_bytes = path.read_bytes()
+    primary = FakeProvider("primary", answers={REQ["question"]: "billing"})
+    result = make_router([primary], cache=path).decide(**REQ)
+    assert result.answer == "billing" and not result.cache_hit
+    assert path.read_bytes().startswith(old_bytes)
+    assert len([json.loads(line) for line in path.read_text().splitlines()]) == 2
+
+
+def test_changed_metadata_cannot_reuse_custom_provider_decision():
+    class MetadataProvider(FakeProvider):
+        def decide(self, request):
+            self.calls += 1
+            return DecisionResponse(request.metadata["team"], self.name, self.model, 1.0)
+
+    provider = MetadataProvider("metadata")
+    router = make_router([provider], cache=True)
+    assert router.decide(**REQ, metadata={"team": "billing"}).answer == "billing"
+    changed = router.decide(**REQ, metadata={"team": "tech"})
+    assert changed.answer == "tech" and not changed.cache_hit
+    assert router.decide(**REQ, metadata={"team": "tech"}).cache_hit
+    assert provider.calls == 2
+
+
+def test_custom_provider_identity_can_include_additional_decision_settings():
+    class ConfiguredProvider(FakeProvider):
+        setting = "initial"
+
+        def cache_identity(self):
+            return {**super().cache_identity(), "setting": self.setting}
+
+    provider = ConfiguredProvider("configured", answers={REQ["question"]: "billing"})
+    router = make_router([provider], cache=True)
+    router.decide(**REQ)
+    provider.setting = "changed"
+    assert not router.decide(**REQ).cache_hit
+    assert provider.calls == 2
+
+
+def test_nonserializable_cache_metadata_fails_before_provider_call():
+    provider = FakeProvider("p", answers={REQ["question"]: "billing"})
+    router = make_router([provider], cache=True)
+    with pytest.raises(TypeError):
+        router.decide(**REQ, metadata={"object": object()})
+    assert provider.calls == 0

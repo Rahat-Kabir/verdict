@@ -68,11 +68,12 @@ class Router:
         request = DecisionRequest(
             question=question, answers=answers, context=context, metadata=metadata or {}
         )
+        cache_policy = self._cache_policy() if self._cache is not None else None
 
         # NOTE: `is not None` matters — ExactCache defines __len__, so an EMPTY
         # cache object is falsy and a plain `if self._cache` would skip caching.
         if self._cache is not None:
-            hit = self._cache.get(request)
+            hit = self._cache.get(request, policy=cache_policy)
             if hit is not None and validate_response(hit, request).ok:
                 hit.latency_ms = (time.perf_counter() - started) * 1000
                 self._log(hit, request)
@@ -103,10 +104,20 @@ class Router:
 
         if self._cache is not None and response.ok:
             response.latency_ms = (time.perf_counter() - started) * 1000
-            self._cache.put(request, response)
+            self._cache.put(request, response, policy=cache_policy)
         response.latency_ms = (time.perf_counter() - started) * 1000
         self._log(response, request)
         return response
+
+    def _cache_policy(self) -> dict:
+        # Compute current settings per decision, so changing a router's policy
+        # between calls cannot reuse a response from the previous configuration.
+        return {
+            "version": 1,
+            "providers": [provider.cache_identity() for provider in self.providers],
+            "threshold": self.threshold,
+            "escalate_to": self.escalate_to.cache_identity() if self.escalate_to is not None else None,
+        }
 
     def _decide_via_providers(self, request: DecisionRequest) -> DecisionResponse:
         errors: list[str] = []

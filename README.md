@@ -99,6 +99,11 @@ answers are ignored. JSON decisions also support a zero-based answer index.
 Duplicate JSON keys are rejected. Nonfinite or invalid confidence becomes missing;
 a valid answer is still usable. Cache TTL applies to both memory and file caches,
 using the entry's original write time rather than its last access.
+Router cache keys include request metadata and the ordered provider/model settings,
+escalation provider, and threshold. Changing that setup causes a cache miss; old
+entries without routing policy are not reused. Custom providers can extend
+`cache_identity()` with nonsecret settings that affect their decisions. Metadata
+and provider identities must be JSON-serializable when caching is enabled.
 
 SDK cost totals include failed fallback and escalation attempts. If any attempt's
 cost is unknown (including a raised provider error with no billing metadata), the
