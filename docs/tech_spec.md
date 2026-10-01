@@ -201,10 +201,17 @@ and the distinction between MIT code and CC-BY-NC-4.0 routing data are in
 
 ## Configuration and automation
 
-Keys are process environment variables. `config.py` also checks `.env` in the
-current directory and the Python project directory; running from `python/` does
-not automatically find the repository-root `.env`. Prefer configured process
-variables for live work until this discrepancy is fixed. Never expose keys in logs.
+Process environment variables take precedence. On first key/base-URL lookup,
+`config.py` loads the first existing `.env` file from: current directory, recognized
+Verdict repository root above the working directory, then recognized source-checkout
+root above the module. A repository is recognized by `python/pyproject.toml` and
+`python/src/verdict_router/config.py`; unrelated ancestor `.env` files are ignored.
+Thus root `.env` works from `python/` or deeper checkout directories, including
+when the package itself is installed as a wheel. Outside a checkout, an installed
+package uses the current directory's `.env` or process variables. Editable source
+installs can also use their source repository's `.env` from another directory.
+Files are not merged and never override process values. Loading occurs once per
+process; restart after changing configuration. Keys are never logged.
 
 CI runs offline tests/lint and the static site build. The nightly workflow runs
 the two bundled suites at concurrency four, aggregates, and commits locally; it has no push

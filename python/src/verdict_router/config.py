@@ -10,6 +10,30 @@ import os
 from pathlib import Path
 
 
+def _repository_root(directory: Path) -> Path | None:
+    # Only recognize Verdict's source layout; an installed wheel's ancestors
+    # must not be mistaken for a repository just because they contain .env.
+    for candidate in (directory, *directory.parents):
+        if (
+            (candidate / "python" / "pyproject.toml").is_file()
+            and (candidate / "python" / "src" / "verdict_router" / "config.py").is_file()
+        ):
+            return candidate
+    return None
+
+
+def _dotenv_candidates() -> list[Path]:
+    current_directory = Path.cwd()
+    candidates = [current_directory / ".env"]
+    for root in (
+        _repository_root(current_directory),
+        _repository_root(Path(__file__).resolve().parent),
+    ):
+        if root is not None and root / ".env" not in candidates:
+            candidates.append(root / ".env")
+    return candidates
+
+
 def _load_dotenv_once() -> None:
     global _LOADED
     if _LOADED:
@@ -19,8 +43,8 @@ def _load_dotenv_once() -> None:
         from dotenv import load_dotenv
     except ImportError:  # pragma: no cover - dotenv is a hard dependency
         return
-    for candidate in (Path.cwd() / ".env", Path(__file__).resolve().parents[3] / ".env"):
-        if candidate.exists():
+    for candidate in _dotenv_candidates():
+        if candidate.is_file():
             load_dotenv(candidate, override=False)
             return
 

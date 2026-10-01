@@ -2,9 +2,9 @@
 
 ## Current state — 2026-10-01
 
-The first public version, benchmark summaries, parser/cache corrections,
-leaderboard sorting, and cache-policy isolation are on GitHub. Malformed-provider
-response handling is implemented locally. Session entries record implementation evidence.
+The first public version and subsequent measurement/SDK fixes are on GitHub,
+including malformed-provider responses. Configuration lookup improvements are
+implemented locally. Session entries record implementation evidence.
 
 ### Implemented
 
@@ -66,8 +66,9 @@ response handling is implemented locally. Session entries record implementation 
 7. Site numeric sorting is fixed; saved ranks remain the original benchmark ranks.
    Unsupported recommendation cards were removed; the timestamp is correctly
    labeled as summary generation.
-8. Environment loading: the root `.env` is not automatically found when commands
-   run from `python/`; the loader checks the current and Python project directories.
+8. Environment loading: corrected the earlier diagnosis. Editable source already
+   found root `.env`; installed-package lookup relied on the wrong path depth.
+   Lookup now recognizes the checkout layout rather than relying on module depth.
 9. Nightly workflow commits locally without pushing; it has no actual spend cap.
    Workflow presence is not proof of successful scheduled execution.
 10. The repository URL is configured in the site footer. No deployment URL has
@@ -137,7 +138,7 @@ checks does not validate the historical leaderboard or native API contracts.
   Duplicate keys are rejected; invalid confidence is missing, never certain.
 - Memory-cache TTL: repaired in the parser/cache slice below. Memory and
   persisted caches now use the same expiry policy and original write time.
-- Existing items remain: root .env lookup,
+- Existing items remain:
   suite-specific cards, dataset provenance/quality,
   native Jev integration. Malformed-response handling was implemented in the
   subsequent slice below.
@@ -146,6 +147,22 @@ Only this progress record was edited during the initial review. Runtime, dataset
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-01 — Configuration lookup
+
+- Published the verified malformed-response slice as bcd8f92 on main.
+- Live module-path inspection disproved the earlier claim that editable commands
+  from python/ miss root .env: parents[3] already pointed at the repository root.
+  The actual gap was installed-wheel lookup depending on the source path depth.
+- Replace fixed depth with recognized source-layout discovery above the working
+  directory and module. Preserve current-directory precedence, process-variable
+  precedence, first-file-only loading, and one-time loading. Ignore unrelated
+  ancestor .env files. No credentials were read for verification.
+- Validation: 297 offline tests passed and Ruff passed. Nine isolated
+  temporary-file/fake-key configuration regressions cover lookup, precedence,
+  editable/installed layout, unrelated ancestors, and one-time loading.
+  Updated README/spec/testing and corrected the stale progress claim.
+  No paid calls, dependencies, benchmark/site data changes, or publication of this slice.
 
 ### 2026-10-01 — Malformed provider responses
 

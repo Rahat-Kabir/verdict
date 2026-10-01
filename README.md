@@ -67,7 +67,7 @@ uv run verdict bench --provider gpt-5.4-nano --suite routing --limit 5 --out ../
 
 `--all` selects all benchmark providers; default suites are routing and
 agent_next_action. See [Testing](docs/testing.md) for aggregation and dataset
-rebuilding, and [the technical spec](docs/tech_spec.md) for the `.env` lookup limit.
+rebuilding, and [the technical spec](docs/tech_spec.md) for configuration lookup order.
 
 ## Using the router SDK
 

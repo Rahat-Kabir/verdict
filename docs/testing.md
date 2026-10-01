@@ -50,6 +50,9 @@ uv run pytest tests/test_datasets.py
   incomplete billing coverage, known zero and empty suites, and escalation failures,
   missing observations, unknown costs, and invalid imported confidence. These offline fixtures verify arithmetic,
   not whether the metrics or datasets are sufficient for a buying decision.
+- `test_config.py`: isolated fake-key lookup from root/Python/nested directories,
+  installed and editable layouts, current-file precedence, process precedence,
+  unrelated ancestor exclusion, and one-time loading. Tests never read real keys.
 - `test_cache_and_types.py`: cache persistence and schema roundtrips, metadata/key
   canonicalization, policy namespaces, backend identity, and credential exclusion.
 - `test_accounting.py`: deterministic-clock checks for total elapsed time, failed
@@ -128,7 +131,7 @@ uv run verdict bench --provider <approved-provider> --suite routing --limit 5 --
 
 This is a paid-command example, not authorization to run it. `verdict decide`
 with remote providers and the nightly workflow also make paid calls. Configure
-keys through the process environment; see tech_spec for the `.env` lookup limit.
+keys through the process environment or a local `.env`; see tech_spec for lookup order.
 Use a new output directory for a trial rather than overwriting committed evidence.
 
 A live report must name the actual endpoint/model, dataset and run settings,
