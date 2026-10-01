@@ -71,6 +71,10 @@ npm run build
 npm run preview
 ```
 
+Run `npm test` from `site/` for the dependency-free Node sorting tests. They cover
+actual column selection, ascending/descending order, raw values behind rounded
+prices, stable ties, missing/nonfinite values, and known zero costs.
+
 The accounting/pricing slice built nine pages successfully. For interactive changes, check
 suite switching, numeric sorting, missing-value rendering, and provider links in
 the browser. A successful build alone does not verify these interactions.

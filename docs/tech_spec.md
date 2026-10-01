@@ -152,6 +152,10 @@ Historical records are unchanged and lack token usage needed for repricing.
    labels and marked as such, not presented as reconstructed original inputs.
    `generated_at` is aggregation time, not necessarily the inference run time.
 7. Astro renders the leaderboard, methodology, and provider pages from that JSON.
+   Numeric sorting uses each header's actual table column and unrounded numeric
+   values. Repeated clicks toggle direction, with unknown values last in either
+   direction and stable ties. Direction arrows and `aria-sort` identify the active
+   sort; saved ranks remain the original benchmark ranks.
 
 The distribution bundles routing (198 support-ticket samples, CC-BY-NC-4.0) and
 agent_next_action (200 generated examples, MIT). Classification and moderation

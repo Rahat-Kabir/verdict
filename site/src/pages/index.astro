@@ -63,8 +63,8 @@ const hasData = suites.length > 0;
               <thead>
                 <tr>
                   <th>#</th><th>Provider</th>
-                  <th data-num>Accuracy (successful) ▾</th><th>Completion</th><th data-num>p50 ms</th><th data-num>p95 ms</th>
-                  <th data-num>$/1k items</th><th>Cost coverage</th><th data-num>ECE ↓</th><th data-num>n</th>
+                  <th data-num data-sort-direction="desc" aria-sort="descending">Accuracy (successful)</th><th>Completion</th><th data-num>p50 ms</th><th data-num>p95 ms</th>
+                  <th data-num>$/1k items</th><th>Cost coverage</th><th data-num title="Lower observed calibration error">ECE</th><th data-num>n</th>
                 </tr>
               </thead>
               <tbody>
@@ -78,14 +78,14 @@ const hasData = suites.length > 0;
                         <a href={`/providers/${r.provider}`}>{meta.display_name ?? r.provider}</a>
                         {labels.map((l) => <span class={`badge ${badgeClass(l)}`}>{l}</span>)}
                       </td>
-                      <td class={`num ${r.accuracy !== null && r.accuracy >= 0.9 ? "good" : ""}`}>{fmtAcc(r.accuracy)}</td>
+                      <td data-sort-value={r.accuracy ?? ""} class={`num ${r.accuracy !== null && r.accuracy >= 0.9 ? "good" : ""}`}>{fmtAcc(r.accuracy)}</td>
                       <td class="num" title={`${r.n_errors} failed items`}>{fmtAcc(r.completion_rate)}</td>
-                      <td class="num">{fmtMs(r.latency_ms_p50)}</td>
-                      <td class="num">{fmtMs(r.latency_ms_p95)}</td>
-                      <td class="num">{fmtCost(r.cost_per_1k_usd)}</td>
+                      <td data-sort-value={r.latency_ms_p50 ?? ""} class="num">{fmtMs(r.latency_ms_p50)}</td>
+                      <td data-sort-value={r.latency_ms_p95 ?? ""} class="num">{fmtMs(r.latency_ms_p95)}</td>
+                      <td data-sort-value={r.cost_per_1k_usd ?? ""} class="num">{fmtCost(r.cost_per_1k_usd)}</td>
                       <td class="num">{r.n_with_cost ?? "?"}/{r.n}</td>
-                      <td class="num">{fmtEce(r.ece)}</td>
-                      <td class="num">{r.n}</td>
+                      <td data-sort-value={r.ece ?? ""} class="num">{fmtEce(r.ece)}</td>
+                      <td data-sort-value={r.n ?? ""} class="num">{r.n}</td>
                     </tr>
                   );
                 })}
@@ -128,27 +128,28 @@ const hasData = suites.length > 0;
   </script>
 
   <script>
+    import { sortRowsByNumericColumn } from "../scripts/numeric-sort.js";
+
     // Click-to-sort on numeric columns.
     document.querySelectorAll<HTMLTableElement>("table.board").forEach((table) => {
       const headers = table.querySelectorAll<HTMLTableCellElement>("th[data-num]");
-      headers.forEach((th, colIdx) => {
+      headers.forEach((th) => {
         th.addEventListener("click", () => {
           const tbody = table.tBodies[0];
           const rows = Array.from(tbody.rows);
-          const parse = (cell: string) => {
-            const s = cell.replace(/[$,%]/g, "").trim();
-            if (s === "–" || s === "n/a") return -Infinity;
-            const v = parseFloat(s);
-            return isNaN(v) ? -Infinity : v;
-          };
-          const dir = th.dataset.dir === "asc" ? -1 : 1;
-          th.dataset.dir = dir === 1 ? "asc" : "desc";
-          rows.sort(
-            (a, b) => dir * (parse(a.cells[colIdx].innerText) - parse(b.cells[colIdx].innerText))
-          );
-          rows.forEach((r) => tbody.appendChild(r));
+          const direction = th.dataset.sortDirection === "asc" ? "desc" : "asc";
+          th.dataset.sortDirection = direction;
+          headers.forEach((header) => header.removeAttribute("aria-sort"));
+          th.setAttribute("aria-sort", direction === "asc" ? "ascending" : "descending");
+          // cellIndex is the position in the full table, including non-sortable columns.
+          sortRowsByNumericColumn(rows, th.cellIndex, direction).forEach((row) => tbody.appendChild(row));
         });
       });
     });
   </script>
 </Base>
+
+<style>
+  th[data-num][aria-sort="ascending"]::after { content: " ↑"; }
+  th[data-num][aria-sort="descending"]::after { content: " ↓"; }
+</style>

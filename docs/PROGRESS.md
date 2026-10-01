@@ -2,8 +2,8 @@
 
 ## Current state — 2026-10-01
 
-The first public version and benchmark summary corrections are on GitHub.
-Parser/confidence and cache TTL corrections are now implemented locally.
+The first public version, benchmark summaries, and parser/cache corrections are
+on GitHub. Leaderboard numeric sorting corrections are now implemented locally.
 Session entries record implementation evidence.
 
 ### Implemented
@@ -63,8 +63,9 @@ Session entries record implementation evidence.
    repeated answer entries rather than four unique choices.
 6. Confidence policy: missing confidence bypasses escalation; failed escalation
    keeps the primary answer. These are current behaviors, not quality guarantees.
-7. Site sorting uses the wrong column index. Unsupported recommendation cards
-   were removed; the timestamp is now correctly labeled as summary generation.
+7. Site numeric sorting is fixed; saved ranks remain the original benchmark ranks.
+   Unsupported recommendation cards were removed; the timestamp is correctly
+   labeled as summary generation.
 8. Environment loading: the root `.env` is not automatically found when commands
    run from `python/`; the loader checks the current and Python project directories.
 9. Nightly workflow commits locally without pushing; it has no actual spend cap.
@@ -137,13 +138,27 @@ checks does not validate the historical leaderboard or native API contracts.
 - Memory-cache TTL: repaired in the parser/cache slice below. Memory and
   persisted caches now use the same expiry policy and original write time.
 - Existing items remain: cache keys ignore routing policy, root .env lookup,
-  site numeric sorting and suite-specific cards, dataset provenance/quality,
+  suite-specific cards, dataset provenance/quality,
   malformed HTTP response handling, and native Jev integration.
 
 Only this progress record was edited during the initial review. Runtime, datasets, saved
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-01 — Leaderboard numeric sorting
+
+- Published the previously verified parser/cache slice as a382851 on main.
+- Sort numeric headers by their actual table column, including intervening
+  non-sortable columns. Use raw values rather than rounded display prices/timing.
+- Unknown values stay last in both directions; known zero remains numeric and
+  ties keep their order. Direction arrows and aria-sort reflect the active column.
+- Added dependency-free Node tests and npm test; verified arithmetic at the CLI
+  before wiring it into the page. All four tests pass and Astro builds nine pages.
+  Playwright verified 48 column/direction combinations across four suites, missing
+  and zero costs, suite tabs, direct hash links after load, and aria-sort indicators.
+  Browser console has no errors or warnings.
+- No benchmark records, saved summaries, provider calls, or new dependencies changed.
 
 ### 2026-10-01 — Parser confidence and cache TTL
 
