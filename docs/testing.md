@@ -30,14 +30,18 @@ uv run pytest tests/test_benchmark_accounting.py tests/test_pricing.py
 uv run pytest tests/test_datasets.py
 ```
 
-- `test_base.py`: explicit JSON/text choices, invalid/ambiguous output, answer indices.
+- `test_base.py`: explicit JSON/text choices, invalid/ambiguous output, answer indices,
+  duplicate/escaped/nested JSON keys and nonfinite confidence.
 - `test_router.py`: priority, fallback, cache, threshold behavior, and invalid
-  primary/escalation/cached answers.
+  primary/escalation/cached answers. Fake clocks verify memory/file TTL before and
+  at expiry, refresh after a new decision, persisted write time after reload,
+  immediate expiry, and no expiry. Invalid confidence cannot trigger escalation.
 - `test_decision_validation.py`: mocked chat/native adapter contracts, reasoning-only
-  rejection, proxy validation, and benchmark rejection of out-of-set answers.
+  rejection, duplicate decisions, invalid native confidence, proxy validation,
+  and benchmark rejection of out-of-set answers.
 - `test_metrics.py`: failure-inclusive cost/latency, completion and all-item accuracy,
   incomplete billing coverage, known zero and empty suites, and escalation failures,
-  missing observations, and unknown costs. These offline fixtures verify arithmetic,
+  missing observations, unknown costs, and invalid imported confidence. These offline fixtures verify arithmetic,
   not whether the metrics or datasets are sufficient for a buying decision.
 - `test_cache_and_types.py`: cache persistence and schema roundtrips.
 - `test_accounting.py`: deterministic-clock checks for total elapsed time, failed

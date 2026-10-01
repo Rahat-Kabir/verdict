@@ -8,6 +8,7 @@ are comparable.
 from __future__ import annotations
 
 import json
+import math
 import re
 from abc import ABC, abstractmethod
 
@@ -116,10 +117,21 @@ def _top_level_json_objects(text: str):
             if depth == 0 and start >= 0:
                 snippet = text[start : i + 1]
                 try:
-                    yield json.loads(snippet)
+                    yield json.loads(snippet, object_pairs_hook=_reject_duplicate_keys)
                 except (json.JSONDecodeError, ValueError):
-                    pass
+                    # Keep invalid objects visible so a second, valid object
+                    # cannot conceal an ambiguous or malformed first decision.
+                    yield None
                 start = -1
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
 
 
 def _match_answer(text: str, answers: list[str]) -> str | None:
@@ -132,6 +144,7 @@ def _match_answer(text: str, answers: list[str]) -> str | None:
 
 def validate_response(response: DecisionResponse, request: DecisionRequest) -> DecisionResponse:
     """Enforce the finite-choice contract at SDK and benchmark boundaries."""
+    response.confidence = _clamp_conf(response.confidence)
     if response.error is None and (
         not isinstance(response.answer, str) or response.answer not in request.answers
     ):
@@ -142,8 +155,12 @@ def validate_response(response: DecisionResponse, request: DecisionRequest) -> D
 
 
 def _clamp_conf(conf) -> float | None:
+    if isinstance(conf, bool):
+        return None
     try:
         c = float(conf)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(c):
         return None
     return max(0.0, min(1.0, c))

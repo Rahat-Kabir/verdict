@@ -2,8 +2,9 @@
 
 ## Current state — 2026-10-01
 
-The first public version is on GitHub. Benchmark summary corrections are now
-implemented locally. Session entries record implementation evidence.
+The first public version and benchmark summary corrections are on GitHub.
+Parser/confidence and cache TTL corrections are now implemented locally.
+Session entries record implementation evidence.
 
 ### Implemented
 
@@ -131,12 +132,10 @@ checks does not validate the historical leaderboard or native API contracts.
 
 - `metrics.suite_metrics`: repaired in the benchmark-summary slice below. Unknown
   costs remain unknown, failed-item spend/time are included, and coverage is disclosed.
-- `providers.base.parse_answer`: duplicate JSON keys silently use the last value;
-  `{"answer":"a","answer":"b"}` returns b instead of rejecting ambiguity.
-  A confidence string of "NaN" becomes 1.0 through clamping. Reject duplicate
-  decision keys and nonfinite confidence before calibration/escalation.
-- `Router(cache=True, cache_ttl_seconds=10)` creates a cache with ttl=None.
-  Apply TTL consistently to in-memory and persisted caches.
+- `providers.base.parse_answer`: repaired in the parser/cache slice below.
+  Duplicate keys are rejected; invalid confidence is missing, never certain.
+- Memory-cache TTL: repaired in the parser/cache slice below. Memory and
+  persisted caches now use the same expiry policy and original write time.
 - Existing items remain: cache keys ignore routing policy, root .env lookup,
   site numeric sorting and suite-specific cards, dataset provenance/quality,
   malformed HTTP response handling, and native Jev integration.
@@ -145,6 +144,21 @@ Only this progress record was edited during the initial review. Runtime, dataset
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-01 — Parser confidence and cache TTL
+
+- Reject duplicate JSON keys, including repeated confidence, identical repeats,
+  escaped keys, and nested keys. An invalid object cannot be discarded to accept
+  a later valid object. The provisional native adapter uses the same duplicate guard.
+- Nonfinite/boolean/unparseable confidence becomes missing while valid answers
+  remain usable. SDK/benchmark validation covers custom providers and cache hits;
+  metrics exclude invalid imported confidence from ECE and simulated escalation.
+- Apply TTL to memory and file caches. Expire at age >= TTL using original write
+  time across reloads; zero/negative TTL prevents reuse, None disables expiry.
+- Added offline parser, mocked adapter, routing, metrics, and fake-clock expiry
+  regressions. Validation: 191 tests passed, Ruff passed, and Astro built nine pages.
+  Updated docs and site methodology; raw records and saved summary data are
+  unchanged. No paid calls, commit/push, or deployment in this slice.
 
 ### 2026-10-01 — Failure-aware benchmark summaries
 

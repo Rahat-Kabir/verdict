@@ -132,6 +132,74 @@ def test_cache_ttl_expiry(tmp_path):
     assert again.cache_hit is False
 
 
+@pytest.mark.parametrize("persisted", [False, True])
+def test_cache_ttl_applies_at_expiry_and_refreshes(tmp_path, monkeypatch, persisted):
+    now = [100.0]
+    monkeypatch.setattr("verdict_router.cache.time.time", lambda: now[0])
+    provider = FakeProvider("p", answers={REQ["question"]: "billing"})
+    router = make_router([provider], cache=tmp_path / "cache.jsonl" if persisted else True,
+                         cache_ttl_seconds=10)
+    assert not router.decide(**REQ).cache_hit
+    now[0] = 109.9
+    assert router.decide(**REQ).cache_hit
+    assert provider.calls == 1
+    now[0] = 110.0
+    assert not router.decide(**REQ).cache_hit
+    assert provider.calls == 2
+    now[0] = 119.9
+    assert router.decide(**REQ).cache_hit
+    assert provider.calls == 2
+
+
+def test_persisted_ttl_uses_original_write_time_after_reload(tmp_path, monkeypatch):
+    now = [100.0]
+    monkeypatch.setattr("verdict_router.cache.time.time", lambda: now[0])
+    path = tmp_path / "cache.jsonl"
+    original = FakeProvider("original", answers={REQ["question"]: "billing"})
+    make_router([original], cache=path, cache_ttl_seconds=10).decide(**REQ)
+    now[0] = 105.0
+    replacement = FakeProvider("replacement", answers={REQ["question"]: "tech"})
+    router = make_router([replacement], cache=path, cache_ttl_seconds=10)
+    assert router.decide(**REQ).answer == "billing"
+    assert replacement.calls == 0
+    now[0] = 110.0
+    result = router.decide(**REQ)
+    assert result.answer == "tech" and not result.cache_hit
+    assert replacement.calls == 1
+
+
+@pytest.mark.parametrize("ttl", [None, 0])
+def test_memory_cache_without_expiry_or_with_immediate_expiry(monkeypatch, ttl):
+    now = [100.0]
+    monkeypatch.setattr("verdict_router.cache.time.time", lambda: now[0])
+    provider = FakeProvider("p", answers={REQ["question"]: "billing"})
+    router = make_router([provider], cache=True, cache_ttl_seconds=ttl)
+    router.decide(**REQ)
+    now[0] = 10000.0 if ttl is None else 100.0
+    assert router.decide(**REQ).cache_hit == (ttl is None)
+    assert provider.calls == (1 if ttl is None else 2)
+
+
+@pytest.mark.parametrize("confidence", [float("nan"), float("inf"), float("-inf"), "NaN"])
+def test_nonfinite_provider_confidence_cannot_trigger_escalation(confidence):
+    primary = FakeProvider("primary", answers={REQ["question"]: "billing"}, confidence=confidence)
+    escalation = FakeProvider("escalation", answers={REQ["question"]: "tech"})
+    result = make_router([primary], threshold=0.8, escalate_to=escalation).decide(**REQ)
+    assert result.ok and result.answer == "billing"
+    assert result.confidence is None
+    assert escalation.calls == 0
+
+
+def test_cached_nonfinite_confidence_is_sanitized():
+    provider = FakeProvider("p", answers={REQ["question"]: "billing"})
+    router = make_router([provider], cache=True)
+    router._cache.put(DecisionRequest(**REQ), DecisionResponse("billing", "old", "old", 1.0,
+                                                            confidence=float("nan")))
+    result = router.decide(**REQ)
+    assert result.cache_hit and result.confidence is None
+    assert provider.calls == 0
+
+
 def test_usage_log_written(tmp_path):
     provider = FakeProvider("p", answers={REQ["question"]: "billing"})
     log = tmp_path / "usage.jsonl"

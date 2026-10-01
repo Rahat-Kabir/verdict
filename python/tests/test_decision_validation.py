@@ -30,6 +30,7 @@ REQUEST = DecisionRequest("Which team?", ["billing", "technical"])
     [
         ("I cannot decide between billing and technical.", None),
         ('{"answer": "billing", "confidence": 0.9}', "billing"),
+        ('{"answer": "billing", "answer": "technical"}', None),
     ],
 )
 def test_chat_adapters_require_explicit_choice(monkeypatch, provider, content, expected):
@@ -95,6 +96,24 @@ def test_native_decisions_adapter_accepts_allowed_answer(monkeypatch):
     )
     response = OpenAIDecisionsProvider(api_key="test").decide(REQUEST)
     assert response.ok and response.answer == "billing"
+
+
+@pytest.mark.parametrize("confidence", ["NaN", "Infinity", "-Infinity", "invalid"])
+def test_native_adapter_sanitizes_invalid_confidence(monkeypatch, confidence):
+    monkeypatch.setattr(httpx, "post", lambda *args, **kwargs: httpx.Response(
+        200, json={"answer": "billing", "confidence": confidence},
+    ))
+    response = OpenAIDecisionsProvider(api_key="test").decide(REQUEST)
+    assert response.ok and response.confidence is None
+
+
+def test_native_adapter_rejects_duplicate_decision_keys(monkeypatch):
+    monkeypatch.setattr(httpx, "post", lambda *args, **kwargs: httpx.Response(
+        200, text='{"answer":"billing","answer":"technical"}',
+    ))
+    response = OpenAIDecisionsProvider(api_key="test").decide(REQUEST)
+    assert not response.ok and response.answer is None
+    assert "duplicate JSON key" in response.error
 
 
 class InvalidProvider(Provider):

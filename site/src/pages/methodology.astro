@@ -48,7 +48,7 @@ DecisionResponse:
     a separate question/answers/context payload and has no verified benchmark records.
     The shared parser accepts a single JSON decision (optionally wrapped in prose), a bare
     or quoted label, or a short explicit answer declaration. It rejects ambiguous prose rather than
-    guessing from mentioned labels. Duplicate JSON keys remain a known parser limitation.
+    guessing from mentioned labels. Duplicate JSON keys are rejected, including nested and escaped keys.
     Reasoning-only responses are errors. JSON decisions may also use
     a zero-based answer index. Returned answers must belong to the supplied list.
   </p>
@@ -99,7 +99,7 @@ DecisionResponse:
     <li><strong>Parser change.</strong> The initial committed benchmark snapshot used a more permissive parser. Raw model output was not saved, so those results cannot be revalidated offline with the stricter parser; a fresh benchmark is required.</li>
     <li><strong>Provider identity.</strong> Jev Router rows measure its routing pipeline, not native Jev decisions. The <span class="badge proxy">proxy</span> wraps the same Nano backend as the Nano baseline. Neither native Jev nor native OpenAI Decisions has measured rows here.</li>
     <li><strong>Routed-model provenance.</strong> The OpenRouter adapter can receive downstream model identity, but historical benchmark records omit it. Exact-cost mode now uses reported account charges; historical costs were recorded under the older resolver.</li>
-    <li><strong>Confidence comparability.</strong> Chat confidence is model-reported. Missing confidence is excluded from ECE and bypasses SDK escalation. Invalid/nonfinite confidence handling remains a known limitation.</li>
+    <li><strong>Confidence comparability.</strong> Chat confidence is model-reported. Nonfinite, boolean, or unparseable confidence becomes missing; finite numeric values are clamped to [0, 1]. Missing confidence is excluded from ECE and bypasses SDK escalation. Imported invalid confidence is also excluded from ECE and offline threshold simulations. These checks do not establish calibrated confidence.</li>
     <li><strong>Snapshot pricing.</strong> Standard token rates in <code>cost.py</code> were verified on 2026-10-01. Estimates exclude special service tiers, regional uplifts, and account adjustments. Saved records omit token usage and billing metadata, so old costs cannot be repriced offline. Summaries preserve unknown costs and disclose coverage.</li>
     <li><strong>Single-run variance.</strong> These are single-run observations without repeated-run uncertainty estimates. Remote adapters do not set temperature. A scheduled workflow exists, but verified nightly publication has not been established.</li>
     <li><strong>Failure coverage.</strong> Successful-response accuracy and ECE exclude failed responses. Completion rate and all-item accuracy disclose failures; latency and cost include them. Billing coverage means a cost value was recorded, not that its billing basis was independently verified. The saved snapshot contains no recorded errors, so failure handling is verified with offline fixtures rather than these historical rows.</li>

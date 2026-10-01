@@ -177,6 +177,14 @@ def test_ece_skips_missing_confidence():
     assert m["n_with_confidence"] == 1
 
 
+@pytest.mark.parametrize("confidence", [float("nan"), float("inf"), float("-inf"), -1, 2, True])
+def test_imported_invalid_confidence_is_excluded_from_ece_and_escalation(confidence):
+    metrics = suite_metrics([rec("p", "i", True, conf=confidence)], [rec("esc", "i", False)])
+    assert metrics["n_with_confidence"] == 0
+    assert metrics["ece"] is None
+    assert metrics["escalation"] == {}
+
+
 def test_escalation_blends_provider_records():
     base = [
         rec("cheap", "i1", False, conf=0.4, cost=0.0001),  # low conf -> escalated

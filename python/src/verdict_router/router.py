@@ -53,7 +53,7 @@ class Router:
         self._cache: ExactCache | None = None
         if cache:
             if cache is True:
-                self._cache = ExactCache()
+                self._cache = ExactCache(ttl_seconds=cache_ttl_seconds)
             else:
                 self._cache = ExactCache(path=cache, ttl_seconds=cache_ttl_seconds)
 

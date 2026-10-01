@@ -36,7 +36,7 @@ class ExactCache:
             entry = self._entries.get(request.cache_key())
         if entry is None:
             return None
-        if self.ttl is not None and time.time() - entry["stored_at"] > self.ttl:
+        if self.ttl is not None and time.time() - entry["stored_at"] >= self.ttl:
             return None
         resp = DecisionResponse(**entry["response"])
         resp.cache_hit = True

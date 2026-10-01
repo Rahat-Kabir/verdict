@@ -96,6 +96,9 @@ a bare or quoted label, or a short explicit declaration such as `Answer: billing
 Ambiguous prose and reasoning-only responses are errors, so the router can try the next
 provider. Invalid escalation answers cannot replace the primary answer, and invalid cached
 answers are ignored. JSON decisions also support a zero-based answer index.
+Duplicate JSON keys are rejected. Nonfinite or invalid confidence becomes missing;
+a valid answer is still usable. Cache TTL applies to both memory and file caches,
+using the entry's original write time rather than its last access.
 
 SDK cost totals include failed fallback and escalation attempts. If any attempt's
 cost is unknown (including a raised provider error with no billing metadata), the

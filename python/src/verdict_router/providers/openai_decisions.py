@@ -16,6 +16,7 @@ from .base import (
     DECISION_SYSTEM_PROMPT,
     Provider,
     ProviderError,
+    _reject_duplicate_keys,
     build_decision_prompt,
     parse_answer,
     validate_response,
@@ -71,7 +72,7 @@ class OpenAIDecisionsProvider(Provider):
                 raise ProviderError(
                     f"Decisions API unavailable (HTTP {resp.status_code}): {message}"
                 )
-            data = resp.json()
+            data = resp.json(object_pairs_hook=_reject_duplicate_keys)
             # Provisional extraction; fixtures do not establish a live API contract.
             answer = data.get("answer") or (data.get("choices") or [{}])[0].get("answer")
             confidence = data.get("confidence")
@@ -82,7 +83,7 @@ class OpenAIDecisionsProvider(Provider):
                     provider=self.name,
                     model=self.model,
                     latency_ms=latency_ms,
-                    confidence=float(confidence) if confidence is not None else None,
+                    confidence=confidence,
                     usage=usage,
                     raw={"status": resp.status_code},
                     error=None
@@ -93,7 +94,7 @@ class OpenAIDecisionsProvider(Provider):
             )
         except ProviderError:
             raise
-        except (httpx.HTTPError, json.JSONDecodeError) as exc:
+        except (httpx.HTTPError, ValueError) as exc:
             latency_ms = (time.perf_counter() - started) * 1000
             return DecisionResponse(
                 answer=None,

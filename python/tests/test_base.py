@@ -96,6 +96,28 @@ def test_confidence_clamped():
     assert conf3 is None
 
 
+@pytest.mark.parametrize("text", [
+    '{"answer":"billing","answer":"technical"}',
+    '{"answer":"billing","answer":"billing"}',
+    '{"choice":0,"choice":1}',
+    '{"label":"billing","label":"technical"}',
+    '{"answer":"billing","confidence":0.1,"confidence":0.9}',
+    r'{"answer":"billing","\u0061nswer":"technical"}',
+    '{"answer":"billing","metadata":{"x":1,"x":2}}',
+    'Decision: {"answer":"billing","answer":"technical"} Thank you.',
+    '{"answer":"billing","answer":"technical"} {"answer":"billing"}',
+])
+def test_duplicate_json_keys_fail_closed(text):
+    assert parse_answer(text, ANSWERS) == (None, None)
+
+
+@pytest.mark.parametrize("confidence", ['NaN', 'Infinity', '-Infinity', '1e999',
+                                        '"NaN"', '"inf"', '"-Infinity"', 'true'])
+def test_nonfinite_or_boolean_confidence_is_missing(confidence):
+    text = '{"answer":"billing","confidence":' + confidence + '}'
+    assert parse_answer(text, ANSWERS) == ("billing", None)
+
+
 def test_prompt_contains_all_parts():
     req = DecisionRequest(question="Which?", answers=["a", "b"], context="The context.")
     prompt = build_decision_prompt(req)

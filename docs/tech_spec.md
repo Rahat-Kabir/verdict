@@ -28,7 +28,13 @@ The parser accepts one JSON decision object (including answer/choice/label or a
 zero-based integer choice), an exact case-insensitive label, a quoted label, or a
 short explicit declaration. Conflicting objects/decision fields, word-overlap
 inference, and ambiguous prose are rejected. A recognized label is normalized to
-the supplied spelling. Chat confidence remains model-generated, not assumed calibrated.
+the supplied spelling. Duplicate JSON keys (including nested and escaped keys) are
+rejected rather than taking the last value; invalid JSON objects cannot be hidden
+by a second valid decision object. Nonfinite, boolean, or unparseable confidence
+is treated as missing without discarding a valid answer. Finite numeric confidence
+is clamped to [0, 1]. SDK/benchmark validation sanitizes provider and cached
+confidence too; imported invalid confidence is excluded from ECE and simulation
+thresholds. Chat confidence remains model-generated, not assumed calibrated.
 
 ## Provider adapters
 
@@ -83,7 +89,11 @@ Missing confidence bypasses escalation. Valid results may be cached and logged.
 
 `ExactCache` hashes question, ordered answers, and context. It ignores provider,
 model, threshold policy, and metadata. It stores response dictionaries in memory
-and optionally appends them to JSONL, with optional TTL. Reusing a cache across
+and optionally appends them to JSONL, with optional TTL. `cache_ttl_seconds`
+applies to both `cache=True` and file-backed caches; expiry uses the original
+write time, including after reload. Age >= TTL is expired; zero/negative TTL
+prevents reuse, and None means no expiry. Hits do not refresh the write time.
+Reusing a cache across
 policies can reuse old decisions. Cache hits return zero API cost, fresh lookup
 latency, no new token usage, and `escalated=False`; provider attribution identifies
 the source of the cached answer. Cache snapshots copy response fields rather than

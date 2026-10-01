@@ -56,7 +56,7 @@ def _ece(pairs: list[tuple[float, bool]]) -> float | None:
 def suite_metrics(records: list[Record], escalation_records: list[Record] | None = None) -> dict:
     ok = _clean(records)
     n_total, n_ok = len(records), len(ok)
-    conf_pairs = [(r.confidence, r.correct) for r in ok if r.confidence is not None]
+    conf_pairs = [(r.confidence, r.correct) for r in ok if _valid_confidence(r.confidence)]
 
     metrics: dict = {
         "n": n_total,
@@ -84,7 +84,7 @@ def suite_metrics(records: list[Record], escalation_records: list[Record] | None
                 correct = successful and r.correct
                 cost = r.cost_usd
                 latency = r.latency_ms
-                if successful and r.confidence is not None and r.confidence < t:
+                if successful and _valid_confidence(r.confidence) and r.confidence < t:
                     escalated_n += 1
                     esc = esc_by_item.get(r.item_id)
                     if esc is None:
@@ -119,6 +119,16 @@ def suite_metrics(records: list[Record], escalation_records: list[Record] | None
                     "n_missing_escalations": missing_escalations,
                 }
     return metrics
+
+
+def _valid_confidence(confidence: float | None) -> bool:
+    # Historical/imported records can bypass provider validation.
+    return (
+        isinstance(confidence, (int, float))
+        and not isinstance(confidence, bool)
+        and math.isfinite(confidence)
+        and 0 <= confidence <= 1
+    )
 
 
 def _cost_metrics(costs: list[float | None]) -> dict:
