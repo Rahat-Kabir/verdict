@@ -1,9 +1,9 @@
 """Metrics computed from benchmark Records.
 
 Headline numbers per (provider, suite):
-- accuracy
-- latency p50 / p95 (ms)
-- cost per 1,000 decisions (USD; None when unpriced)
+- accuracy among successful responses, completion rate, and accuracy over all items
+- latency p50 / p95 (ms), including failed items
+- cost per 1,000 items (USD; None unless every item is priced), billing coverage
 - Expected Calibration Error (ECE, 10 equal-width bins, only records with confidence)
 - escalation curves: blended accuracy/cost if low-confidence items were escalated
   to a chosen escalation provider (computed from that provider's records — no
@@ -13,7 +13,6 @@ Headline numbers per (provider, suite):
 from __future__ import annotations
 
 import math
-import statistics
 
 from .types import Record
 
@@ -63,44 +62,77 @@ def suite_metrics(records: list[Record], escalation_records: list[Record] | None
         "n": n_total,
         "n_errors": n_total - n_ok,
         "accuracy": round(sum(1 for r in ok if r.correct) / n_ok, 4) if n_ok else None,
-        "latency_ms_p50": round(_percentile([r.latency_ms for r in ok], 50), 1) if n_ok else None,
-        "latency_ms_p95": round(_percentile([r.latency_ms for r in ok], 95), 1) if n_ok else None,
+        "completion_rate": round(n_ok / n_total, 4) if n_total else None,
+        "accuracy_all_items": round(sum(1 for r in ok if r.correct) / n_total, 4) if n_total else None,
+        "latency_ms_p50": round(_percentile([r.latency_ms for r in records], 50), 1) if n_total else None,
+        "latency_ms_p95": round(_percentile([r.latency_ms for r in records], 95), 1) if n_total else None,
         "n_with_confidence": len(conf_pairs),
         "ece": round(_ece(conf_pairs), 4) if _ece(conf_pairs) is not None else None,
-        "cost_per_1k_usd": _cost_per_1k(ok),
+        **_cost_metrics([r.cost_usd for r in records]),
         "escalation": {},
     }
 
-    if escalation_records:
-        esc_by_item = {r.item_id: r for r in _clean(escalation_records)}
+    if escalation_records is not None:
+        esc_by_item = {r.item_id: r for r in escalation_records}
         for t in THRESHOLDS:
-            blended_correct, blended_cost, escalated_n = 0, 0.0, 0
-            considered = 0
-            for r in ok:
-                considered += 1
-                if r.confidence is not None and r.confidence < t:
+            blended_correct, escalated_n = 0, 0
+            failed_escalations, missing_escalations = 0, 0
+            costs: list[float | None] = []
+            latencies: list[float] = []
+            for r in records:
+                successful = r.error is None and r.answer is not None
+                correct = successful and r.correct
+                cost = r.cost_usd
+                latency = r.latency_ms
+                if successful and r.confidence is not None and r.confidence < t:
+                    escalated_n += 1
                     esc = esc_by_item.get(r.item_id)
-                    if esc is not None:
-                        escalated_n += 1
-                        blended_correct += 1 if esc.correct else 0
-                        blended_cost += (esc.cost_usd or 0.0) + (r.cost_usd or 0.0)
-                        continue
-                blended_correct += 1 if r.correct else 0
-                blended_cost += r.cost_usd or 0.0
-            if considered and escalated_n:
+                    if esc is None:
+                        # The SDK retains the primary on escalation failure, but
+                        # an absent observation cannot establish cost or timing.
+                        missing_escalations += 1
+                        cost = None
+                    else:
+                        cost = cost + esc.cost_usd if cost is not None and esc.cost_usd is not None else None
+                        latency += esc.latency_ms
+                        if esc.error is None and esc.answer is not None:
+                            correct = esc.correct
+                        else:
+                            # Failed escalation still consumes resources; the
+                            # primary answer remains the SDK's final answer.
+                            failed_escalations += 1
+                blended_correct += int(correct)
+                costs.append(cost)
+                latencies.append(latency)
+            if n_total and escalated_n:
                 metrics["escalation"][str(t)] = {
-                    "accuracy": round(blended_correct / considered, 4),
-                    "cost_per_1k_usd": round(blended_cost / considered * 1000, 5),
-                    "escalated_pct": round(escalated_n / considered * 100, 1),
+                    "n": n_total,
+                    "n_errors": n_total - n_ok,
+                    "accuracy": round(blended_correct / n_ok, 4) if n_ok and not missing_escalations else None,
+                    "completion_rate": round(n_ok / n_total, 4),
+                    "accuracy_all_items": round(blended_correct / n_total, 4) if not missing_escalations else None,
+                    **_cost_metrics(costs),
+                    "latency_ms_p50": round(_percentile(latencies, 50), 1) if not missing_escalations else None,
+                    "latency_ms_p95": round(_percentile(latencies, 95), 1) if not missing_escalations else None,
+                    "escalated_pct": round(escalated_n / n_total * 100, 1),
+                    "n_failed_escalations": failed_escalations,
+                    "n_missing_escalations": missing_escalations,
                 }
     return metrics
 
 
-def _cost_per_1k(records: list[Record]) -> float | None:
-    costs = [r.cost_usd for r in records if r.cost_usd is not None]
-    if not costs:
-        return None
-    return round(statistics.mean(costs) * 1000, 5)
+def _cost_metrics(costs: list[float | None]) -> dict:
+    known_costs = [cost for cost in costs if cost is not None]
+    complete = bool(costs) and len(known_costs) == len(costs)
+    known_total = sum(known_costs) if known_costs else None
+    return {
+        "n_with_cost": len(known_costs),
+        "cost_coverage": round(len(known_costs) / len(costs), 4) if costs else None,
+        # This is a partial sum, not the total spend, when coverage is incomplete.
+        "known_cost_total_usd": known_total,
+        "total_cost_usd": known_total if complete else None,
+        "cost_per_1k_usd": round(known_total / len(costs) * 1000, 5) if complete else None,
+    }
 
 
 def summarize(results: dict[tuple[str, str], list[Record]], escalation_map: dict[str, str] | None = None) -> dict:

@@ -117,11 +117,25 @@ Historical records are unchanged and lack token usage needed for repricing.
    executor queue time and record-file writing. Retry policy is not status-specific.
 3. The runner compares the answer to the expected label and writes
    `results/<provider>__<suite>.jsonl`. Saving overwrites that pair's previous file.
-4. `metrics.summarize` computes accuracy and latency over successful responses,
-   average known cost, and 10-bin ECE over responses with confidence.
+4. `metrics.summarize` computes accuracy over successful responses and 10-bin ECE
+   over successful responses with confidence. Completion rate is successful / all
+   items; `accuracy_all_items` is correct successful responses / all items, treating
+   failures as incorrect. Latency percentiles include every item, including failures.
+   `cost_per_1k_usd` is total recorded cost / all items × 1,000, and is unknown if
+   any item lacks cost. `total_cost_usd` follows the same completeness rule.
+   `n_with_cost` and `cost_coverage` disclose billing coverage; `known_cost_total_usd`
+   is the known subtotal, not total spend when coverage is incomplete. Empty suites
+   have unknown rates and totals, rather than claiming free decisions.
 5. Escalation curves join records by item ID and simulate replacement below each
-   threshold using the already measured escalation provider. This is not a live
-   cascade measurement or independently held-out threshold validation.
+   threshold using the already measured escalation provider. Only successful primary
+   responses with reported confidence below the threshold attempt escalation.
+   Failed escalation retains the primary answer but contributes cost and latency.
+   Primary failures remain failures. Costs are known per simulated item only if
+   all contributing costs are known. Missing required escalation records make
+   simulated accuracy, cost, and latency unknown. Curves disclose failed/missing
+   escalation counts and cost coverage per simulated item; `escalated_pct` counts
+   requested attempts / all primary items. Simulated latency sums recorded durations;
+   this is not a live cascade measurement or held-out threshold validation.
 6. `verdict aggregate` adds suite/provider metadata and writes site results JSON.
    Suites with historical records remain visible even when their local input is
    unavailable; fallback metadata is derived from recorded item IDs and expected

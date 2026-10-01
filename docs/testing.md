@@ -35,8 +35,10 @@ uv run pytest tests/test_datasets.py
   primary/escalation/cached answers.
 - `test_decision_validation.py`: mocked chat/native adapter contracts, reasoning-only
   rejection, proxy validation, and benchmark rejection of out-of-set answers.
-- `test_metrics.py`: implemented metrics arithmetic, not evidence that the chosen
-  metrics or datasets are sufficient for a buying decision.
+- `test_metrics.py`: failure-inclusive cost/latency, completion and all-item accuracy,
+  incomplete billing coverage, known zero and empty suites, and escalation failures,
+  missing observations, and unknown costs. These offline fixtures verify arithmetic,
+  not whether the metrics or datasets are sufficient for a buying decision.
 - `test_cache_and_types.py`: cache persistence and schema roundtrips.
 - `test_accounting.py`: deterministic-clock checks for total elapsed time, failed
   and invalid attempts, missing costs, raised errors, persisted cache hits, usage

@@ -106,6 +106,12 @@ also include retry costs and elapsed time, including backoff. OpenRouter exact m
 uses account charges (including zero); missing charges stay unknown. OpenAI uses
 verified standard-rate estimates with cached-input discounts, not account invoices.
 
+Benchmark summaries include failed items in cost and latency. Cost per 1,000 items
+and total cost stay unknown unless every item is priced; billing coverage and the
+known subtotal are reported separately. Completion rate and all-item accuracy
+show failures alongside accuracy among successful responses. Offline escalation
+simulations include failed attempts and preserve unknown costs.
+
 The committed benchmark snapshot predates this stricter parser. Its raw model output was
 not saved, so those results cannot be revalidated offline; a fresh benchmark is required.
 
@@ -140,7 +146,8 @@ uv run verdict decide "Which team?" --answers billing --answers technical \
 - [x] Astro snapshot tables, provider pages, and methodology; known sorting limitations
 - [x] router SDK with fallback, cache, threshold escalation, usage log
 - [x] nightly benchmark workflow scaffold (commits locally; does not push)
-- [ ] run/dataset/model provenance and failure-aware metrics
+- [x] failure-inclusive cost/latency summaries and explicit billing coverage
+- [ ] run/dataset/model provenance
 - [ ] representative datasets and held-out confidence evaluation
 - [ ] native Jev adapter with contract verification before live comparison
 

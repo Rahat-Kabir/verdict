@@ -49,9 +49,14 @@ const suiteName = (s: string) => s.replace("_", " ");
           <tr><th>Metric</th><th>Value</th><th>Note</th></tr>
         </thead>
         <tbody>
-          <tr><td>Accuracy</td><td class="num">{fmtAcc(m.accuracy)}</td><td>{m.n} items, {m.n_errors} errors excluded</td></tr>
-          <tr><td>Latency p50 / p95</td><td class="num">{fmtMs(m.latency_ms_p50)} / {fmtMs(m.latency_ms_p95)} ms</td><td>historical client timing over successful items</td></tr>
-          <tr><td>Cost per 1,000 decisions</td><td class="num">{fmtCost(m.cost_per_1k_usd)}</td><td>historical recorded cost; pricing/billing basis was not retained</td></tr>
+          <tr><td>Accuracy (successful responses)</td><td class="num">{fmtAcc(m.accuracy)}</td><td>{m.n} items, {m.n_errors} failed items excluded from this accuracy</td></tr>
+          <tr><td>Completion rate</td><td class="num">{fmtAcc(m.completion_rate)}</td><td>successful responses / all items</td></tr>
+          <tr><td>Accuracy (all items)</td><td class="num">{fmtAcc(m.accuracy_all_items)}</td><td>correct successful responses / all items; failures count as incorrect</td></tr>
+          <tr><td>Latency p50 / p95</td><td class="num">{fmtMs(m.latency_ms_p50)} / {fmtMs(m.latency_ms_p95)} ms</td><td>historical client timing over all items, including failures</td></tr>
+          <tr><td>Cost per 1,000 items</td><td class="num">{fmtCost(m.cost_per_1k_usd)}</td><td>includes failed items; unknown unless every item has a recorded cost</td></tr>
+          <tr><td>Cost coverage</td><td class="num">{m.n_with_cost ?? "?"}/{m.n}</td><td>items with known cost / all items; historical billing basis was not retained</td></tr>
+          <tr><td>Total recorded cost</td><td class="num">{fmtCost(m.total_cost_usd)}</td><td>unknown when billing coverage is incomplete</td></tr>
+          <tr><td>Known recorded cost subtotal</td><td class="num">{fmtCost(m.known_cost_total_usd)}</td><td>partial sum when costs are missing; does not establish total spend</td></tr>
           <tr><td>Calibration (ECE)</td><td class="num">{fmtEce(m.ece)}</td><td>{m.n_with_confidence} items reported confidence</td></tr>
         </tbody>
       </table>
@@ -61,19 +66,24 @@ const suiteName = (s: string) => s.replace("_", " ");
           <h3 style="margin-top:22px; font-size:15px; color:var(--muted)">
             Offline escalation simulation with GPT-6 Luna
           </h3>
-          <p class="tagline">Uses previously recorded answers, with failed escalation records excluded.
-            Thresholds were not validated on held-out data; unknown costs are currently treated as zero.</p>
+          <p class="tagline">Uses previously recorded answers. Failed escalation retains the primary answer
+            and adds recorded cost and time. Missing escalation observations make simulated accuracy,
+            cost, and latency unknown. Thresholds were not validated on held-out data.</p>
           <table class="board">
             <thead>
-              <tr><th>Threshold</th><th>Blended accuracy</th><th>Blended $/1k</th><th>Escalated</th></tr>
+              <tr><th>Threshold</th><th>Accuracy (successful)</th><th>Accuracy (all)</th><th>Blended $/1k</th><th>Cost coverage</th><th>p50 / p95 ms</th><th>Escalation attempts</th><th>Failed / missing</th></tr>
             </thead>
             <tbody>
               {Object.entries(m.escalation).map(([t, e]: [string, any]) => (
                 <tr>
                   <td class="num">{t}</td>
                   <td class="num">{fmtAcc(e.accuracy)}</td>
+                  <td class="num">{fmtAcc(e.accuracy_all_items)}</td>
                   <td class="num">{fmtCost(e.cost_per_1k_usd)}</td>
+                  <td class="num">{e.n_with_cost ?? "?"}/{e.n ?? "?"}</td>
+                  <td class="num">{fmtMs(e.latency_ms_p50)} / {fmtMs(e.latency_ms_p95)}</td>
                   <td class="num">{e.escalated_pct}%</td>
+                  <td class="num">{e.n_failed_escalations ?? "?"} / {e.n_missing_escalations ?? "?"}</td>
                 </tr>
               ))}
             </tbody>

@@ -63,8 +63,8 @@ const hasData = suites.length > 0;
               <thead>
                 <tr>
                   <th>#</th><th>Provider</th>
-                  <th data-num>Accuracy ▾</th><th data-num>p50 ms</th><th data-num>p95 ms</th>
-                  <th data-num>$/1k decisions</th><th data-num>ECE ↓</th><th data-num>n</th>
+                  <th data-num>Accuracy (successful) ▾</th><th>Completion</th><th data-num>p50 ms</th><th data-num>p95 ms</th>
+                  <th data-num>$/1k items</th><th>Cost coverage</th><th data-num>ECE ↓</th><th data-num>n</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,9 +79,11 @@ const hasData = suites.length > 0;
                         {labels.map((l) => <span class={`badge ${badgeClass(l)}`}>{l}</span>)}
                       </td>
                       <td class={`num ${r.accuracy !== null && r.accuracy >= 0.9 ? "good" : ""}`}>{fmtAcc(r.accuracy)}</td>
+                      <td class="num" title={`${r.n_errors} failed items`}>{fmtAcc(r.completion_rate)}</td>
                       <td class="num">{fmtMs(r.latency_ms_p50)}</td>
                       <td class="num">{fmtMs(r.latency_ms_p95)}</td>
                       <td class="num">{fmtCost(r.cost_per_1k_usd)}</td>
+                      <td class="num">{r.n_with_cost ?? "?"}/{r.n}</td>
                       <td class="num">{fmtEce(r.ece)}</td>
                       <td class="num">{r.n}</td>
                     </tr>
@@ -97,10 +99,12 @@ const hasData = suites.length > 0;
 
   <h2>What "cost" means here</h2>
   <p class="tagline">
-    $/1k = average known cost per 1,000 decisions on that suite. Displayed costs come from the
+    $/1k = total recorded cost divided by all items, including failures, multiplied by 1,000.
+    It is shown only when every item has a known cost; cost coverage shows known costs / all items.
+    Latency includes failed items. Displayed costs come from the
     historical snapshot and have not been repaired with the corrected pricing and retry accounting.
     OpenAI costs are estimates. See the <a href="/methodology">methodology page</a> for billing limits.
-    "n/a" means no cost could be resolved.
+    "n/a" means the complete cost is unknown. A known zero remains zero.
   </p>
 
   <script>

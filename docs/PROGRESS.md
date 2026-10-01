@@ -2,8 +2,8 @@
 
 ## Current state — 2026-10-01
 
-Parser/accounting fixes, dataset distribution changes, and documentation are being
-prepared for the first public push. Session entries record implementation evidence.
+The first public version is on GitHub. Benchmark summary corrections are now
+implemented locally. Session entries record implementation evidence.
 
 ### Implemented
 
@@ -11,6 +11,10 @@ prepared for the first public push. Session entries record implementation eviden
   suites and two optional local suite types, records, metrics, and an Astro leaderboard.
 - Chat adapters for OpenAI, OpenRouter, and local Ollama; Jev Router uses OpenRouter.
 - Optional exact cache, ordered fallback, confidence-based escalation, and usage log.
+- Failure-inclusive benchmark cost/latency summaries, completion and all-item
+  accuracy, and explicit cost coverage. Partial billing keeps total cost unknown.
+  Offline escalation retains primary answers on failure and includes attempt
+  resources; missing escalation observations make simulated answers/cost/time unknown.
 - SDK cost totals include all returned attempts, including failed fallback and
   escalation. Unknown attempt costs propagate as unknown; raised provider errors
   without billing data also make total cost unknown. SDK latency measures decision
@@ -48,9 +52,10 @@ prepared for the first public push. Session entries record implementation eviden
 3. Billing limits: standard token rates are verified; they remain estimates and
    exclude special service tiers, regional uplifts, and account adjustments.
    OpenRouter exact mode keeps unavailable charges unknown. Records do not retain
-   per-attempt cost provenance; summaries average known costs only.
-4. Metrics: accuracy excludes errors, while the headline table hides error counts.
-   Low ECE alone does not validate thresholds; the site now states this limit.
+   per-attempt cost provenance; billing coverage proves only that a value was recorded.
+4. Metrics: ranking still uses successful-response accuracy, with completion
+   displayed separately. Low ECE alone does not validate thresholds; the site
+   states this limit. Simulated latency sums observations rather than timing a live cascade.
 5. Dataset quality: tool selection has 200 rows but 105 unique inputs from 12
    templates, without realistic tool prerequisites. Builders do not persist source
    provenance; site source names are hardcoded. Synthetic routing supplies 200
@@ -124,10 +129,8 @@ checks does not validate the historical leaderboard or native API contracts.
 
 ### Deferred code work, reproduced during this review
 
-- `metrics.suite_metrics`: offline escalation treats unknown costs as zero via
-  `cost_usd or 0.0`. A primary and escalation record with unknown costs produced
-  a $0 simulated cascade. Successful-only summaries also omit failed-item spend
-  and latency. Fix metric semantics and disclose measurement coverage.
+- `metrics.suite_metrics`: repaired in the benchmark-summary slice below. Unknown
+  costs remain unknown, failed-item spend/time are included, and coverage is disclosed.
 - `providers.base.parse_answer`: duplicate JSON keys silently use the last value;
   `{"answer":"a","answer":"b"}` returns b instead of rejecting ambiguity.
   A confidence string of "NaN" becomes 1.0 through clamping. Reject duplicate
@@ -142,6 +145,24 @@ Only this progress record was edited during the initial review. Runtime, dataset
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-01 — Failure-aware benchmark summaries
+
+- Cost and latency include every recorded item, including failures. Added completion
+  rate and all-item accuracy without changing successful-response accuracy/ECE.
+- Total cost and cost per 1,000 items require complete billing coverage. Added
+  priced-item count, coverage, and known subtotal; zero remains known zero.
+- Offline escalation counts failed attempts and their resources while retaining
+  the primary answer. Missing required observations make simulated accuracy,
+  cost, and latency unknown. Costs are tracked per complete simulated item.
+- Updated site labels, coverage displays, and methodology. Reaggregated existing
+  JSONL observations without repricing, changing raw records, or making API calls.
+- Validation: 150 offline tests passed; Ruff passed; Astro built nine pages.
+  CLI fixture forbids provider calls and checks exported failure/cost coverage.
+  Built HTML includes coverage, completion, subtotals, and escalation disclosure.
+  Raw JSONL is unchanged; prior headline numbers, provider metadata, and suite
+  counts/labels are unchanged. Aggregation now marks missing local suite metadata
+  as derived from records. No commit/push, deployment, or paid calls in this slice.
 
 ### 2026-10-01 — Prepare the first public push
 
