@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Provider-agnostic decision-API benchmark harness and router SDK"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [{ name = "Rahat Kabir" }]
 keywords = ["llm", "decisions", "benchmark", "router", "classification"]
 dependencies = [
@@ -25,8 +25,17 @@ verdict = "verdict_router.cli:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build]
+exclude = [
+    "src/verdict_router/datasets/classification.jsonl",
+    "src/verdict_router/datasets/moderation.jsonl",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/verdict_router"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"DATASET_NOTICE.md" = "verdict_router/DATASET_NOTICE.md"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

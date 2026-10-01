@@ -1,7 +1,7 @@
 """Eval suite loading.
 
-Suites ship as JSONL inside the package (`datasets/*.jsonl`) so the installed
-SDK and the site build both read the exact same data. Each line:
+Routing and agent_next_action ship as JSONL. Classification and moderation are
+optional private inputs read from VERDICT_DATASET_DIR. Each line:
 
     {"id": "...", "question": "...", "answers": [...], "context": "...", "expected": "..."}
 
@@ -13,18 +13,31 @@ from __future__ import annotations
 
 import importlib.resources
 import json
-from functools import cache
+import os
+from pathlib import Path
 
 from ..types import DatasetItem
 
 KNOWN_SUITES = ["classification", "routing", "moderation", "agent_next_action"]
+BUNDLED_SUITES = ["routing", "agent_next_action"]
+LOCAL_ONLY_SUITES = ["classification", "moderation"]
 
 
-@cache
 def load_suite(name: str) -> tuple[DatasetItem, ...]:
     if name not in KNOWN_SUITES:
         raise ValueError(f"unknown suite '{name}'; known: {KNOWN_SUITES}")
-    resource = importlib.resources.files("verdict_router") / "datasets" / f"{name}.jsonl"
+    if name in LOCAL_ONLY_SUITES:
+        dataset_directory = os.environ.get("VERDICT_DATASET_DIR", "").strip()
+        if not dataset_directory:
+            raise FileNotFoundError(
+                f"{name} is local-only. Set VERDICT_DATASET_DIR to a private directory "
+                f"containing {name}.jsonl obtained under the source terms; see DATASET_NOTICE.md."
+            )
+        resource = Path(dataset_directory).expanduser() / f"{name}.jsonl"
+        if not resource.is_file():
+            raise FileNotFoundError(f"Missing local suite: {resource}")
+    else:
+        resource = importlib.resources.files("verdict_router") / "datasets" / f"{name}.jsonl"
     items: list[DatasetItem] = []
     for line in resource.read_text(encoding="utf-8").splitlines():
         line = line.strip()

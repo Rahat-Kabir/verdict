@@ -1,8 +1,8 @@
 name: Nightly benchmark
 
 # Runs the benchmark matrix against live providers, aggregates into the site's
-# results.json, and commits the fresh numbers. Budget-capped: the default
-# matrix (6 providers x 4 suites x ~200 items) costs well under $1 per run.
+# results.json, and commits locally. Runs only the two bundled suites. Routing
+# data is CC-BY-NC-4.0; this is a noncommercial workflow with no enforced spend cap.
 
 on:
   schedule:
@@ -31,8 +31,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           uv run verdict bench --all \
-            --suite classification --suite routing \
-            --suite moderation --suite agent_next_action \
+            --suite routing --suite agent_next_action \
             --concurrency 4 --out ../results
       - name: Aggregate into site data
         working-directory: python

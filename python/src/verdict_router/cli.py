@@ -13,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-from .datasets import KNOWN_SUITES, suite_summary
+from .datasets import BUNDLED_SUITES, KNOWN_SUITES, suite_summary
 from .metrics import leaderboard_rows, summarize
 from .providers import BENCHMARK_PROVIDERS, PROVIDER_META, build_provider
 from .runner import load_all_records, run_bench
@@ -28,7 +28,10 @@ def main(argv: list[str] | None = None) -> int:
     p_bench = sub.add_parser("bench", help="run benchmark suites")
     p_bench.add_argument("--provider", action="append", dest="providers")
     p_bench.add_argument("--suite", action="append", dest="suites", choices=KNOWN_SUITES)
-    p_bench.add_argument("--all", action="store_true", help="all benchmark providers x classification+routing")
+    p_bench.add_argument(
+        "--all", action="store_true",
+        help="all benchmark providers; bundled suites by default",
+    )
     p_bench.add_argument("--limit", type=int, default=None)
     p_bench.add_argument("--concurrency", type=int, default=1)
     p_bench.add_argument("--out", type=Path, default=Path("results"))
@@ -58,19 +61,23 @@ def main(argv: list[str] | None = None) -> int:
                 info = suite_summary(s)
                 print(f"  {info['name']:24s} {info['n_items']} items, {info['n_answers']} answers")
             except (ValueError, FileNotFoundError) as exc:
-                print(f"  {s:24s} (not built: {exc})")
+                print(f"  {s:24s} (unavailable: {exc})")
         return 0
 
     if args.command == "bench":
         providers = BENCHMARK_PROVIDERS if args.all else (args.providers or ["jev-router"])
-        suites = args.suites or ["classification", "routing"]
-        run_bench(
-            providers=providers,
-            suites=suites,
-            limit=args.limit,
-            concurrency=args.concurrency,
-            out_dir=args.out,
-        )
+        suites = args.suites or BUNDLED_SUITES
+        try:
+            run_bench(
+                providers=providers,
+                suites=suites,
+                limit=args.limit,
+                concurrency=args.concurrency,
+                out_dir=args.out,
+            )
+        except FileNotFoundError as exc:
+            print(f"Dataset unavailable: {exc}", file=sys.stderr)
+            return 2
         return 0
 
     if args.command == "aggregate":
@@ -79,12 +86,34 @@ def main(argv: list[str] | None = None) -> int:
             print(f"no results found in {args.results}")
             return 1
         summary = summarize(grouped)
+        suite_names = sorted({suite for _, suite in grouped})
+        suite_metadata = {}
+        for suite in suite_names:
+            try:
+                suite_metadata[suite] = suite_summary(suite)
+            except (ValueError, FileNotFoundError):
+                # Preserve historical rows without pretending their missing input
+                # is bundled or reconstructing raw dataset text from results.
+                records = [
+                    record
+                    for (_, name), entries in grouped.items()
+                    if name == suite
+                    for record in entries
+                ]
+                labels = sorted({record.expected for record in records})
+                suite_metadata[suite] = {
+                    "name": suite,
+                    "n_items": len({record.item_id for record in records}),
+                    "n_answers": len(labels),
+                    "answers": labels,
+                    "metadata_source": "recorded expected labels; original input unavailable",
+                }
         payload = {
             "generated_at": None,  # filled below to keep imports light
-            "suites": {s: suite_summary(s) for s in KNOWN_SUITES if _suite_exists(s)},
+            "suites": suite_metadata,
             "providers_meta": PROVIDER_META,
             "summary": summary,
-            "leaderboards": {s: leaderboard_rows(summary, s) for s in KNOWN_SUITES if _suite_exists(s)},
+            "leaderboards": {suite: leaderboard_rows(summary, suite) for suite in suite_names},
         }
         from .types import utc_now_iso
 
@@ -118,14 +147,6 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0 if result.ok else 2
     return 1
-
-
-def _suite_exists(name: str) -> bool:
-    try:
-        suite_summary(name)
-        return True
-    except (ValueError, FileNotFoundError):
-        return False
 
 
 if __name__ == "__main__":

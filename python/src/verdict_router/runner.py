@@ -18,7 +18,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from .datasets import KNOWN_SUITES, load_suite
+from .datasets import BUNDLED_SUITES, KNOWN_SUITES, load_suite
 from .providers import BENCHMARK_PROVIDERS, Provider, ProviderError, build_provider
 from .providers.base import validate_response
 from .types import DatasetItem, DecisionRequest, Record
@@ -130,7 +130,14 @@ def run_bench(
     """Run the matrix; skip providers that raise ProviderError (missing keys,
     preview-gated endpoints) with a printed notice — never crash the run."""
     providers = providers or BENCHMARK_PROVIDERS
-    suites = suites or ["classification", "routing"]
+    suites = suites or BUNDLED_SUITES
+    # Resolve every requested input before contacting any provider. Missing private
+    # suites must not trigger a partial paid run or overwrite existing evidence.
+    suite_items = {}
+    for suite in suites:
+        if suite not in KNOWN_SUITES:
+            raise ValueError(f"unknown suite: {suite}")
+        suite_items[suite] = load_suite(suite)
     summary: dict[str, list[Record]] = {}
     for provider_name in providers:
         try:
@@ -139,9 +146,7 @@ def run_bench(
             print(f"[skip] {provider_name}: {exc}")
             continue
         for suite in suites:
-            if suite not in KNOWN_SUITES:
-                raise ValueError(f"unknown suite: {suite}")
-            items = load_suite(suite)
+            items = suite_items[suite]
             if limit:
                 items = items[:limit]
             print(f"[bench] {provider_name} on {suite} ({len(items)} items)")

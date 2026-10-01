@@ -1,7 +1,12 @@
 # --- secrets ---
-# The user asked to keep .env local-only; we git-ignore it so keys can never
-# be pushed by accident. Remove this line ONLY if you really want .env committed.
+# Keep local credentials out of version control.
 .env
+.env.*
+!.env.example
+
+# Private optional suites must never be republished from their former paths.
+python/src/verdict_router/datasets/classification.jsonl
+python/src/verdict_router/datasets/moderation.jsonl
 
 # --- python ---
 __pycache__/
@@ -20,10 +25,8 @@ site/.astro/
 site/dist/
 
 # --- local scratch ---
+decision_cache.jsonl
+usage.jsonl
 *.log
 .DS_Store
 Thumbs.db
-
-# --- internal working docs (kept local, not for the public repo) ---
-NOTES.md
-MORNING_REPORT.md

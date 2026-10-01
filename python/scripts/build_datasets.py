@@ -2,13 +2,13 @@
 
 Sources (all fetched via the free HuggingFace datasets-server rows API):
 - classification: ag_news (World/Sports/Business/Sci-Tech), 200 items balanced
-- routing:        PolyAI/banking77 intents mapped to 4 support queues, 200 balanced
+- routing:        Tobi-Bueck/customer-support-tickets, four queues
 - moderation:     tweet_eval/hate (hate vs not_hate), 200 balanced
 - agent_next_action: synthetic support-agent tool-selection scenarios, 200
 
-Every fetch failure falls back to a seeded synthetic generator so the build
-always produces complete, balanced suites (the generator used is recorded in
-each suite's meta and disclosed on the methodology page).
+Default builds cover routing (CC-BY-NC-4.0) and agent_next_action (MIT).
+Classification and moderation require explicit --suite and --local-out outside
+the repository, and use under their source terms. Sources are printed, not stored.
 
 Usage: python scripts/build_datasets.py [--size 200] [--seed 42]
 """
@@ -24,6 +24,8 @@ from pathlib import Path
 import httpx
 
 SRC_DATASETS = Path(__file__).resolve().parents[1] / "src" / "verdict_router" / "datasets"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+LOCAL_ONLY_SUITES = {"classification", "moderation"}
 ROWS_URL = "https://datasets-server.huggingface.co/rows"
 FIRST_ROWS_URL = "https://datasets-server.huggingface.co/first-rows"
 
@@ -91,13 +93,19 @@ def balanced_sample(rows: list[dict], labels: list[str], size: int, rng: random.
     return picked[:size]
 
 
-def write_suite(name: str, items: list[dict]) -> None:
-    SRC_DATASETS.mkdir(parents=True, exist_ok=True)
-    path = SRC_DATASETS / f"{name}.jsonl"
+def write_suite(name: str, items: list[dict], local_out: Path | None = None) -> None:
+    if name in LOCAL_ONLY_SUITES:
+        if local_out is None or local_out.resolve().is_relative_to(REPOSITORY_ROOT):
+            raise ValueError("Local-only suites require --local-out outside the repository")
+        destination = local_out
+    else:
+        destination = SRC_DATASETS
+    destination.mkdir(parents=True, exist_ok=True)
+    path = destination / f"{name}.jsonl"
     with path.open("w", encoding="utf-8") as fh:
         for item in items:
             fh.write(json.dumps(item, ensure_ascii=False) + "\n")
-    print(f"[ok] {name}: {len(items)} items -> {path.relative_to(SRC_DATASETS.parents[3])}")
+    print(f"[ok] {name}: {len(items)} items -> {path}")
 
 
 # ---------------------------------------------------------------- classification
@@ -323,7 +331,20 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--size", type=int, default=200, help="items per suite")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--suite", action="append",
+        choices=["classification", "routing", "moderation", "agent_next_action"],
+    )
+    parser.add_argument("--local-out", type=Path, help="private output directory outside this repository")
     args = parser.parse_args()
+    selected_suites = args.suite or ["routing", "agent_next_action"]
+    if LOCAL_ONLY_SUITES.intersection(selected_suites) and (
+        args.local_out is None or args.local_out.resolve().is_relative_to(REPOSITORY_ROOT)
+    ):
+        parser.error(
+            "Local-only suites require --local-out outside the repository; "
+            "review DATASET_NOTICE.md first"
+        )
     rng = random.Random(args.seed)
 
     builders = [
@@ -334,9 +355,11 @@ def main() -> int:
     ]
     failed = []
     for name, builder in builders:
+        if name not in selected_suites:
+            continue
         try:
             items, source = builder(args.size, rng)
-            write_suite(name, items)
+            write_suite(name, items, args.local_out)
             print(f"     source: {source}")
         except Exception as exc:  # noqa: BLE001 - never die mid-build overnight
             print(f"[fail] {name}: {type(exc).__name__}: {exc}")
