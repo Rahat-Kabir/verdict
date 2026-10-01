@@ -6,7 +6,6 @@ ProviderError and the runner skips it. Nothing in the benchmark depends on it.
 
 from __future__ import annotations
 
-import json
 import time
 
 import httpx
@@ -17,7 +16,9 @@ from .base import (
     Provider,
     ProviderError,
     build_decision_prompt,
+    message_content,
     parse_answer,
+    response_object,
 )
 
 
@@ -60,8 +61,8 @@ class OllamaProvider(Provider):
             )
             latency_ms = (time.perf_counter() - started) * 1000
             resp.raise_for_status()
-            data = resp.json()
-            content = data.get("message", {}).get("content", "")
+            data = response_object(resp)
+            content = message_content(data.get("message"))
             answer, confidence = parse_answer(content, request.answers)
             usage = {
                 "prompt_tokens": data.get("prompt_eval_count", 0),
@@ -78,12 +79,13 @@ class OllamaProvider(Provider):
                 raw={"content": content[:2000]},
                 error=None if answer else "unparseable answer",
             )
-        except (httpx.HTTPError, json.JSONDecodeError, KeyError) as exc:
+        except (httpx.HTTPError, ValueError) as exc:
             latency_ms = (time.perf_counter() - started) * 1000
             return DecisionResponse(
                 answer=None,
                 provider=self.name,
                 model=self.model,
                 latency_ms=latency_ms,
+                cost_usd=0.0,
                 error=f"{type(exc).__name__}: {exc}",
             )

@@ -12,6 +12,8 @@ import math
 import re
 from abc import ABC, abstractmethod
 
+import httpx
+
 from ..types import DecisionRequest, DecisionResponse
 
 DECISION_SYSTEM_PROMPT = (
@@ -36,6 +38,42 @@ def build_decision_prompt(req: DecisionRequest) -> str:
 
 class ProviderError(Exception):
     """Raised when a provider cannot be used at all (missing key, disabled, down)."""
+
+
+class ResponseFormatError(ValueError):
+    """The remote response does not have the expected decision shape."""
+
+
+def require_object(value, field: str) -> dict:
+    if not isinstance(value, dict):
+        raise ResponseFormatError(f"malformed response: {field} must be an object")
+    return value
+
+
+def response_object(response: httpx.Response) -> dict:
+    return require_object(response.json(object_pairs_hook=_reject_duplicate_keys), "body")
+
+
+def first_choice(data: dict) -> dict:
+    choices = data.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise ResponseFormatError("malformed response: choices must be a nonempty array")
+    return require_object(choices[0], "choices[0]")
+
+
+def message_content(message) -> str:
+    message = require_object(message, "message")
+    content = message.get("content")
+    if content is None:
+        return ""  # Empty/refusal/reasoning-only responses still fail answer parsing.
+    if not isinstance(content, str):
+        raise ResponseFormatError("malformed response: message.content must be text")
+    return content
+
+
+def response_usage(data: dict) -> dict:
+    usage = data.get("usage")
+    return usage if isinstance(usage, dict) else {}
 
 
 class Provider(ABC):

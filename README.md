@@ -105,6 +105,11 @@ entries without routing policy are not reused. Custom providers can extend
 `cache_identity()` with nonsecret settings that affect their decisions. Metadata
 and provider identities must be JSON-serializable when caching is enabled.
 
+Malformed provider response bodies become failed decisions so fallback and
+benchmark retries can continue. Known charges are retained even when the answer
+payload is broken. Malformed billing data leaves cost unknown without discarding
+a valid answer. Remote HTTP failures and missing keys still raise `ProviderError`.
+
 SDK cost totals include failed fallback and escalation attempts. If any attempt's
 cost is unknown (including a raised provider error with no billing metadata), the
 total is `None`. Latency measures the whole decision through cache persistence,

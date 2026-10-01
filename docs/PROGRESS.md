@@ -2,9 +2,9 @@
 
 ## Current state — 2026-10-01
 
-The first public version, benchmark summaries, parser/cache corrections, and
-leaderboard sorting are on GitHub. Routing-policy cache isolation is implemented
-locally. Session entries record implementation evidence.
+The first public version, benchmark summaries, parser/cache corrections,
+leaderboard sorting, and cache-policy isolation are on GitHub. Malformed-provider
+response handling is implemented locally. Session entries record implementation evidence.
 
 ### Implemented
 
@@ -139,12 +139,29 @@ checks does not validate the historical leaderboard or native API contracts.
   persisted caches now use the same expiry policy and original write time.
 - Existing items remain: root .env lookup,
   suite-specific cards, dataset provenance/quality,
-  malformed HTTP response handling, and native Jev integration.
+  native Jev integration. Malformed-response handling was implemented in the
+  subsequent slice below.
 
 Only this progress record was edited during the initial review. Runtime, datasets, saved
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-01 — Malformed provider responses
+
+- Published the verified routing-policy cache slice as 198ca19 on main.
+- Validate decoded HTTP objects, choices, messages, and content. Malformed decision
+  payloads return failed responses rather than crashing SDK fallback or benchmark
+  retries. Reject duplicate HTTP-envelope keys through the shared decoder.
+- Read usable cost/usage independently before parsing decision content so known
+  charges survive shape failures. Malformed usage yields unknown estimates;
+  invalid billing lookup JSON/data yields unknown charge but preserves valid answers.
+- Native HTTP failures tolerate malformed error bodies while preserving status;
+  its response contract remains provisional. Ollama errors retain zero API charge.
+- Validation: 288 offline tests passed and Ruff passed. Mocked adapter, fallback,
+  retry, billing-shape, and overflowing token-usage regressions pass. Raw records
+  and site data are unchanged; no paid calls, dependencies, commit/push, or
+  deployment for this malformed-response slice.
 
 ### 2026-10-01 — Cache isolation by routing policy
 

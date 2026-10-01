@@ -13,19 +13,23 @@ charges unknown — important because jev-router's listing price is unpublished.
 
 from __future__ import annotations
 
-import json
 import time
 
 import httpx
 
-from ..cost import compute_cost
+from ..cost import compute_usage_cost
 from ..types import DecisionRequest, DecisionResponse
 from .base import (
     DECISION_SYSTEM_PROMPT,
     Provider,
     ProviderError,
     build_decision_prompt,
+    first_choice,
+    message_content,
     parse_answer,
+    require_object,
+    response_object,
+    response_usage,
 )
 
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
@@ -65,6 +69,8 @@ class OpenRouterProvider(Provider):
 
     def decide(self, request: DecisionRequest) -> DecisionResponse:
         started = time.perf_counter()
+        cost = None
+        usage = None
         messages = [
             {"role": "system", "content": DECISION_SYSTEM_PROMPT},
             {"role": "user", "content": build_decision_prompt(request)},
@@ -84,12 +90,11 @@ class OpenRouterProvider(Provider):
                 raise ProviderError("rate limited (429)")
             if resp.status_code >= 400:
                 raise ProviderError(f"HTTP {resp.status_code}: {resp.text[:300]}")
-            data = resp.json()
-            message = (data.get("choices") or [{}])[0].get("message", {})
-            content = message.get("content") or ""
-            answer, confidence = parse_answer(content, request.answers)
-            usage = data.get("usage") or {}
+            data = response_object(resp)
+            usage = response_usage(data)
             cost = self._resolve_cost(data.get("id"), usage)
+            content = message_content(first_choice(data).get("message"))
+            answer, confidence = parse_answer(content, request.answers)
             return DecisionResponse(
                 answer=answer,
                 provider=self.name,
@@ -103,13 +108,15 @@ class OpenRouterProvider(Provider):
             )
         except ProviderError:
             raise
-        except (httpx.HTTPError, json.JSONDecodeError, KeyError) as exc:
+        except (httpx.HTTPError, ValueError) as exc:
             latency_ms = (time.perf_counter() - started) * 1000
             return DecisionResponse(
                 answer=None,
                 provider=self.name,
                 model=self.model,
                 latency_ms=latency_ms,
+                cost_usd=cost,
+                usage=usage,
                 error=f"{type(exc).__name__}: {exc}",
             )
 
@@ -120,15 +127,11 @@ class OpenRouterProvider(Provider):
         unknown when neither usage nor the generation endpoint reports a charge.
         """
         if not self.exact_cost:
-            return compute_cost(
-                self.model, usage.get("prompt_tokens"), usage.get("completion_tokens"),
-                cached_prompt_tokens=(usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0),
-                cache_write_tokens=(usage.get("prompt_tokens_details") or {}).get("cache_write_tokens", 0),
-            )
+            return compute_usage_cost(self.model, usage)
         charged = usage.get("cost")
         if type(charged) in (int, float) and 0 <= charged < float("inf"):
             return float(charged)
-        if generation_id:
+        if isinstance(generation_id, str) and generation_id:
             try:
                 generation = httpx.get(
                     f"{self.base_url}/generation",
@@ -137,7 +140,8 @@ class OpenRouterProvider(Provider):
                     timeout=15.0,
                 )
                 if generation.status_code == 200:
-                    charged = generation.json().get("data", {}).get("total_cost")
+                    billing = require_object(response_object(generation).get("data"), "data")
+                    charged = billing.get("total_cost")
                     if type(charged) in (int, float) and 0 <= charged < float("inf"):
                         return float(charged)
             except (httpx.HTTPError, ValueError):

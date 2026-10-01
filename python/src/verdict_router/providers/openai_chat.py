@@ -7,19 +7,22 @@ context) interface on a chat model. Proxy results do not measure a native API.
 
 from __future__ import annotations
 
-import json
 import time
 
 import httpx
 
-from ..cost import compute_cost
+from ..cost import compute_usage_cost
 from ..types import DecisionRequest, DecisionResponse
 from .base import (
     DECISION_SYSTEM_PROMPT,
     Provider,
     ProviderError,
     build_decision_prompt,
+    first_choice,
+    message_content,
     parse_answer,
+    response_object,
+    response_usage,
 )
 
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
@@ -52,6 +55,8 @@ class OpenAIChatProvider(Provider):
 
     def decide(self, request: DecisionRequest) -> DecisionResponse:
         started = time.perf_counter()
+        cost = None
+        usage = None
         try:
             payload = {
                 "model": self.model,
@@ -73,17 +78,11 @@ class OpenAIChatProvider(Provider):
                 raise ProviderError("rate limited (429)")
             if resp.status_code >= 400:
                 raise ProviderError(f"HTTP {resp.status_code}: {_short(resp.text)}")
-            data = resp.json()
-            content = (data.get("choices") or [{}])[0].get("message", {}).get("content") or ""
+            data = response_object(resp)
+            usage = response_usage(data)
+            cost = compute_usage_cost(self.model, usage)
+            content = message_content(first_choice(data).get("message"))
             answer, confidence = parse_answer(content, request.answers)
-            usage = data.get("usage") or {}
-            cost = compute_cost(
-                self.model,
-                usage.get("prompt_tokens"),
-                usage.get("completion_tokens"),
-                cached_prompt_tokens=(usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0),
-                cache_write_tokens=(usage.get("prompt_tokens_details") or {}).get("cache_write_tokens", 0),
-            )
             return DecisionResponse(
                 answer=answer,
                 provider=self.name,
@@ -97,13 +96,15 @@ class OpenAIChatProvider(Provider):
             )
         except ProviderError:
             raise
-        except (httpx.HTTPError, json.JSONDecodeError, KeyError) as exc:
+        except (httpx.HTTPError, ValueError) as exc:
             latency_ms = (time.perf_counter() - started) * 1000
             return DecisionResponse(
                 answer=None,
                 provider=self.name,
                 model=self.model,
                 latency_ms=latency_ms,
+                cost_usd=cost,
+                usage=usage,
                 error=f"{type(exc).__name__}: {exc}",
             )
 

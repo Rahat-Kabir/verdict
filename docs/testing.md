@@ -42,6 +42,10 @@ uv run pytest tests/test_datasets.py
 - `test_decision_validation.py`: mocked chat/native adapter contracts, reasoning-only
   rejection, duplicate decisions, invalid native confidence, proxy validation,
   and benchmark rejection of out-of-set answers.
+- `test_response_shapes.py`: mocked null/scalar/array/invalid JSON bodies, malformed
+  choices/messages/content, native HTTP errors, optional usage, and generation
+  billing. Router fallback and benchmark retries preserve known charges, while
+  unknown charges propagate; malformed billing does not discard valid answers.
 - `test_metrics.py`: failure-inclusive cost/latency, completion and all-item accuracy,
   incomplete billing coverage, known zero and empty suites, and escalation failures,
   missing observations, unknown costs, and invalid imported confidence. These offline fixtures verify arithmetic,

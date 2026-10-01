@@ -41,6 +41,18 @@ thresholds. Chat confidence remains model-generated, not assumed calibrated.
 `providers/__init__.py` holds constructors and site metadata. Adapters implement
 `Provider.decide(request)` and time their synchronous HTTP call.
 
+Response handling validates object bodies, nonempty choices arrays, object messages,
+and text content before parsing answers. Malformed bodies, JSON, or decision fields
+return failed DecisionResponses rather than AttributeError/TypeError/IndexError,
+so SDK fallback and benchmark retries can continue. Where usage or OpenRouter
+charges can be read independently, failed decisions retain their known cost.
+Malformed optional usage yields unknown estimates; invalid billing lookup JSON,
+data shape, or charge values do not discard a valid answer. Invalid generation IDs
+do not trigger billing requests. Ollama failures retain zero API charge, which
+does not measure local infrastructure spend. Missing keys and remote HTTP failures
+retain ProviderError behavior; native HTTP error messages tolerate malformed bodies
+and preserve the HTTP status. The native adapter is still provisional.
+
 | Provider | Implemented behavior | Evidence boundary |
 | --- | --- | --- |
 | `gpt-5.4-nano`, `gpt-5.4-mini`, `gpt-6-luna` | OpenAI chat completions with strict answer-enum JSON schema | Chat-model baselines, not native Decisions API |

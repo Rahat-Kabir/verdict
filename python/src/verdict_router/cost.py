@@ -6,6 +6,7 @@ uses reported account charges; it does not substitute upstream provider spend.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 VERIFIED_ON = "2026-10-01"
@@ -77,6 +78,24 @@ def compute_cost(
         input_cost *= 2
         output_cost *= 1.5
     return (input_cost + output_cost) / 1e6
+
+
+def compute_usage_cost(model: str, usage: dict) -> float | None:
+    """Invalid billing fields must not become guessed usage or break decisions."""
+    details = usage.get("prompt_tokens_details")
+    if details is None:
+        details = {}
+    if not isinstance(details, dict):
+        return None
+    try:
+        cost = compute_cost(
+            model, usage.get("prompt_tokens"), usage.get("completion_tokens"),
+            cached_prompt_tokens=details.get("cached_tokens", 0),
+            cache_write_tokens=details.get("cache_write_tokens", 0),
+        )
+        return cost if cost is not None and math.isfinite(cost) else None
+    except OverflowError:
+        return None
 
 
 def is_estimated(model: str) -> bool:

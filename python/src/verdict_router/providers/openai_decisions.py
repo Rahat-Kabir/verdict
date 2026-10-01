@@ -6,7 +6,6 @@ chat baseline using Verdict's finite-choice interface; it is not native API evid
 
 from __future__ import annotations
 
-import json
 import time
 
 import httpx
@@ -16,9 +15,11 @@ from .base import (
     DECISION_SYSTEM_PROMPT,
     Provider,
     ProviderError,
-    _reject_duplicate_keys,
     build_decision_prompt,
+    first_choice,
     parse_answer,
+    response_object,
+    response_usage,
     validate_response,
 )
 
@@ -66,17 +67,22 @@ class OpenAIDecisionsProvider(Provider):
             if resp.status_code >= 400:
                 # Surface the provider's HTTP error without assuming account access.
                 try:
-                    message = resp.json().get("error", {}).get("message", resp.text[:300])
-                except (json.JSONDecodeError, ValueError):
+                    error = response_object(resp).get("error")
+                    message = error.get("message") if isinstance(error, dict) else error
+                    if not isinstance(message, str):
+                        message = resp.text[:300]
+                except ValueError:
                     message = resp.text[:300]
                 raise ProviderError(
                     f"Decisions API unavailable (HTTP {resp.status_code}): {message}"
                 )
-            data = resp.json(object_pairs_hook=_reject_duplicate_keys)
+            data = response_object(resp)
             # Provisional extraction; fixtures do not establish a live API contract.
-            answer = data.get("answer") or (data.get("choices") or [{}])[0].get("answer")
+            answer = data.get("answer")
+            if answer is None:
+                answer = first_choice(data).get("answer")
             confidence = data.get("confidence")
-            usage = data.get("usage") or {}
+            usage = response_usage(data)
             return validate_response(
                 DecisionResponse(
                     answer=answer,
@@ -86,9 +92,7 @@ class OpenAIDecisionsProvider(Provider):
                     confidence=confidence,
                     usage=usage,
                     raw={"status": resp.status_code},
-                    error=None
-                    if answer
-                    else f"unexpected response shape: {json.dumps(data)[:300]}",
+                    error=None,
                 ),
                 request,
             )
