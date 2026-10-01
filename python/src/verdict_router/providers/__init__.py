@@ -19,11 +19,11 @@ PROVIDER_META: dict[str, dict] = {
         "display_name": "Jev Router",
         "vendor": "TypeSafe (via OpenRouter)",
         "model": "typesafe/jev-router",
-        "kind": "decision-model",
+        "kind": "routing-pipeline",
         "description": (
-            "TypeSafe's System-One decision model, exposed on OpenRouter as a router "
-            "that picks an underlying model per request. No structured outputs and no "
-            "confidence scores; answers are parsed from free text."
+            "OpenRouter routing pipeline that selects a downstream answering model. "
+            "This adapter sends plain-text decision prompts and parses final content. "
+            "Its benchmark rows do not measure native Jev decisions or confidence."
         ),
         "url": "https://openrouter.ai/typesafe/jev-router",
         "labels": ["openrouter"],
@@ -34,8 +34,8 @@ PROVIDER_META: dict[str, dict] = {
         "model": "upstage/solar-mini4",
         "kind": "small-baseline",
         "description": (
-            "Upstage's small fast model. The closest available stand-in for the "
-            "'Solar Decide' decision variant, which is not exposed as a separate ID."
+            "Upstage chat-model baseline through OpenRouter with JSON-object output. "
+            "These rows do not establish the capabilities of a separate decision API."
         ),
         "url": "https://openrouter.ai/upstage/solar-mini4",
         "labels": ["openrouter", "baseline"],
@@ -46,8 +46,8 @@ PROVIDER_META: dict[str, dict] = {
         "model": "gpt-5.4-nano",
         "kind": "small-baseline",
         "description": (
-            "OpenAI's cheapest current small model, driven through the same decision "
-            "prompt with strict JSON-schema outputs."
+            "OpenAI chat-model baseline using decision prompts and a strict "
+            "answer-enum JSON schema."
         ),
         "url": "https://platform.openai.com/docs/models",
         "labels": ["openai", "baseline"],
@@ -57,7 +57,7 @@ PROVIDER_META: dict[str, dict] = {
         "vendor": "OpenAI",
         "model": "gpt-5.4-mini",
         "kind": "small-baseline",
-        "description": "Mid-tier OpenAI small model; the step-up option from nano.",
+        "description": "OpenAI chat-model baseline using a strict answer-enum JSON schema.",
         "url": "https://platform.openai.com/docs/models",
         "labels": ["openai", "baseline"],
     },
@@ -65,14 +65,14 @@ PROVIDER_META: dict[str, dict] = {
         "display_name": "GPT-6 Luna",
         "vendor": "OpenAI",
         "model": "gpt-6-luna",
-        "kind": "frontier-reference",
+        "kind": "chat-baseline",
         "description": (
-            "The smallest member of the GPT-6 family (the model the Decisions API is "
-            "built on). Included as a frontier reference point: what do you give up "
-            "if you use a general frontier model instead of a decision model?"
+            "OpenAI chat-model baseline using a strict answer-enum JSON schema. "
+            "Also the default reference for offline escalation simulations. "
+            "These rows do not measure the native Decisions API."
         ),
         "url": "https://platform.openai.com/docs/models",
-        "labels": ["openai", "frontier"],
+        "labels": ["openai", "baseline"],
     },
     "openai-decisions-proxy": {
         "display_name": "OpenAI Decisions (proxy)",
@@ -80,26 +80,25 @@ PROVIDER_META: dict[str, dict] = {
         "model": "gpt-5.4-nano",
         "kind": "proxy",
         "description": (
-            "The Decisions-API contract (question, finite answers, context) served by "
-            "gpt-5.4-nano with structured outputs. This is NOT the real Decisions API "
-            "— preview access is not enabled for our key yet — but it shows what the "
-            "interface costs on an off-the-shelf chat model."
+            "Verdict's finite-choice interface served by GPT-5.4 Nano with structured "
+            "outputs. Uses the same backend as the Nano baseline; this is a proxy, "
+            "not an independent decision engine or native Decisions API measurement."
         ),
-        "url": "https://openai.com/index/devday-2026-recap/",
+        "url": "https://platform.openai.com/docs/models",
         "labels": ["proxy"],
     },
     "openai-decisions": {
         "display_name": "OpenAI Decisions API",
         "vendor": "OpenAI",
-        "model": "luna (real endpoint)",
-        "kind": "decision-model",
+        "model": "luna (provisional adapter)",
+        "kind": "provisional-adapter",
         "description": (
-            "The real /v1/decisions endpoint. Present in the registry for the day "
-            "preview access is granted; the runner skips it cleanly while the key "
-            "lacks access."
+            "Provisional adapter for /v1/decisions. Successful live response handling "
+            "has not been verified; there are no native benchmark records. "
+            "Excluded from the default benchmark roster."
         ),
-        "url": "https://openai.com/index/devday-2026-recap/",
-        "labels": ["preview-gated"],
+        "url": None,
+        "labels": ["provisional"],
     },
 }
 

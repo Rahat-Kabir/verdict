@@ -33,6 +33,10 @@ const suiteName = (s: string) => s.replace("_", " ");
     {((meta.labels ?? []) as string[]).map((l) => <span class={`badge ${l}`}>{l}</span>)}
   </p>
   <p class="tagline">{meta.description ?? ""}</p>
+  <p class="callout">
+    Historical snapshot: these measurements predate parser, pricing, and accounting corrections.
+    Results apply to the recorded tasks and adapter, with <a href="/methodology">the limitations described in methodology</a>.
+  </p>
   {meta.url && <p><a href={meta.url} rel="noopener" target="_blank">provider page ↗</a></p>}
 
   {Object.keys(suites).length === 0 && <div class="callout">No benchmark data recorded for this provider yet.</div>}
@@ -46,8 +50,8 @@ const suiteName = (s: string) => s.replace("_", " ");
         </thead>
         <tbody>
           <tr><td>Accuracy</td><td class="num">{fmtAcc(m.accuracy)}</td><td>{m.n} items, {m.n_errors} errors excluded</td></tr>
-          <tr><td>Latency p50 / p95</td><td class="num">{fmtMs(m.latency_ms_p50)} / {fmtMs(m.latency_ms_p95)} ms</td><td>measured per decision</td></tr>
-          <tr><td>Cost per 1,000 decisions</td><td class="num">{fmtCost(m.cost_per_1k_usd)}</td><td>{meta.labels?.includes("openai") ? "estimated pricing" : "per-generation billing"}</td></tr>
+          <tr><td>Latency p50 / p95</td><td class="num">{fmtMs(m.latency_ms_p50)} / {fmtMs(m.latency_ms_p95)} ms</td><td>historical client timing over successful items</td></tr>
+          <tr><td>Cost per 1,000 decisions</td><td class="num">{fmtCost(m.cost_per_1k_usd)}</td><td>historical recorded cost; pricing/billing basis was not retained</td></tr>
           <tr><td>Calibration (ECE)</td><td class="num">{fmtEce(m.ece)}</td><td>{m.n_with_confidence} items reported confidence</td></tr>
         </tbody>
       </table>
@@ -55,8 +59,10 @@ const suiteName = (s: string) => s.replace("_", " ");
       {m.escalation && Object.keys(m.escalation).length > 0 && (
         <>
           <h3 style="margin-top:22px; font-size:15px; color:var(--muted)">
-            Escalation curve — blend this provider with GPT-6 Luna when confidence &lt; threshold
+            Offline escalation simulation with GPT-6 Luna
           </h3>
+          <p class="tagline">Uses previously recorded answers, with failed escalation records excluded.
+            Thresholds were not validated on held-out data; unknown costs are currently treated as zero.</p>
           <table class="board">
             <thead>
               <tr><th>Threshold</th><th>Blended accuracy</th><th>Blended $/1k</th><th>Escalated</th></tr>

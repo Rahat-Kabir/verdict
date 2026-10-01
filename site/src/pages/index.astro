@@ -18,64 +18,25 @@ function badgeClass(label: string) {
   return ["proxy", "frontier", "decision-model"].includes(label) ? label : "";
 }
 
-// Auto-takeaways, computed defensively (all optional when data is missing).
-const takeaways: { title: string; body: string }[] = [];
-try {
-  const rows = (results.leaderboards?.[activeSuite] || []) as any[];
-  if (rows.length >= 2) {
-    const priced = rows.filter((r) => r.cost_per_1k_usd !== null && r.cost_per_1k_usd !== undefined);
-    const best = rows[0];
-    const bestAcc = best?.accuracy;
-    if (priced.length && bestAcc !== null) {
-      const cheapestAtTop = priced
-        .filter((r) => r.accuracy !== null && bestAcc - r.accuracy <= 0.01)
-        .sort((a, b) => a.cost_per_1k_usd - b.cost_per_1k_usd)[0];
-      if (cheapestAtTop) {
-        takeaways.push({
-          title: "Best value",
-          body: `${results.providers_meta[cheapestAtTop.provider]?.display_name ?? cheapestAtTop.provider} reaches top-tier accuracy on ${activeSuite} at ${fmtCost(cheapestAtTop.cost_per_1k_usd)} per 1,000 decisions.`,
-        });
-      }
-    }
-    const fastest = [...rows].filter((r) => r.latency_ms_p50).sort((a, b) => a.latency_ms_p50 - b.latency_ms_p50)[0];
-    if (fastest) {
-      takeaways.push({
-        title: "Fastest p50",
-        body: `${results.providers_meta[fastest.provider]?.display_name ?? fastest.provider} answers in ${fmtMs(fastest.latency_ms_p50)} ms at the median.`,
-      });
-    }
-    const calibrated = rows.filter((r) => r.ece !== null && r.ece !== undefined).sort((a, b) => a.ece - b.ece)[0];
-    if (calibrated) {
-      takeaways.push({
-        title: "Best calibrated",
-        body: `${results.providers_meta[calibrated.provider]?.display_name ?? calibrated.provider} reports the most honest confidence (ECE ${fmtEce(calibrated.ece)}) — trust its thresholds.`,
-      });
-    }
-  }
-} catch (e) {
-  // takeaways are decorative; never fail the page
-}
 const hasData = suites.length > 0;
 ---
 
-<Base title="Verdict — decision API leaderboard">
-  <h1>The decision-API leaderboard</h1>
+<Base title="Verdict — historical benchmark results">
+  <h1>Finite-choice AI benchmark results</h1>
   <p class="tagline">
-    Independent measurements for the fast judgment layer of agent stacks: which provider classifies,
-    routes and picks next actions with the best <strong>accuracy × latency × cost</strong> — and whose
-    confidence scores you can actually trust.
+    An experimental comparison of chat baselines and Jev Router on labeled tasks.
+    These tables describe a historical snapshot, with accuracy, client latency,
+    recorded cost, and reported confidence. They do not establish production reliability.
   </p>
   <p class="updated">
-    {results.generated_at ? `Last run: ${results.generated_at.replace(/Z$/, "")} (UTC)` : "First nightly run in progress…"}
+    {results.generated_at ? `Summary generated: ${results.generated_at.replace(/Z$/, "")} (UTC); aggregation time, not inference time.` : "Summary generation time unavailable."}
   </p>
-
-  {takeaways.length > 0 && (
-    <div class="cards">
-      {takeaways.map((t) => (
-        <div class="card"><h3>{t.title}</h3><p>{t.body}</p></div>
-      ))}
-    </div>
-  )}
+  <p class="callout">
+    Historical evidence: these records predate parser, pricing, and accounting corrections.
+    Raw outputs and token usage were not saved, so the snapshot cannot be repaired offline.
+    Accuracy excludes failed responses; confidence thresholds have not been validated on held-out tasks.
+    See <a href="/methodology">methodology and limitations</a> before interpreting ranks or costs.
+  </p>
 
   {!hasData && (
     <div class="callout">
@@ -136,9 +97,10 @@ const hasData = suites.length > 0;
 
   <h2>What "cost" means here</h2>
   <p class="tagline">
-    $/1k = average charged cost per 1,000 decisions on that suite. OpenRouter providers are billed at the
-    authoritative per-generation amount; OpenAI prices are estimates and marked as such on the
-    <a href="/methodology">methodology page</a>. "n/a" means the provider's price could not be resolved.
+    $/1k = average known cost per 1,000 decisions on that suite. Displayed costs come from the
+    historical snapshot and have not been repaired with the corrected pricing and retry accounting.
+    OpenAI costs are estimates. See the <a href="/methodology">methodology page</a> for billing limits.
+    "n/a" means no cost could be resolved.
   </p>
 
   <script>

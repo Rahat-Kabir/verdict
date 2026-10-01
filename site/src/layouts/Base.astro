@@ -5,7 +5,7 @@ interface Props {
   title: string;
   description?: string;
 }
-const { title, description = "Independent benchmark for decision APIs: accuracy, latency, cost and calibration." } = Astro.props;
+const { title, description = "Experimental finite-choice AI evaluation harness and router SDK, with historical benchmark results." } = Astro.props;
 const path = Astro.url.pathname;
 const nav = [
   ["/", "Leaderboard"],
@@ -34,8 +34,8 @@ const nav = [
       </header>
       <slot />
       <footer class="site">
-        Verdict &middot; independent measurements, run nightly &middot; <a href="/methodology">methodology</a> &middot;
-        <a href="https://github.com/">source</a>
+        Verdict &middot; experimental evaluation harness &middot; <a href="/methodology">methodology</a>
+        &middot; <a href="https://github.com/Rahat-Kabir/verdict">source</a>
       </footer>
     </div>
   </body>

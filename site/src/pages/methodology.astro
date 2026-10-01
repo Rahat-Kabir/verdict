@@ -20,18 +20,15 @@ const suiteRows = Object.entries(suites).map(([name, s]: [string, any]) => ({
   src: srcFor(name),
   task: `${s.n_answers}-way choice`,
 }));
-const suiteRowsShown =
-  suiteRows.length > 0
-    ? suiteRows
-    : [{ name: "classification", n: 200, src: "ag_news (HF)", task: "4-way choice" }];
 ---
 
 <Base title="Methodology — Verdict">
   <h1>Methodology</h1>
   <p class="tagline">
-    Verdict measures decision APIs on the same prompt, the same labeled items, and the same contract:
+    Verdict compares included provider adapters on labeled tasks with a common finite-choice contract:
     <em>given a question with a finite set of allowed answers and some context, choose exactly one answer</em>.
-    Everything on this site is reproducible from the repository with two commands.
+    Saved summaries can be rebuilt from historical records. Rerunning classification and moderation
+    requires separately obtained local inputs under their source terms.
   </p>
 
   <h2>The contract every provider must satisfy</h2>
@@ -45,19 +42,34 @@ DecisionResponse:
   confidence:  float | None       # 0..1, optional
   latency_ms, cost_usd            # measured per call`}</code></pre>
   <p class="tagline">
-    All providers receive an identical system prompt and user prompt. Structured-output providers get a
-    strict JSON schema (<code>answer</code> enum + <code>confidence</code>); providers without schema
-    support (e.g. <code>jev-router</code> advertises no supported parameters) receive the same prompt as
-    plain text and their answer is extracted by a shared robust parser (embedded JSON → exact match →
-    quoted match → word-overlap fallback).
+    Chat adapters share a decision prompt. OpenAI chat baselines request a strict
+    <code>answer</code>-enum JSON schema; Solar requests JSON-object output, Ollama uses
+    JSON mode, and Jev Router receives plain text. The provisional native adapter uses
+    a separate question/answers/context payload and has no verified benchmark records.
+    The shared parser accepts a single JSON decision (optionally wrapped in prose), a bare
+    or quoted label, or a short explicit answer declaration. It rejects ambiguous prose rather than
+    guessing from mentioned labels. Duplicate JSON keys remain a known parser limitation.
+    Reasoning-only responses are errors. JSON decisions may also use
+    a zero-based answer index. Returned answers must belong to the supplied list.
   </p>
 
   <h2>Suites</h2>
-  <p class="tagline">Fixed, seeded, versioned JSONL files shipped inside the package. Real data wherever a public labeled source was available:</p>
+  <p class="tagline">
+    This table describes the historical benchmark suites. Only routing and synthetic agent examples
+    are bundled. AG News and TweetEval hate raw text are excluded from public distributions and Git
+    history; those suites accept permitted private local inputs.
+  </p>
+  <p class="tagline">
+    Routing samples are adapted from <a href="https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets">Tobi Bueck's Customer Support Tickets</a>
+    under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a>, separately from the MIT code.
+    Changes include sampling English rows, selecting queues, combining and truncating text, and adding
+    decision fields. Dataset use is noncommercial, with attribution required; it is provided without
+    warranties and without endorsement. The source describes synthetic ticket generation.
+  </p>
   <table class="board">
     <thead><tr><th>Suite</th><th>Items</th><th>Source</th><th>Task</th></tr></thead>
     <tbody>
-      {suiteRowsShown.map((r: any) => (
+      {suiteRows.map((r: any) => (
         <tr>
           <td>{r.name.replace("_", " ")}</td>
           <td class="num">{r.n}</td>
@@ -67,30 +79,42 @@ DecisionResponse:
       ))}
     </tbody>
   </table>
+  <p class="tagline">
+    Source names reflect the original builder configuration; row-level source manifests were not
+    retained. The agent-action suite has 200 rows but only 105 distinct inputs from 12 templates,
+    and does not evaluate tool execution, prerequisites, or completed agent workflows.
+  </p>
 
   <h2>Metrics</h2>
   <ul class="tagline">
     <li><strong>Accuracy</strong> — exact verbatim match against the labeled answer, over non-errored items.</li>
-    <li><strong>Latency p50/p95</strong> — wall-clock per call measured in the client (network included), sequential-by-default; the published run uses concurrency 4 (mild queueing possible at p95).</li>
-    <li><strong>Cost per 1,000 decisions</strong> — OpenRouter providers are billed at the authoritative per-generation amount returned by OpenRouter's <code>/generation</code> endpoint. OpenAI prices are our estimates (flagged in the harness) until confirmed against published pricing.</li>
-    <li><strong>ECE</strong> — expected calibration error over 10 equal-width confidence bins; lower means the stated confidence is more honest. Computed only over items that reported confidence.</li>
-    <li><strong>Escalation curves</strong> — offline simulation: items below a confidence threshold are "answered" by the escalation provider's already-recorded output (GPT-6 Luna by default), and we report blended accuracy and cost. No extra API calls are involved.</li>
+    <li><strong>Latency p50/p95</strong> — future benchmark records measure total item wall time, including retries, backoff, and billing lookups; executor queue time is excluded. The saved snapshot predates this correction and used concurrency 4.</li>
+    <li><strong>Cost per 1,000 decisions</strong> — future records include all retry costs. OpenRouter exact mode uses reported account charges, including zero; missing charges stay unknown. OpenAI uses published standard token-rate estimates with cache discounts. The displayed historical costs have not been repaired.</li>
+    <li><strong>ECE</strong> — expected calibration error over 10 equal-width confidence bins, using successful items with reported confidence. Lower values mean a smaller observed gap between confidence and correctness on these samples; they do not validate thresholds on another workload.</li>
+    <li><strong>Escalation curves</strong> — offline simulations joining recorded answers by item ID (GPT-6 Luna by default). They do not measure a live cascade or validate thresholds on held-out data. The current simulation substitutes zero for unknown costs, so simulated cost can be understated.</li>
   </ul>
 
   <h2>Disclosed caveats</h2>
   <ul class="tagline">
-    <li><strong>Proxy labeling.</strong> The OpenAI Decisions API is in limited preview and not enabled for our key at measurement time. Any provider labeled <span class="badge proxy">proxy</span> implements the same contract on a standard chat model — it is <em>not</em> the real Decisions API. When access lands, the real adapter runs in the same slot and the badge disappears.</li>
-    <li><strong>jev-router opacity.</strong> Jev is a router: it picks an underlying model per request, and its listing price is unpublished. We report the charged amount per call and record the routed model.</li>
-    <li><strong>Confidence comparability.</strong> Some providers return no confidence (excluded from ECE); others derive it from free text. Treat ECE as provider-internal honesty, not cross-provider gospel.</li>
-    <li><strong>Snapshot pricing.</strong> Provider prices change; the cost table is dated and versioned in the repo (<code>cost.py</code>).</li>
-    <li><strong>Single-run variance.</strong> Temperature is 0 where supported, but routed providers can still vary. Nightly reruns smooth this out over time.</li>
+    <li><strong>Parser change.</strong> The initial committed benchmark snapshot used a more permissive parser. Raw model output was not saved, so those results cannot be revalidated offline with the stricter parser; a fresh benchmark is required.</li>
+    <li><strong>Provider identity.</strong> Jev Router rows measure its routing pipeline, not native Jev decisions. The <span class="badge proxy">proxy</span> wraps the same Nano backend as the Nano baseline. Neither native Jev nor native OpenAI Decisions has measured rows here.</li>
+    <li><strong>Routed-model provenance.</strong> The OpenRouter adapter can receive downstream model identity, but historical benchmark records omit it. Exact-cost mode now uses reported account charges; historical costs were recorded under the older resolver.</li>
+    <li><strong>Confidence comparability.</strong> Chat confidence is model-reported. Missing confidence is excluded from ECE and bypasses SDK escalation. Invalid/nonfinite confidence handling remains a known limitation.</li>
+    <li><strong>Snapshot pricing.</strong> Standard token rates in <code>cost.py</code> were verified on 2026-10-01. Estimates exclude special service tiers, regional uplifts, and account adjustments. Saved records omit token usage and billing metadata, so old costs cannot be repriced offline. Summaries average known costs only.</li>
+    <li><strong>Single-run variance.</strong> These are single-run observations without repeated-run uncertainty estimates. Remote adapters do not set temperature. A scheduled workflow exists, but verified nightly publication has not been established.</li>
+    <li><strong>Failure coverage.</strong> Accuracy, latency, and average cost summaries exclude failed responses. Average cost uses only known costs, without a coverage percentage. The main table does not display error counts; provider pages do.</li>
   </ul>
 
   <h2>Reproduce it</h2>
   <pre><code>{`cd python
 uv sync --extra dev
-uv run python scripts/build_datasets.py   # rebuild suites (seeded)
-uv run verdict bench --all --out ../results
+# Rebuild the saved historical summary; no inference calls:
 uv run verdict aggregate --results ../results --out ../site/src/data/results.json
-cd ../site && npm run build               # static site from real data`}</code></pre>
+cd ../site && npm run build
+
+# New paid measurements, after checking source terms and spend:
+cd ../python
+uv run verdict bench --all --out ../new-results
+# Defaults: routing + agent_next_action. Optional local suites require
+# VERDICT_DATASET_DIR and an explicit --suite classification or moderation.`}</code></pre>
 </Base>

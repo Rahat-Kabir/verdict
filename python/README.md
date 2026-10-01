@@ -1,11 +1,20 @@
 # verdict-router
 
-Provider-agnostic **decision-API** benchmark harness and router SDK.
+Experimental evaluation harness and Python router SDK for finite-choice AI decisions.
 
-A "decision" is the small, fast judgment every agent needs: classify this
-ticket, route this request, pick the agent's next tool — always choosing from
-a finite, predefined set of answers. `verdict-router` benchmarks every
-provider offering that primitive and gives you one Python interface over all
-of them, with caching, confidence thresholds, and escalation.
+A decision chooses one label from a predefined list. The included adapters
+compare chat-model baselines and Jev Router on labeled tasks. The SDK provides
+ordered fallback, exact caching, and optional escalation based on reported
+confidence. Native Jev is absent; the OpenAI Decisions adapter is provisional,
+and its Nano-based proxy does not measure the native API.
+
+Saved results predate parser/accounting corrections. Treat them as historical
+observations, not evidence of production reliability or calibrated confidence.
 
 See the repo-root `README.md` for the full story.
+
+Original code and documentation: [MIT](LICENSE). Bundled routing samples are
+separately CC-BY-NC-4.0; synthetic agent examples are MIT. See
+[the dataset notice](DATASET_NOTICE.md) for attribution and source terms.
+Classification and moderation are optional private JSONL inputs selected through
+`VERDICT_DATASET_DIR`; their source text is excluded from public distributions.
