@@ -110,6 +110,11 @@ benchmark retries can continue. Known charges are retained even when the answer
 payload is broken. Malformed billing data leaves cost unknown without discarding
 a valid answer. Remote HTTP failures and missing keys still raise `ProviderError`.
 
+New benchmark records distinguish `requested_model` from `reported_model` (the
+model ID supplied by the final response). Missing identity stays unknown; old
+results are not backfilled. SDK responses, usage logs, and `verdict decide` also
+retain reported identity. These are provider reports, not independent verification.
+
 SDK cost totals include failed fallback and escalation attempts. If any attempt's
 cost is unknown (including a raised provider error with no billing metadata), the
 total is `None`. Latency measures the whole decision through cache persistence,

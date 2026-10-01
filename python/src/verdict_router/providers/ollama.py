@@ -18,6 +18,7 @@ from .base import (
     build_decision_prompt,
     message_content,
     parse_answer,
+    response_model,
     response_object,
 )
 
@@ -44,6 +45,7 @@ class OllamaProvider(Provider):
 
     def decide(self, request: DecisionRequest) -> DecisionResponse:
         started = time.perf_counter()
+        reported_model = None
         try:
             resp = httpx.post(
                 f"{self.base_url}/api/chat",
@@ -62,6 +64,7 @@ class OllamaProvider(Provider):
             latency_ms = (time.perf_counter() - started) * 1000
             resp.raise_for_status()
             data = response_object(resp)
+            reported_model = response_model(data)
             content = message_content(data.get("message"))
             answer, confidence = parse_answer(content, request.answers)
             usage = {
@@ -76,6 +79,7 @@ class OllamaProvider(Provider):
                 confidence=confidence,
                 cost_usd=0.0,
                 usage=usage,
+                reported_model=reported_model,
                 raw={"content": content[:2000]},
                 error=None if answer else "unparseable answer",
             )
@@ -87,5 +91,6 @@ class OllamaProvider(Provider):
                 model=self.model,
                 latency_ms=latency_ms,
                 cost_usd=0.0,
+                reported_model=reported_model,
                 error=f"{type(exc).__name__}: {exc}",
             )

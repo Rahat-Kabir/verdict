@@ -16,13 +16,29 @@ a static site from a JSON file; the browser does not hold provider credentials.
 - `DecisionRequest`: question, ordered allowed answers, optional text context,
   and metadata. Existing built-in adapters do not use metadata to make decisions.
 - `DecisionResponse`: answer, provider/model, latency, optional confidence/cost,
-  usage, raw adapter metadata, error, escalation/provider attribution, cache flag.
+  usage, raw adapter metadata, error, escalation/provider attribution, cache flag,
+  and optional `reported_model`. Existing `model` is the configured/requested ID;
+  `reported_model` is a nonempty response-supplied model string, never inferred.
   `ok` checks error/answer presence; allowed-answer membership is enforced by the
   parsing and validation boundaries, not by the property itself.
 - `DatasetItem`: ID, question, answers, context, and expected label.
 - `Record`: provider, suite, item ID, expected/actual answer, correctness, latency,
-  confidence, cost, error, and timestamp. It omits raw output, token usage, model
-  version, routed-model identity, and dataset/run fingerprints.
+  confidence, cost, error, timestamp, optional `requested_model`, and optional
+  `reported_model`. Future records retain the requested ID and final response's
+  reported ID. Historical missing fields remain None. Records still omit raw
+  output, token usage, per-attempt identities, and dataset/run fingerprints.
+
+Adapters preserve the top-level response `model` string independently of the
+requested alias; invalid/missing values stay unknown. OpenRouter documents this
+field as the selected model for its [Auto Router](https://openrouter.ai/docs/guides/routing/routers/auto-router).
+These are provider reports, not independently authenticated serving identities.
+Model identity is retained even when returned decision content is invalid. Records
+describe only the final attempt; a final exception cannot reuse an earlier model
+ID. SDK fallback/escalation preserves the final chosen response's identity; cache
+hits retain the original cached response's identity. Usage logs and decide CLI
+JSON expose both requested and reported IDs. Existing caches without the added
+field remain readable and report unknown identity; no inference is made from raw
+metadata or registry labels to backfill it.
 
 The parser accepts one JSON decision object (including answer/choice/label or a
 zero-based integer choice), an exact case-insensitive label, a quoted label, or a
@@ -235,8 +251,9 @@ run have not been verified in this review.
   this workaround does not make upstream spend equal to the account charge.
 - **Routing identity:** initial probes reportedly selected different downstream
   models on different Jev Router requests. Adapter raw metadata can include that
-  identity, but benchmark `Record` drops it. Preserve model identity in a future
-  evidence-schema slice before attributing native Jev capabilities to these rows.
+  identity. New benchmark records retain the final response-reported identity;
+  historical rows omit it and cannot establish which downstream model answered.
+  Jev Router results still do not establish native Jev capabilities.
 
 The former permissive parser and reasoning fallback were superseded by explicit
 answer parsing. Do not restore them as compatibility workarounds.

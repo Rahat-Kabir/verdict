@@ -46,6 +46,9 @@ uv run pytest tests/test_datasets.py
   choices/messages/content, native HTTP errors, optional usage, and generation
   billing. Router fallback and benchmark retries preserve known charges, while
   unknown charges propagate; malformed billing does not discard valid answers.
+- `test_model_identity.py`: requested/reported model separation across adapters,
+  missing/invalid IDs, failed decisions and retries, JSONL persistence, old records
+  and caches, proxying, escalation, usage logs, and offline decide CLI output.
 - `test_metrics.py`: failure-inclusive cost/latency, completion and all-item accuracy,
   incomplete billing coverage, known zero and empty suites, and escalation failures,
   missing observations, unknown costs, and invalid imported confidence. These offline fixtures verify arithmetic,

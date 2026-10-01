@@ -152,6 +152,8 @@ class Router:
             "question": request.question[:500],
             "n_answers": len(request.answers),
             "provider": response.served_by or response.provider,
+            "requested_model": response.model,
+            "reported_model": response.reported_model,
             "answer": response.answer,
             "confidence": response.confidence,
             "correct": None,

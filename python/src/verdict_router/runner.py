@@ -40,6 +40,7 @@ def run_provider_suite(
             question=item.question, answers=item.answers, context=item.context
         )
         started = time.perf_counter()
+        requested_model = provider.model
         total_cost: float | None = 0.0
         response = None
         for attempt in range(retries + 1):
@@ -66,6 +67,7 @@ def run_provider_suite(
                         latency_ms=(time.perf_counter() - started) * 1000,
                         cost_usd=total_cost,
                         error=str(exc),
+                        requested_model=requested_model,
                     )
                     return
             if attempt < retries:
@@ -83,6 +85,8 @@ def run_provider_suite(
             confidence=response.confidence,
             cost_usd=total_cost,
             error=response.error,
+            requested_model=requested_model,
+            reported_model=response.reported_model,
         )
 
     if concurrency <= 1:

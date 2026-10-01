@@ -47,6 +47,7 @@ class DecisionResponse:
     escalated: bool = False
     served_by: str | None = None  # set by the Router when escalation happens
     cache_hit: bool = False
+    reported_model: str | None = None  # response-reported identity, not the requested alias
 
     @property
     def ok(self) -> bool:
@@ -80,6 +81,8 @@ class Record:
     cost_usd: float | None = None
     error: str | None = None
     timestamp: str = field(default_factory=utc_now_iso)
+    requested_model: str | None = None
+    reported_model: str | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)

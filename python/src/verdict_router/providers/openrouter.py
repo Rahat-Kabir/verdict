@@ -28,6 +28,7 @@ from .base import (
     message_content,
     parse_answer,
     require_object,
+    response_model,
     response_object,
     response_usage,
 )
@@ -71,6 +72,7 @@ class OpenRouterProvider(Provider):
         started = time.perf_counter()
         cost = None
         usage = None
+        reported_model = None
         messages = [
             {"role": "system", "content": DECISION_SYSTEM_PROMPT},
             {"role": "user", "content": build_decision_prompt(request)},
@@ -91,6 +93,7 @@ class OpenRouterProvider(Provider):
             if resp.status_code >= 400:
                 raise ProviderError(f"HTTP {resp.status_code}: {resp.text[:300]}")
             data = response_object(resp)
+            reported_model = response_model(data)
             usage = response_usage(data)
             cost = self._resolve_cost(data.get("id"), usage)
             content = message_content(first_choice(data).get("message"))
@@ -103,7 +106,8 @@ class OpenRouterProvider(Provider):
                 confidence=confidence,
                 cost_usd=cost,
                 usage=usage,
-                raw={"content": (content or "")[:2000], "routed_model": data.get("model")},
+                reported_model=reported_model,
+                raw={"content": (content or "")[:2000], "routed_model": reported_model},
                 error=None if answer else "unparseable answer",
             )
         except ProviderError:
@@ -117,6 +121,7 @@ class OpenRouterProvider(Provider):
                 latency_ms=latency_ms,
                 cost_usd=cost,
                 usage=usage,
+                reported_model=reported_model,
                 error=f"{type(exc).__name__}: {exc}",
             )
 

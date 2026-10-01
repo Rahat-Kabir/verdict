@@ -76,6 +76,11 @@ def response_usage(data: dict) -> dict:
     return usage if isinstance(usage, dict) else {}
 
 
+def response_model(data: dict) -> str | None:
+    model = data.get("model")
+    return model.strip() if isinstance(model, str) and model.strip() else None
+
+
 class Provider(ABC):
     name: str
     model: str
@@ -199,6 +204,7 @@ def _match_answer(text: str, answers: list[str]) -> str | None:
 def validate_response(response: DecisionResponse, request: DecisionRequest) -> DecisionResponse:
     """Enforce the finite-choice contract at SDK and benchmark boundaries."""
     response.confidence = _clamp_conf(response.confidence)
+    response.reported_model = response_model({"model": response.reported_model})
     if response.error is None and (
         not isinstance(response.answer, str) or response.answer not in request.answers
     ):

@@ -21,6 +21,7 @@ from .base import (
     first_choice,
     message_content,
     parse_answer,
+    response_model,
     response_object,
     response_usage,
 )
@@ -57,6 +58,7 @@ class OpenAIChatProvider(Provider):
         started = time.perf_counter()
         cost = None
         usage = None
+        reported_model = None
         try:
             payload = {
                 "model": self.model,
@@ -79,6 +81,7 @@ class OpenAIChatProvider(Provider):
             if resp.status_code >= 400:
                 raise ProviderError(f"HTTP {resp.status_code}: {_short(resp.text)}")
             data = response_object(resp)
+            reported_model = response_model(data)
             usage = response_usage(data)
             cost = compute_usage_cost(self.model, usage)
             content = message_content(first_choice(data).get("message"))
@@ -91,6 +94,7 @@ class OpenAIChatProvider(Provider):
                 confidence=confidence,
                 cost_usd=cost,
                 usage=usage,
+                reported_model=reported_model,
                 raw={"content": content[:2000]},
                 error=None if answer else "unparseable answer",
             )
@@ -105,6 +109,7 @@ class OpenAIChatProvider(Provider):
                 latency_ms=latency_ms,
                 cost_usd=cost,
                 usage=usage,
+                reported_model=reported_model,
                 error=f"{type(exc).__name__}: {exc}",
             )
 

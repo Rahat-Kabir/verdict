@@ -18,6 +18,7 @@ from .base import (
     build_decision_prompt,
     first_choice,
     parse_answer,
+    response_model,
     response_object,
     response_usage,
     validate_response,
@@ -51,6 +52,7 @@ class OpenAIDecisionsProvider(Provider):
 
     def decide(self, request: DecisionRequest) -> DecisionResponse:
         started = time.perf_counter()
+        reported_model = None
         payload = {
             "question": request.question,
             "answers": request.answers,
@@ -77,6 +79,7 @@ class OpenAIDecisionsProvider(Provider):
                     f"Decisions API unavailable (HTTP {resp.status_code}): {message}"
                 )
             data = response_object(resp)
+            reported_model = response_model(data)
             # Provisional extraction; fixtures do not establish a live API contract.
             answer = data.get("answer")
             if answer is None:
@@ -91,6 +94,7 @@ class OpenAIDecisionsProvider(Provider):
                     latency_ms=latency_ms,
                     confidence=confidence,
                     usage=usage,
+                    reported_model=reported_model,
                     raw={"status": resp.status_code},
                     error=None,
                 ),
@@ -105,6 +109,7 @@ class OpenAIDecisionsProvider(Provider):
                 provider=self.name,
                 model=self.model,
                 latency_ms=latency_ms,
+                reported_model=reported_model,
                 error=f"{type(exc).__name__}: {exc}",
             )
 

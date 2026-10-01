@@ -2,9 +2,9 @@
 
 ## Current state — 2026-10-01
 
-The first public version and subsequent measurement/SDK fixes are on GitHub,
-including malformed-provider responses. Configuration lookup improvements are
-implemented locally. Session entries record implementation evidence.
+The first public version and subsequent measurement/SDK/configuration fixes are
+on GitHub. Benchmark model identity is implemented locally. Session entries
+record implementation evidence.
 
 ### Implemented
 
@@ -147,6 +147,25 @@ Only this progress record was edited during the initial review. Runtime, dataset
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-01 — Model identity in benchmark records
+
+- Published the verified configuration-lookup slice as b0d7129 on main.
+- Keep requested model aliases separate from model identity reported by the
+  response. Built-in adapters retain nonempty top-level model strings; missing or
+  invalid IDs stay unknown. OpenRouter response-field semantics checked against
+  its official Auto Router docs; no Jev/native capability claim follows from this.
+- New records retain requested_model and reported_model for the final attempt,
+  including returned failures. Final exceptions cannot reuse prior model metadata.
+  Per-attempt identities remain deferred. Old records remain readable with None
+  fields; no historical backfill or provider-registry inference.
+- SDK cache/proxy/escalation, usage logs, and decide CLI retain the chosen response's
+  reported identity. Old cache dictionaries remain compatible with unknown identity.
+- Validation: 324 offline Python tests passed, Ruff passed, four site tests passed,
+  and the site built all nine pages. All 4,746 historical records still load with
+  unknown identity; their recomputed summary matches the saved site summary.
+  Updated README/spec/testing/site methodology. Raw records/site data are unchanged.
+  No paid calls, dependencies, or publication of this slice.
 
 ### 2026-10-01 — Configuration lookup
 

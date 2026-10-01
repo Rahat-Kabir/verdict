@@ -136,6 +136,8 @@ def main(argv: list[str] | None = None) -> int:
                     "answer": result.answer,
                     "confidence": result.confidence,
                     "provider": result.served_by or result.provider,
+                    "requested_model": result.model,
+                    "reported_model": result.reported_model,
                     "escalated": result.escalated,
                     "cache_hit": result.cache_hit,
                     "latency_ms": round(result.latency_ms, 1),
