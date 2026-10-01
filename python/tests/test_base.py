@@ -42,9 +42,39 @@ def test_quoted_answer_in_sentence():
     assert ans == "shipping"
 
 
-def test_word_overlap_fallback():
-    ans, _ = parse_answer("This is clearly a billing matter that the payments team should own.", ANSWERS)
-    assert ans == "billing"
+@pytest.mark.parametrize("text", [
+    "This is clearly a billing matter that the payments team should own.",
+    "I cannot decide between billing and technical.",
+    'I cannot decide between "billing" and "technical".',
+    'Do not choose "billing".',
+    'The answer is "billing" or "technical".',
+    '{"answer": "billing or technical", "confidence": 0.9}',
+    '{"answer": "unknown", "explanation": "billing"}',
+    '{"answer": "billing"}\n{"answer": "technical"}',
+    '{"answer": "billing", "choice": "technical"}',
+    '{"answer": true}',
+    '{"answer": -1}',
+    '{"answer": 4}',
+])
+def test_ambiguous_or_invalid_output_is_not_guessed(text):
+    assert parse_answer(text, ANSWERS) == (None, None)
+
+
+@pytest.mark.parametrize("text", [
+    "billing", '"billing"', "'billing'", "`billing`",
+    'The answer is "billing".', 'Answer: billing',
+])
+def test_explicit_text_choices(text):
+    assert parse_answer(text, ANSWERS) == ("billing", None)
+
+
+def test_zero_index_is_an_explicit_choice():
+    assert parse_answer('{"answer": 0, "confidence": 0.9}', ANSWERS) == ("billing", 0.9)
+
+
+def test_overlapping_labels_do_not_confuse_negation():
+    assert parse_answer("not_hate", ["hate", "not_hate"]) == ("not_hate", None)
+    assert parse_answer("This is not hate speech.", ["hate", "not_hate"]) == (None, None)
 
 
 def test_unparseable_returns_none():

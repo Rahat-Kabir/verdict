@@ -1,12 +1,13 @@
 """The Router SDK: one interface over any decision provider.
 
-    from verdict_router import Router, build_provider
+    from verdict_router import Router
+    from verdict_router.providers import build_provider
 
     router = Router(
         providers=[build_provider("jev-router"), build_provider("gpt-5.4-nano")],
         threshold=0.85,                      # escalate below this confidence
         escalate_to=build_provider("gpt-6-luna"),
-        cache_path="decision_cache.jsonl",   # exact-match cache (optional)
+        cache="decision_cache.jsonl",        # exact-match cache (optional)
         usage_log="usage.jsonl",             # append-only audit log (optional)
     )
     result = router.decide(question="...", answers=["a", "b"], context="...")
@@ -16,15 +17,20 @@ Behaviour:
 - caches exact requests (cache_hit=True responses cost nothing)
 - when confidence is below `threshold` and an escalation provider is set, the
   escalation provider answers and the result is marked escalated=True
+- cost includes every attempted provider; any unknown attempt makes total cost unknown
+- latency measures decision wall time, including failures and cache persistence,
+  but excluding usage-log writing
 """
 
 from __future__ import annotations
 
 import json
+import time
+from dataclasses import replace
 from pathlib import Path
 
 from .cache import ExactCache
-from .providers.base import Provider, ProviderError
+from .providers.base import Provider, ProviderError, validate_response
 from .types import DecisionRequest, DecisionResponse, utc_now_iso
 
 
@@ -58,6 +64,7 @@ class Router:
         context: str | None = None,
         metadata: dict | None = None,
     ) -> DecisionResponse:
+        started = time.perf_counter()
         request = DecisionRequest(
             question=question, answers=answers, context=context, metadata=metadata or {}
         )
@@ -66,7 +73,8 @@ class Router:
         # cache object is falsy and a plain `if self._cache` would skip caching.
         if self._cache is not None:
             hit = self._cache.get(request)
-            if hit is not None:
+            if hit is not None and validate_response(hit, request).ok:
+                hit.latency_ms = (time.perf_counter() - started) * 1000
                 self._log(hit, request)
                 return hit
 
@@ -82,30 +90,37 @@ class Router:
             and response.confidence < self.threshold
         ):
             try:
-                esc = self.escalate_to.decide(request)
+                esc = validate_response(replace(self.escalate_to.decide(request)), request)
+                total_cost = _sum_costs(response.cost_usd, esc.cost_usd)
                 if esc.ok:
                     esc.escalated = True
                     esc.served_by = self.escalate_to.name
-                    esc.latency_ms += response.latency_ms
-                    esc.cost_usd = (esc.cost_usd or 0.0) + (response.cost_usd or 0.0)
                     response = esc
+                response.cost_usd = total_cost
             except ProviderError:
-                pass  # escalation is best-effort; keep the original answer
+                # No billing data accompanies ProviderError; do not assume it was free.
+                response.cost_usd = None
 
         if self._cache is not None and response.ok:
+            response.latency_ms = (time.perf_counter() - started) * 1000
             self._cache.put(request, response)
+        response.latency_ms = (time.perf_counter() - started) * 1000
         self._log(response, request)
         return response
 
     def _decide_via_providers(self, request: DecisionRequest) -> DecisionResponse:
         errors: list[str] = []
+        total_cost: float | None = 0.0
         for provider in self.providers:
             try:
-                response = provider.decide(request)
+                response = validate_response(replace(provider.decide(request)), request)
             except ProviderError as exc:
+                total_cost = None
                 errors.append(f"{provider.name}: {exc}")
                 continue
+            total_cost = _sum_costs(total_cost, response.cost_usd)
             if response.ok:
+                response.cost_usd = total_cost
                 response.served_by = provider.name
                 return response
             errors.append(f"{provider.name}: {response.error}")
@@ -114,6 +129,7 @@ class Router:
             provider=self.providers[0].name,
             model=self.providers[0].model,
             latency_ms=0.0,
+            cost_usd=total_cost,
             error="; ".join(errors) or "all providers failed",
         )
 
@@ -136,3 +152,10 @@ class Router:
         }
         with self.usage_log.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
+
+
+def _sum_costs(accumulated: float | None, attempt: float | None) -> float | None:
+    """A partial sum is not a known total; preserve missing billing information."""
+    if accumulated is None or attempt is None:
+        return None
+    return accumulated + attempt

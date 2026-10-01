@@ -1,9 +1,7 @@
-"""OpenAI Decisions API adapter (real endpoint) + labeled proxy.
+"""Provisional Decisions adapter and a separately labeled chat-model proxy.
 
-The real endpoint exists (2026-10-01) but returns
-"Decision API is not enabled for this user." until preview access is granted.
-The proxy mimics the same decide() contract on top of the chat baseline so the
-benchmark can still feature a "Decisions-style" provider, clearly labeled.
+Successful native response handling has not been verified. The proxy wraps a
+chat baseline using Verdict's finite-choice interface; it is not native API evidence.
 """
 
 from __future__ import annotations
@@ -20,15 +18,17 @@ from .base import (
     ProviderError,
     build_decision_prompt,
     parse_answer,
+    validate_response,
 )
 
 DECISIONS_URL = "https://api.openai.com/v1/decisions"
 
 
 class OpenAIDecisionsProvider(Provider):
-    """Calls the real /v1/decisions endpoint. Raises ProviderError with the
-    server's message when the account does not have access (the expected state
-    while the API is in limited preview)."""
+    """Calls /v1/decisions using a provisional response contract.
+
+    HTTP failures raise ProviderError with the server's message.
+    """
 
     name = "openai-decisions"
     model = "luna"
@@ -63,26 +63,33 @@ class OpenAIDecisionsProvider(Provider):
             )
             latency_ms = (time.perf_counter() - started) * 1000
             if resp.status_code >= 400:
-                # Expected while preview-gated: surface a clean, actionable error.
+                # Surface the provider's HTTP error without assuming account access.
                 try:
                     message = resp.json().get("error", {}).get("message", resp.text[:300])
                 except (json.JSONDecodeError, ValueError):
                     message = resp.text[:300]
-                raise ProviderError(f"Decisions API unavailable (HTTP {resp.status_code}): {message}")
+                raise ProviderError(
+                    f"Decisions API unavailable (HTTP {resp.status_code}): {message}"
+                )
             data = resp.json()
-            # Response shape is not publicly documented yet; accept the obvious fields.
+            # Provisional extraction; fixtures do not establish a live API contract.
             answer = data.get("answer") or (data.get("choices") or [{}])[0].get("answer")
             confidence = data.get("confidence")
             usage = data.get("usage") or {}
-            return DecisionResponse(
-                answer=answer,
-                provider=self.name,
-                model=self.model,
-                latency_ms=latency_ms,
-                confidence=float(confidence) if confidence is not None else None,
-                usage=usage,
-                raw={"status": resp.status_code},
-                error=None if answer else f"unexpected response shape: {json.dumps(data)[:300]}",
+            return validate_response(
+                DecisionResponse(
+                    answer=answer,
+                    provider=self.name,
+                    model=self.model,
+                    latency_ms=latency_ms,
+                    confidence=float(confidence) if confidence is not None else None,
+                    usage=usage,
+                    raw={"status": resp.status_code},
+                    error=None
+                    if answer
+                    else f"unexpected response shape: {json.dumps(data)[:300]}",
+                ),
+                request,
             )
         except ProviderError:
             raise
@@ -110,7 +117,7 @@ class OpenAIDecisionsProxyProvider(Provider):
     def decide(self, request: DecisionRequest) -> DecisionResponse:
         response = self._backend.decide(request)
         response.provider = self.name
-        return response
+        return validate_response(response, request)
 
 
 __all__ = [

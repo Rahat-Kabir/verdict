@@ -49,54 +49,45 @@ class Provider(ABC):
 
 
 def parse_answer(text: str, answers: list[str]) -> tuple[str | None, float | None]:
-    """Robustly extract (answer, confidence) from arbitrary model text.
+    """Accept one explicit choice, never infer a choice from mentioned labels.
 
-    Order: JSON object -> exact case-insensitive match -> substring containment
-    -> word-overlap fallback. Returns (None, None) when nothing matches.
+    Accept a single JSON decision (optionally wrapped in prose), a bare/quoted
+    label, or a short answer declaration. Ambiguous or invalid output fails closed.
     """
     if not text:
         return None, None
     text = text.strip()
 
-    # 1) Try to find a JSON object in the text (the whole text or embedded).
-    for candidate in _json_candidates(text):
-        if isinstance(candidate, dict):
-            ans = candidate.get("answer") or candidate.get("choice") or candidate.get("label")
-            conf = candidate.get("confidence")
-            if isinstance(ans, str):
-                match = _match_answer(ans, answers)
-                if match:
-                    return match, _clamp_conf(conf)
-            # JSON with an index instead of a string
-            if isinstance(ans, int) and 0 <= ans < len(answers):
-                return answers[ans], _clamp_conf(conf)
+    candidates = list(_top_level_json_objects(text))
+    if candidates:
+        if len(candidates) != 1 or not isinstance(candidates[0], dict):
+            return None, None
+        candidate = candidates[0]
+        fields = [candidate[k] for k in ("answer", "choice", "label") if k in candidate]
+        if len(fields) != 1:
+            return None, None
+        ans = fields[0]
+        match = _match_answer(ans, answers) if isinstance(ans, str) else None
+        # Preserve the documented zero-based JSON index format; bool is not an index.
+        if type(ans) is int and 0 <= ans < len(answers):
+            match = answers[ans]
+        if match is not None:
+            return match, _clamp_conf(candidate.get("confidence"))
+        return None, None
 
-    # 2) Exact (case-insensitive) answer match anywhere as its own line/quote.
     exact = _match_answer(text, answers)
-    if exact:
+    if exact is not None:
         return exact, None
 
-    # 3) Word-overlap fallback: pick the allowed answer with most token overlap.
-    lowered = text.lower()
-    best, best_score = None, 0
-    for a in answers:
-        tokens = [t for t in re.split(r"[^a-z0-9]+", a.lower()) if t]
-        score = sum(1 for t in tokens if t in lowered)
-        if score > best_score:
-            best, best_score = a, score
-    if best is not None and best_score >= max(1, len(re.split(r"[^a-z0-9]+", best.lower())) - 1):
-        return best, None
+    declaration = re.fullmatch(
+        r"(?:answer\s*:|(?:the\s+)?answer\s+is|the\s+best\s+team\s+for\s+this\s+is)"
+        r"\s+(.+?)[.!]?",
+        text,
+        re.IGNORECASE,
+    )
+    if declaration:
+        return _match_answer(declaration.group(1), answers), None
     return None, None
-
-
-def _json_candidates(text: str):
-    yield from _top_level_json_objects(text)
-    try:
-        obj = json.loads(text)
-        if isinstance(obj, dict):
-            yield obj
-    except (json.JSONDecodeError, ValueError):
-        pass
 
 
 def _top_level_json_objects(text: str):
@@ -123,23 +114,31 @@ def _top_level_json_objects(text: str):
         elif ch == "}" and depth > 0:
             depth -= 1
             if depth == 0 and start >= 0:
-                    snippet = text[start : i + 1]
-                    try:
-                        yield json.loads(snippet)
-                    except (json.JSONDecodeError, ValueError):
-                        pass
-                    start = -1
+                snippet = text[start : i + 1]
+                try:
+                    yield json.loads(snippet)
+                except (json.JSONDecodeError, ValueError):
+                    pass
+                start = -1
 
 
 def _match_answer(text: str, answers: list[str]) -> str | None:
-    for a in answers:
-        if a.lower() == text.strip().lower():
-            return a
-    # quoted answer inside longer text, e.g. The answer is "billing".
-    for a in answers:
-        if re.search(rf"['\"`\b]{re.escape(a)}['\"`\b]", text, re.IGNORECASE):
-            return a
-    return None
+    label = text.strip()
+    if len(label) >= 2 and label[0] in "\"'`" and label[-1] == label[0]:
+        label = label[1:-1]
+    matches = {a for a in answers if a.casefold() == label.casefold()}
+    return next(iter(matches)) if len(matches) == 1 else None
+
+
+def validate_response(response: DecisionResponse, request: DecisionRequest) -> DecisionResponse:
+    """Enforce the finite-choice contract at SDK and benchmark boundaries."""
+    if response.error is None and (
+        not isinstance(response.answer, str) or response.answer not in request.answers
+    ):
+        response.answer = None
+        response.confidence = None
+        response.error = "provider did not return an allowed answer"
+    return response
 
 
 def _clamp_conf(conf) -> float | None:

@@ -2,7 +2,7 @@
 
 Used both as a plain baseline (gpt-5.4-nano / gpt-5.4-mini / gpt-6-luna) and as
 the *proxy* for the Decisions API: it exposes the same decide(question, answers,
-context) contract on a cheap chat model until real preview access lands.
+context) interface on a chat model. Proxy results do not measure a native API.
 """
 
 from __future__ import annotations
@@ -79,8 +79,10 @@ class OpenAIChatProvider(Provider):
             usage = data.get("usage") or {}
             cost = compute_cost(
                 self.model,
-                usage.get("prompt_tokens", 0) or 0,
-                usage.get("completion_tokens", 0) or 0,
+                usage.get("prompt_tokens"),
+                usage.get("completion_tokens"),
+                cached_prompt_tokens=(usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0),
+                cache_write_tokens=(usage.get("prompt_tokens_details") or {}).get("cache_write_tokens", 0),
             )
             return DecisionResponse(
                 answer=answer,

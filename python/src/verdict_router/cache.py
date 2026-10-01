@@ -31,6 +31,7 @@ class ExactCache:
                     continue
 
     def get(self, request: DecisionRequest) -> DecisionResponse | None:
+        started = time.perf_counter()
         with self._lock:
             entry = self._entries.get(request.cache_key())
         if entry is None:
@@ -39,10 +40,18 @@ class ExactCache:
             return None
         resp = DecisionResponse(**entry["response"])
         resp.cache_hit = True
+        resp.cost_usd = 0.0
+        resp.latency_ms = (time.perf_counter() - started) * 1000
+        resp.usage = None
+        resp.escalated = False
         return resp
 
     def put(self, request: DecisionRequest, response: DecisionResponse) -> None:
-        entry = {"key": request.cache_key(), "stored_at": time.time(), "response": response.__dict__}
+        entry = {
+            "key": request.cache_key(),
+            "stored_at": time.time(),
+            "response": response.__dict__.copy(),
+        }
         with self._lock:
             self._entries[request.cache_key()] = entry
         if self.path:

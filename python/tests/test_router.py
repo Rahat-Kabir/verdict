@@ -148,3 +148,38 @@ def test_usage_log_written(tmp_path):
 def test_router_requires_providers():
     with pytest.raises(ValueError):
         make_router([])
+
+
+def test_invalid_provider_answer_triggers_fallback():
+    invalid = FakeProvider("invalid", answers={REQ["question"]: "unknown"})
+    good = FakeProvider("good", answers={REQ["question"]: "billing"})
+    result = make_router([invalid, good]).decide(**REQ)
+    assert result.ok and result.answer == "billing"
+    assert result.served_by == "good" and good.calls == 1
+
+
+def test_invalid_answer_without_fallback_returns_error():
+    invalid = FakeProvider("invalid", answers={REQ["question"]: "unknown"})
+    result = make_router([invalid]).decide(**REQ)
+    assert not result.ok and result.answer is None
+    assert "allowed answer" in result.error
+
+
+def test_invalid_escalation_cannot_replace_valid_primary():
+    unsure = FakeProvider("unsure", answers={REQ["question"]: "billing"}, confidence=0.4)
+    invalid = FakeProvider("invalid", answers={REQ["question"]: "unknown"})
+    result = make_router([unsure], threshold=0.8, escalate_to=invalid).decide(**REQ)
+    assert result.ok and result.answer == "billing"
+    assert not result.escalated and invalid.calls == 1
+
+
+def test_invalid_cached_answer_is_ignored():
+    good = FakeProvider("good", answers={REQ["question"]: "billing"})
+    router = make_router([good], cache=True)
+    router._cache.put(
+        DecisionRequest(**REQ),
+        DecisionResponse("unknown", "old", "old", 1.0),
+    )
+    result = router.decide(**REQ)
+    assert result.ok and result.answer == "billing"
+    assert not result.cache_hit and good.calls == 1

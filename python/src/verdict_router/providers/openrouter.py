@@ -3,12 +3,12 @@ and small baselines like upstage/solar-mini4.
 
 Two modes:
 - structured=True  -> response_format json_object, parse {answer, confidence}
-- structured=False -> plain prompt, robust free-text parsing (jev-router advertises
+- structured=False -> plain prompt, explicit-choice parsing (jev-router advertises
   no supported parameters and may return reasoning tokens)
 
-Exact cost: OpenRouter returns `usage` and, via the generation endpoint, the real
-charged amount. When --exact-cost is on (bench default), we resolve the true
-cost per call — important because jev-router's listing price is unpublished.
+Exact cost: OpenRouter reports account charges in `usage.cost` or the generation
+endpoint, including zero charges. Exact mode is the default and leaves missing
+charges unknown — important because jev-router's listing price is unpublished.
 """
 
 from __future__ import annotations
@@ -87,9 +87,6 @@ class OpenRouterProvider(Provider):
             data = resp.json()
             message = (data.get("choices") or [{}])[0].get("message", {})
             content = message.get("content") or ""
-            if not content and message.get("reasoning"):
-                # Some routed models spend all tokens on reasoning; try to parse it.
-                content = message["reasoning"] if isinstance(message["reasoning"], str) else ""
             answer, confidence = parse_answer(content, request.answers)
             usage = data.get("usage") or {}
             cost = self._resolve_cost(data.get("id"), usage)
@@ -117,34 +114,32 @@ class OpenRouterProvider(Provider):
             )
 
     def _resolve_cost(self, generation_id: str | None, usage: dict) -> float | None:
-        """Resolve the true charged cost, in order of authority:
-        1. usage.cost (what the account was charged — 0 for BYOK/free routing)
-        2. usage.cost_details.upstream_inference_cost (real upstream spend, present
-           even when the account charge is 0; includes jev-router's routed model)
-        3. GET /generation (async, sometimes 404s right after the call)
-        4. our static price table (cannot price jev-router -> None)
+        """Report account charge, including zero; never substitute upstream spend.
+
+        Explicit estimate mode uses published token rates. Exact mode leaves cost
+        unknown when neither usage nor the generation endpoint reports a charge.
         """
         if not self.exact_cost:
-            return compute_cost(self.model, usage.get("prompt_tokens", 0) or 0, usage.get("completion_tokens", 0) or 0)
+            return compute_cost(
+                self.model, usage.get("prompt_tokens"), usage.get("completion_tokens"),
+                cached_prompt_tokens=(usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0),
+                cache_write_tokens=(usage.get("prompt_tokens_details") or {}).get("cache_write_tokens", 0),
+            )
         charged = usage.get("cost")
-        if isinstance(charged, (int, float)) and charged > 0:
+        if type(charged) in (int, float) and 0 <= charged < float("inf"):
             return float(charged)
-        details = usage.get("cost_details") or {}
-        upstream = details.get("upstream_inference_cost")
-        if isinstance(upstream, (int, float)) and upstream > 0:
-            return float(upstream)
         if generation_id:
             try:
-                gen = httpx.get(
+                generation = httpx.get(
                     f"{self.base_url}/generation",
                     params={"id": generation_id},
                     headers=self._headers(),
                     timeout=15.0,
                 )
-                if gen.status_code == 200:
-                    charged_gen = gen.json().get("data", {}).get("total_cost")
-                    if isinstance(charged_gen, (int, float)) and charged_gen > 0:
-                        return float(charged_gen)
-            except httpx.HTTPError:
-                pass
-        return compute_cost(self.model, usage.get("prompt_tokens", 0) or 0, usage.get("completion_tokens", 0) or 0)
+                if generation.status_code == 200:
+                    charged = generation.json().get("data", {}).get("total_cost")
+                    if type(charged) in (int, float) and 0 <= charged < float("inf"):
+                        return float(charged)
+            except (httpx.HTTPError, ValueError):
+                pass  # No usable billing response; the charge remains unknown.
+        return None

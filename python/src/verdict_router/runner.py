@@ -1,10 +1,11 @@
 """Benchmark runner: run suites against providers, write Records, aggregate.
 
 Design choices:
-- Sequential by default (clean latency measurement); --concurrency N available
-  for wall-clock speed with the caveat that p95 latency includes mild queueing.
-- One retry on transient failures (429/5xx/timeout) with 2s backoff; persistent
-  failures become error Records (counted, excluded from metrics).
+- Sequential by default; --concurrency N can reduce total run time. Item latency
+  starts inside the worker, excluding executor queue time.
+- One retry on returned errors or ProviderError by default, with 2s backoff;
+  records include all attempt costs and wall time, including backoff. Unknown
+  billing remains unknown. Retry classification is not yet status-specific.
 - Records land as JSONL per provider__suite in the results dir; aggregation
   merges everything into one results.json for the site.
 """
@@ -19,6 +20,7 @@ from pathlib import Path
 
 from .datasets import KNOWN_SUITES, load_suite
 from .providers import BENCHMARK_PROVIDERS, Provider, ProviderError, build_provider
+from .providers.base import validate_response
 from .types import DatasetItem, DecisionRequest, Record
 
 
@@ -37,30 +39,37 @@ def run_provider_suite(
         request = DecisionRequest(
             question=item.question, answers=item.answers, context=item.context
         )
+        started = time.perf_counter()
+        total_cost: float | None = 0.0
         response = None
         for attempt in range(retries + 1):
             try:
-                response = provider.decide(request)
-                if response.error is None or response.answer is not None:
+                response = validate_response(provider.decide(request), request)
+                if total_cost is None or response.cost_usd is None:
+                    total_cost = None
+                else:
+                    total_cost += response.cost_usd
+                if response.ok:
                     break
             except ProviderError as exc:
-                if attempt < retries:
-                    time.sleep(2.0 * (attempt + 1))
-                    continue
-                from .types import utc_now_iso
-
-                records[idx] = Record(
-                    provider=provider.name,
-                    suite=suite,
-                    item_id=item.id,
-                    expected=item.expected,
-                    answer=None,
-                    correct=False,
-                    latency_ms=0.0,
-                    error=str(exc),
-                    timestamp=utc_now_iso(),
-                )
-                return
+                # Exceptions have no billing metadata; previous success cannot fill it in.
+                total_cost = None
+                response = None
+                if attempt == retries:
+                    records[idx] = Record(
+                        provider=provider.name,
+                        suite=suite,
+                        item_id=item.id,
+                        expected=item.expected,
+                        answer=None,
+                        correct=False,
+                        latency_ms=(time.perf_counter() - started) * 1000,
+                        cost_usd=total_cost,
+                        error=str(exc),
+                    )
+                    return
+            if attempt < retries:
+                time.sleep(2.0 * (attempt + 1))
         if response is None:
             return
         records[idx] = Record(
@@ -69,10 +78,10 @@ def run_provider_suite(
             item_id=item.id,
             expected=item.expected,
             answer=response.answer,
-            correct=(response.answer == item.expected) if response.answer else False,
-            latency_ms=response.latency_ms,
+            correct=response.ok and response.answer == item.expected,
+            latency_ms=(time.perf_counter() - started) * 1000,
             confidence=response.confidence,
-            cost_usd=response.cost_usd,
+            cost_usd=total_cost,
             error=response.error,
         )
 
