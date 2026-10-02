@@ -9,7 +9,9 @@ with fallback, exact caching, and optional confidence-based escalation.
 
 It is currently an experimental harness and SDK. Existing results are internally
 consistent with their original labels, but historical accounting and dataset quality
-limit what can be concluded from the rankings. Native Jev is not implemented.
+limit what can be concluded from the rankings. Direct Jev through OpenRouter has
+offline contract tests and three successful synthetic live smoke checks, but no
+representative benchmark results.
 The OpenAI Decisions proxy uses Nano and
 is not a measurement of the real Decisions API.
 
@@ -146,9 +148,17 @@ uv run verdict decide "Which team?" --answers billing --answers technical \
 
 ## Featured providers
 
+Direct Jev uses your existing `OPENROUTER_API_KEY`. Select `jev-direct` explicitly
+in `build_provider("jev-direct")` or `verdict decide --providers jev-direct` with
+the usual question/answers/context arguments. It is outside the default `--all`
+roster. Remote decisions are paid calls. This adapter supports one typed choice;
+multi-question, noul, and score requests are outside this slice. Its request/response
+contract follows the [OpenRouter Jev example](https://openrouter.ai/blog/insights/what-is-jev/).
+
 | Provider | Vendor | Note |
 | --- | --- | --- |
 | `jev-router` | TypeSafe (OpenRouter) | Jev selects a downstream answering model; not native Jev decisions |
+| `jev-direct` | TypeSafe (OpenRouter) | Typed choice through the alpha Decisions API; explicit selection only, live smoke-tested |
 | `solar-mini4` | Upstage (OpenRouter) | Chat baseline using JSON-object output |
 | `gpt-5.4-nano` / `gpt-5.4-mini` | OpenAI | Chat baselines using strict answer-enum JSON schemas |
 | `gpt-6-luna` | OpenAI | Chat baseline and default offline escalation reference |
@@ -167,7 +177,7 @@ uv run verdict decide "Which team?" --answers billing --answers technical \
 - [x] failure-inclusive cost/latency summaries and explicit billing coverage
 - [ ] run/dataset/model provenance
 - [ ] representative datasets and held-out confidence evaluation
-- [ ] native Jev adapter with contract verification before live comparison
+- [ ] live verification and representative comparison of the direct Jev adapter
 
 The scheduled benchmark workflow is a scaffold: it makes paid calls when configured,
 has no enforced spending cap, and commits results locally without pushing them.

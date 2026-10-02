@@ -18,8 +18,10 @@ Jev Router is an additional complete-pipeline comparison, not native Jev output.
 
 ## Current scope
 
-This is an experimental local harness, SDK, and static leaderboard. Native Jev is
-an agreed next direction, not implemented. Native OpenAI Decisions has a provisional
+This is an experimental local harness, SDK, and static leaderboard. Direct Jev
+through OpenRouter is offline-tested and passed three synthetic live smoke checks;
+representative comparison remains pending.
+Native OpenAI Decisions has a provisional
 adapter but no saved benchmark results. The public leaderboard is not yet a
 validated buying guide, and the SDK has unresolved measurement issues.
 

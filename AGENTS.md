@@ -90,6 +90,9 @@ See `docs/testing.md` for focused tests, previews, aggregation, and live command
   for new custom settings. Never include credentials or per-call runtime state.
 - Keep provider identity/metadata in `providers/__init__.py`. Label native APIs,
   chat baselines, proxies, and complete routing pipelines accurately.
+- Direct Jev (`jev-direct`) uses OpenRouter's alpha Decisions API and is explicit
+  selection only; smoke checks do not approve broader paid runs. Its distribution confidence must not be
+  presented as calibrated correctness; keep it distinct from Jev Router results.
 - Treat unknown cost or confidence as unknown; do not claim zero cost or a
   calibrated probability without evidence. Current code has exceptions listed
   in PROGRESS; those are bugs to fix, not conventions to copy.

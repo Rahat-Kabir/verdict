@@ -1,8 +1,8 @@
 """Provider protocol and shared helpers.
 
 Every provider implements `decide(request) -> DecisionResponse` and measures
-its own latency. The benchmark prompt is identical across providers so results
-are comparable.
+its own latency. Chat adapters share a prompt; typed decision adapters map the
+same question, context, and allowed choices to their native request contract.
 """
 
 from __future__ import annotations

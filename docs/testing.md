@@ -2,7 +2,14 @@
 
 ## Offline first
 
-Run Python commands from `python/`. These checks use fake providers and mocked
+Run Python commands from `python/`. Direct Jev contract regressions run with
+`python -m pytest tests/test_jev.py`:
+payload, typed choice validation, malformed JSON, optional confidence/billing,
+model identity, input limits, timeout/HTTP errors, and CLI/SDK/benchmark wiring.
+They establish offline behavior, not live access or quality. Jev's contract source
+is the [OpenRouter example](https://openrouter.ai/blog/insights/what-is-jev/).
+
+These checks use fake providers and mocked
 HTTP, require no real keys, and make no paid inference calls.
 
 ```powershell

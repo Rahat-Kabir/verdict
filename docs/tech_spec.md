@@ -1,6 +1,6 @@
 # Verdict as-built technical spec
 
-This describes the implementation as of 2026-10-01. Unresolved defects are tracked
+This describes the implementation as of 2026-10-02. Unresolved defects are tracked
 in PROGRESS; intended capabilities belong in VISION.
 
 ## Runtime and boundaries
@@ -77,7 +77,26 @@ and preserve the HTTP status. The native adapter is still provisional.
 | `openai-decisions-proxy` | Wraps the Nano adapter and changes provider attribution | Same backend as Nano, not an independent native API |
 | `openai-decisions` | POST to `/v1/decisions`, with provisional answer extraction | Adapter exists; no native results or verified success contract |
 | `ollama:<model>` | Local `/api/chat` with JSON output | Requires an independently running local server |
-| Native Jev | Not implemented | Agreed direction only |
+| `jev-direct` | OpenRouter `/api/alpha/decisions`, typed `choice` | Offline tests and three synthetic live smoke checks; explicit selection only; no representative benchmark |
+
+`JevProvider` uses model `typesafe/jev-1.13`, the existing OpenRouter key, text
+context as `state`, question as `instructions`, and answer labels as criterion
+names/descriptions. Duplicate labels become one criterion; empty labels and more
+than 255 unique choices fail before HTTP. No new choices or descriptions are
+invented. This label-only mapping may be less informative than domain-specific
+criteria. Only `answers.decision` with type `choice` and an allowed string choice
+is accepted; chat text and probability argmax are never substitutes.
+
+The [OpenRouter Jev example](https://openrouter.ai/blog/insights/what-is-jev/)
+documents this raw HTTP contract, including `usage.input_tokens`, `output_tokens`,
+and `cost`. Direct Jev retains usage, response model, and the decision distribution
+in SDK raw metadata; benchmark records still omit usage/raw output. It uses only
+finite nonnegative `usage.cost`, including zero, with no rate estimate or billing
+lookup fallback. Missing charges stay unknown. Its confidence summarizes the
+distribution rather than the winning option's probability; existing ECE/threshold
+calculations must not be interpreted as calibrated correctness for Jev.
+`jev-direct` works with explicit CLI/SDK selection and stays outside `--all` and
+the scheduled roster pending representative evaluation. No historical/site data is backfilled.
 
 OpenRouter parses final content only, not reasoning. Exact-cost mode uses the
 account charge from `usage.cost`, then `/generation`'s `total_cost`, including zero.

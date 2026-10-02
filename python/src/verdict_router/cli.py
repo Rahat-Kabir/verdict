@@ -55,6 +55,10 @@ def main(argv: list[str] | None = None) -> int:
         for name in BENCHMARK_PROVIDERS:
             meta = PROVIDER_META[name]
             print(f"  {name:24s} {meta['vendor']:32s} {meta['model']}")
+        print("Additional providers (explicit selection only):")
+        for name, meta in PROVIDER_META.items():
+            if name not in BENCHMARK_PROVIDERS:
+                print(f"  {name:24s} {meta['vendor']:32s} {meta['model']}")
         print("Suites:")
         for s in KNOWN_SUITES:
             try:

@@ -1,9 +1,10 @@
 # Verdict progress
 
-## Current state — 2026-10-01
+## Current state — 2026-10-02
 
 The first public version and subsequent measurement/SDK/configuration fixes are
-on GitHub. Benchmark model identity is implemented locally. Session entries
+on GitHub, including benchmark model identity (9a7d93b). Direct Jev through
+OpenRouter is implemented locally with offline verification. Session entries
 record implementation evidence.
 
 ### Implemented
@@ -24,7 +25,9 @@ record implementation evidence.
   benchmark boundaries. Invalid cached/escalation answers cannot be returned as
   successful decisions. OpenRouter reasoning is not used as a final answer.
 - Native OpenAI Decisions adapter exists, with a provisional response contract.
-  The Decisions proxy wraps Nano; native Jev is absent.
+  The Decisions proxy wraps Nano. Direct Jev through OpenRouter supports typed
+  choice decisions; three synthetic live smoke checks passed, while representative
+  quality remains unverified.
 
 ### Evidence and limits
 
@@ -77,7 +80,7 @@ record implementation evidence.
 ### Next slices to discuss
 
 - Retain run, dataset, model, and per-attempt cost provenance in benchmark records.
-- Implement native Jev against its actual API contract, with mocked tests first.
+- Evaluate direct Jev on representative examples with an approved scope and spend.
 - Correct labels and improve benchmark provenance, failure metrics, and
   representative datasets before publishing stronger conclusions.
 
@@ -147,6 +150,56 @@ Only this progress record was edited during the initial review. Runtime, dataset
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-02 — Approved three-provider smoke comparison
+
+- Fresh calls on the same three synthetic billing/technical/account tickets:
+  direct Jev, Jev Router, and GPT-5.4 Nano each returned 3/3 expected labels with
+  no recorded errors. Nine sequential calls, no retries, cache, or escalation.
+- Median decision wall time: direct Jev 552.0 ms, Jev Router 4,576.3 ms,
+  Nano 1,722.6 ms. This includes adapter processing/billing lookup where applicable.
+- Three-call totals: direct Jev $0.000041496 and Jev Router $0.0000855 in reported
+  account charges; Nano $0.00015335 in standard-token estimates. OpenRouter reported
+  zero charges on two routed calls; those values are preserved without inferring
+  ordinary pricing or independently reconciling invoices.
+- Jev Router reported `deepseek/deepseek-v4.1-flash` once and `openai/gpt-6-luna`
+  twice. Direct Jev reported `typesafe/jev-1.13-20260917`; Nano reported
+  `gpt-5.4-nano-2026-03-17`. No claims about router decision quality follow.
+- Local request/response evidence: Git-ignored `jev-comparison-2026-10-02.log`.
+  Historical/site results remain unchanged. Three easy examples and one call per
+  provider/item do not establish a quality ranking or stable latency advantage.
+  No further paid calls, implementation, commit, push, or deployment in this trial.
+
+### 2026-10-02 — Approved direct Jev live smoke trial
+
+- Ran exactly three synthetic support-team choices with no retries or fallback.
+  Billing, technical, and account examples all returned their expected labels.
+- Responses reported `typesafe/jev-1.13-20260917`, usable typed choices, usage, and
+  charges. Observed adapter latency: 1,081.4 ms, 500.1 ms, and 482.8 ms.
+  Total reported account charge: $0.000041496; not independently invoice-reconciled.
+- Request/response evidence is preserved locally in the Git-ignored
+  `jev-live-smoke-2026-10-02.log`. Historical records and site data remain unchanged.
+  These checks verify basic live response handling, not representative accuracy,
+  confidence calibration, billing completeness, or production readiness.
+  No broader paid trial, commit, push, or deployment was performed.
+
+### 2026-10-02 — Direct Jev through OpenRouter
+
+- Added explicit `jev-direct` selection using `typesafe/jev-1.13` at the alpha
+  Decisions endpoint, the existing OpenRouter key, and no new dependencies.
+- Map context/question/unique labels to state/instructions/criteria. Validate typed
+  choice and allowed labels; retain usage, charge, reported model, and SDK distribution.
+  Unknown billing stays unknown. Jev confidence is distribution confidence, not
+  calibrated correctness. Label-only criteria and omitted benchmark raw/usage
+  provenance remain limitations.
+- Keep default/scheduled benchmark roster and historical/site results unchanged.
+  CLI providers lists explicit-only integrations separately. Validation: 363 Python
+  tests passed (39 direct Jev regressions), Ruff passed, four site tests passed,
+  and Astro built nine pages. Recomputed summaries of all 4,746 historical
+  observations still match saved site data. Mocked CLI decides and provider listing
+  confirm explicit selection works; persistent cache and failed-attempt cost totals
+  are covered offline.
+  No paid calls, commits, pushes, or deployments in this slice.
 
 ### 2026-10-01 — Model identity in benchmark records
 
