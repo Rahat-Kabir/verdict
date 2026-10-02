@@ -148,6 +148,14 @@ uv run verdict decide "Which team?" --answers billing --answers technical \
 
 ## Featured providers
 
+Cloudflare Clef and Clef Flash are available as `clef` and `clef-flash`, selected
+explicitly through `build_provider(...)` or `verdict decide --providers ...`.
+Set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_AUTH_TOKEN` in your local `.env`.
+These text-choice adapters are offline-tested and each passed three synthetic
+live smoke checks; representative evaluation is pending.
+Costs use published input-token estimates, not account charges. Keys stay on the
+server in any future hosted playground; hosted access/spend controls are unbuilt.
+
 Direct Jev uses your existing `OPENROUTER_API_KEY`. Select `jev-direct` explicitly
 in `build_provider("jev-direct")` or `verdict decide --providers jev-direct` with
 the usual question/answers/context arguments. It is outside the default `--all`
@@ -159,6 +167,7 @@ contract follows the [OpenRouter Jev example](https://openrouter.ai/blog/insight
 | --- | --- | --- |
 | `jev-router` | TypeSafe (OpenRouter) | Jev selects a downstream answering model; not native Jev decisions |
 | `jev-direct` | TypeSafe (OpenRouter) | Typed choice through the alpha Decisions API; explicit selection only, live smoke-tested |
+| `clef` / `clef-flash` | Cloudflare Workers AI | Direct typed text choice; explicit selection only; live smoke-tested; estimated cost |
 | `solar-mini4` | Upstage (OpenRouter) | Chat baseline using JSON-object output |
 | `gpt-5.4-nano` / `gpt-5.4-mini` | OpenAI | Chat baselines using strict answer-enum JSON schemas |
 | `gpt-6-luna` | OpenAI | Chat baseline and default offline escalation reference |

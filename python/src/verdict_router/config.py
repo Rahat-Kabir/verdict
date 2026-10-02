@@ -65,3 +65,13 @@ def get_openrouter_key() -> str:
 def get_ollama_base_url() -> str:
     _load_dotenv_once()
     return os.environ.get("OLLAMA_BASE_URL", "").strip()
+
+
+def get_cloudflare_account_id() -> str:
+    _load_dotenv_once()
+    return os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
+
+
+def get_cloudflare_token() -> str:
+    _load_dotenv_once()
+    return os.environ.get("CLOUDFLARE_AUTH_TOKEN", "").strip()

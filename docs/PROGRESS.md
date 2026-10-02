@@ -4,7 +4,9 @@
 
 The first public version and subsequent measurement/SDK/configuration fixes are
 on GitHub, including benchmark model identity (9a7d93b). Direct Jev through
-OpenRouter is implemented locally with offline verification. Session entries
+OpenRouter is published in f766870 with limited live smoke evidence. Cloudflare
+Clef/Flash adapters are implemented locally with offline tests and three live
+smoke checks each. Session entries
 record implementation evidence.
 
 ### Implemented
@@ -150,6 +152,37 @@ Only this progress record was edited during the initial review. Runtime, dataset
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-02 — Approved Clef/Flash live smoke trial
+
+- Ran six fresh calls on the billing/technical/account synthetic tickets: three
+  each for Clef and Clef Flash, with no retries, cache, fallback, or escalation.
+  Both returned 3/3 expected labels without errors. The real success envelope,
+  typed choices, complete probability distributions, and token usage passed validation.
+- Clef median wall time: 956.1 ms; three-call estimated cost $0.00010968.
+  Flash median wall time: 1,014.6 ms; estimated cost $0.00004113.
+  These are published-input-token estimates, not reconciled account charges.
+  Neither latency nor accuracy rankings are established by three easy examples.
+- Response model identifiers were `clef` / `clef-flash`, with no dated snapshot.
+  Local request/response evidence is Git-ignored `clef-live-smoke-2026-10-02.log`.
+  Historical/site results are unchanged. No broader trial, commit, push, or deployment.
+
+### 2026-10-02 — Workers AI Clef adapters and playground direction
+
+- User confirmed a hosted developer playground with operator-funded calls.
+  Record this intended product direction; hosted runtime/access/spend controls
+  are not implemented. Provider keys must remain server-side.
+- Added explicit `clef` / `clef-flash` provider selection using account ID and
+  Workers AI token, both present in local configuration without exposing values.
+  No new dependencies. One typed text choice; no images or multi-question support.
+- Validate success envelope, allowed winner, and complete normalized distribution;
+  retain reported model, usage, and SDK distribution. Costs are published-input-token
+  estimates, with unknown usage left unknown. Account-scoped cache identity excludes
+  raw account ID/token. Default/scheduled roster and historical/site results unchanged.
+- Validation: 413 Python tests passed (50 Cloudflare regressions), Ruff passed,
+  four site tests passed, and Astro built nine pages. Local credential presence
+  and account format were checked without remote authentication or value output.
+  No paid calls, commits, pushes, deployments, or hosted UI.
 
 ### 2026-10-02 — Approved three-provider smoke comparison
 

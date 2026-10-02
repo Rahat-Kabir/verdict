@@ -2,6 +2,13 @@
 
 ## Offline first
 
+Cloudflare adapter checks: `python -m pytest tests/test_cloudflare.py`. Mocked
+Workers AI envelopes cover payloads for both models, distributions, confidence,
+estimated billing, missing credentials, account cache isolation, malformed/error
+responses, and CLI/SDK/cache/benchmark wiring. No real credentials or paid calls
+are needed. Contracts: [input schema](https://developers.cloudflare.com/workers-ai/models/clef/schema-input.json)
+and [output schema](https://developers.cloudflare.com/workers-ai/models/clef/schema-output.json).
+
 Run Python commands from `python/`. Direct Jev contract regressions run with
 `python -m pytest tests/test_jev.py`:
 payload, typed choice validation, malformed JSON, optional confidence/billing,

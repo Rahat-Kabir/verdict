@@ -7,6 +7,7 @@ the leaderboard site (description, hosting, links, labels such as "proxy").
 from __future__ import annotations
 
 from .base import Provider, ProviderError, parse_answer
+from .cloudflare import CloudflareDecisionProvider
 from .jev import JevProvider
 from .ollama import OllamaProvider
 from .openai_chat import OpenAIChatProvider
@@ -16,6 +17,20 @@ from .openrouter import OpenRouterProvider
 # Human-facing metadata rendered on the site. `label` values with "proxy" get a
 # visible disclaimer badge so proxy numbers are never mistaken for the real API.
 PROVIDER_META: dict[str, dict] = {
+    "clef": {
+        "display_name": "Clef", "vendor": "Cloudflare", "model": "@cf/cloudflare/clef",
+        "kind": "native-decision",
+        "description": "Workers AI typed choice model; three synthetic live smoke checks passed. Costs are estimates.",
+        "url": "https://developers.cloudflare.com/workers-ai/models/clef/",
+        "labels": ["experimental"],
+    },
+    "clef-flash": {
+        "display_name": "Clef Flash", "vendor": "Cloudflare", "model": "@cf/cloudflare/clef-flash",
+        "kind": "native-decision",
+        "description": "Workers AI typed choice model; three synthetic live smoke checks passed. Costs are estimates.",
+        "url": "https://developers.cloudflare.com/workers-ai/models/clef-flash/",
+        "labels": ["experimental"],
+    },
     "jev-direct": {
         "display_name": "Jev Direct",
         "vendor": "TypeSafe (via OpenRouter)",
@@ -119,6 +134,8 @@ PROVIDER_META: dict[str, dict] = {
 
 def build_provider(name: str) -> Provider:
     """Construct a provider by friendly name. Raises ProviderError for unknown names."""
+    if name in ("clef", "clef-flash"):
+        return CloudflareDecisionProvider(model=name)
     if name == "jev-direct":
         return JevProvider()
     if name == "jev-router":
@@ -152,6 +169,7 @@ BENCHMARK_PROVIDERS = [
 __all__ = [
     "BENCHMARK_PROVIDERS",
     "PROVIDER_META",
+    "CloudflareDecisionProvider",
     "JevProvider",
     "OllamaProvider",
     "OpenAIChatProvider",

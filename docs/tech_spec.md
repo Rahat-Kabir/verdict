@@ -78,6 +78,28 @@ and preserve the HTTP status. The native adapter is still provisional.
 | `openai-decisions` | POST to `/v1/decisions`, with provisional answer extraction | Adapter exists; no native results or verified success contract |
 | `ollama:<model>` | Local `/api/chat` with JSON output | Requires an independently running local server |
 | `jev-direct` | OpenRouter `/api/alpha/decisions`, typed `choice` | Offline tests and three synthetic live smoke checks; explicit selection only; no representative benchmark |
+| `clef`, `clef-flash` | Workers AI REST, typed text `choice` | Offline tests and three live smoke checks each; explicit selection; estimated cost |
+
+`CloudflareDecisionProvider` calls `/accounts/{account_id}/ai/run/@cf/cloudflare/{model}`
+using `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_AUTH_TOKEN`. It requires a successful
+Workers AI envelope and extracts its `result`. Context is state (question used if
+context is absent); labels map to criterion names/descriptions. Require a nonempty
+question and 2–255 unique nonempty labels. Response choice must be allowed and
+agree with the highest probability; distributions must cover every unique label,
+contain finite numeric probabilities in [0, 1], and sum to 1 within 0.001 tolerance.
+No answer is invented from argmax. Invalid optional confidence stays unknown.
+
+SDK raw metadata retains distribution and an estimate label. Valid nonnegative
+integer `usage.input_tokens` yields an estimate at $0.24/M for Clef or $0.09/M for
+Flash, checked 2026-10-02 against [Clef](https://developers.cloudflare.com/workers-ai/models/clef/)
+and [Flash](https://developers.cloudflare.com/workers-ai/models/clef-flash/) docs.
+Missing/invalid/overflowing usage stays unknown; free allowances and account
+adjustments are not reconciled. Benchmark records still omit usage/distributions
+and per-record cost basis. Account hash joins cache identity; raw account ID and
+token are excluded. No images, noul/score, multi-question API, hosted backend, or
+representative quality has been verified. A subsequent approved trial verified
+live text-choice access with three synthetic examples per model. Responses named
+`clef` / `clef-flash` rather than dated snapshots. Models remain outside `--all`.
 
 `JevProvider` uses model `typesafe/jev-1.13`, the existing OpenRouter key, text
 context as `state`, question as `instructions`, and answer labels as criterion

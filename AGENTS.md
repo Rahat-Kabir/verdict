@@ -93,6 +93,8 @@ See `docs/testing.md` for focused tests, previews, aggregation, and live command
 - Direct Jev (`jev-direct`) uses OpenRouter's alpha Decisions API and is explicit
   selection only; smoke checks do not approve broader paid runs. Its distribution confidence must not be
   presented as calibrated correctness; keep it distinct from Jev Router results.
+- Clef/Flash are explicit-only Workers AI text-choice adapters. Their costs are
+  published-input-token estimates; Cloudflare credentials remain server-side.
 - Treat unknown cost or confidence as unknown; do not claim zero cost or a
   calibrated probability without evidence. Current code has exceptions listed
   in PROGRESS; those are bugs to fix, not conventions to copy.
