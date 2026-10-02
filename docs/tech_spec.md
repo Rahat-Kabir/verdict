@@ -7,7 +7,7 @@ in PROGRESS; intended capabilities belong in VISION.
 
 Python 3.11+ with httpx and python-dotenv, packaged by Hatchling. Pytest and Ruff
 are dev dependencies. The `verdict` CLI dispatches to `cli.main`. Astro 5 renders
-a static site from a JSON file; the browser does not hold provider credentials.
+a static site from saved JSON; the browser does not hold provider credentials.
 
 ## Contracts
 
@@ -235,6 +235,12 @@ Historical records are unchanged and lack token usage needed for repricing.
    values. Repeated clicks toggle direction, with unknown values last in either
    direction and stable ties. Direction arrows and `aria-sort` identify the active
    sort; saved ranks remain the original benchmark ranks.
+
+The separate `/comparison` page reads `site/src/data/decision-comparison.json`,
+an aggregate export of the approved October 2 synthetic ticket run. It displays
+all four providers without ranks, with cost bases, model identities, settings,
+and limitations. It does not use or replace historical leaderboard data, and
+neither page makes inference calls. Full comparison evidence remains local.
 
 The distribution bundles routing (198 support-ticket samples, CC-BY-NC-4.0) and
 agent_next_action (200 generated examples, MIT). Classification and moderation

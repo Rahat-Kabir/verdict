@@ -15,6 +15,11 @@ representative benchmark results.
 The OpenAI Decisions proxy uses Nano and
 is not a measurement of the real Decisions API.
 
+The site's `/comparison` page presents a separate October 2 synthetic-ticket run
+for Jev Direct, Clef, Clef Flash, and Nano. All four passed 24/24; this small set
+does not identify a quality winner. See the [run report](docs/decision_comparison.md)
+for cost bases and limitations. The interactive playground is still unbuilt.
+
 Project context and current limits:
 
 - [Vision](docs/VISION.md) — who this serves and how to establish value.

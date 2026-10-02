@@ -103,7 +103,13 @@ Run `npm test` from `site/` for the dependency-free Node sorting tests. They cov
 actual column selection, ascending/descending order, raw values behind rounded
 prices, stable ties, missing/nonfinite values, and known zero costs.
 
-The accounting/pricing slice built nine pages successfully. For interactive changes, check
+The comparison-page slice built ten pages successfully. `/comparison` displays
+the approved 24-ticket run separately from historical results. Desktop and
+390-pixel mobile checks verified the homepage link, expandable policy/model
+details, and horizontal table scrolling without document overflow. Displayed
+aggregates were checked against the local run evidence; no new paid calls.
+
+For interactive changes, check
 suite switching, numeric sorting, missing-value rendering, and provider links in
 the browser. A successful build alone does not verify these interactions.
 
@@ -134,6 +140,17 @@ accidentally recreated. Git history checks must cover all reachable refs, not
 only the current tree. Keep private history backups outside the public repository.
 
 ## Live verification requires separate approval
+
+`scripts/compare_decisions.py` contains 24 original synthetic support-ticket stress
+cases, balanced across billing/technical/account/other. Run without `--live` to
+inspect cases offline. The explicit live flag selects Jev Direct, Clef, Clef Flash,
+and Nano with no retries/cache/escalation. Agree on item limit and spend first.
+Use a new Git-ignored `.log` output; existing evidence is never overwritten.
+The script stops after unknown billing or when cumulative reported/estimated cost
+reaches its threshold, which cannot prevent a single request exceeding that limit.
+It retains inputs, label/category, dataset fingerprint, per-call usage/raw response,
+model identity, failures, and wall time. Synthetic stress results do not establish
+representative workload quality or confidence calibration.
 
 Before calling a remote provider, agree on provider, suite, item limit, estimated
 spend, and output destination. Native providers and new integrations also require

@@ -23,6 +23,11 @@ const hasData = suites.length > 0;
 
 <Base title="Verdict — historical benchmark results">
   <h1>Finite-choice AI benchmark results</h1>
+  <aside class="latest-comparison">
+    <strong>New: Jev Direct, Clef, Clef Flash, and Nano</strong>
+    <p>October 2 · 24 synthetic support tickets · all four returned 24/24 expected answers.</p>
+    <a href="/comparison">View the new comparison and its limits &#8594;</a>
+  </aside>
   <p class="tagline">
     An experimental comparison of chat baselines and Jev Router on labeled tasks.
     These tables describe a historical snapshot, with accuracy, client latency,
@@ -148,6 +153,11 @@ const hasData = suites.length > 0;
     });
   </script>
 </Base>
+
+<style>
+  .latest-comparison { border: 1px solid #2c5a48; background: #111f1d; padding: 16px 18px; border-radius: 12px; margin: 20px 0; }
+  .latest-comparison p { color: var(--muted); font-size: 14px; margin: 6px 0 10px; }
+</style>
 
 <style>
   th[data-num][aria-sort="ascending"]::after { content: " ↑"; }

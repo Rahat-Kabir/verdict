@@ -153,6 +153,37 @@ results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
 
+### 2026-10-02 — Separate comparison page
+
+- Added `/comparison` for the approved Jev Direct/Clef/Clef Flash/Nano run and
+  linked it from the homepage and navigation. Historical results are unchanged.
+- Published aggregate counts, wall time, and cost with charge/estimate labels;
+  included model identities, routing policy, run settings, and dataset fingerprint.
+  All four passed 24/24; the page explicitly avoids a quality-winner claim.
+- Site checks: four Node tests passed, ten pages built, desktop/mobile browser
+  checks passed. Aggregates match local evidence. No new inference calls.
+- The interactive playground remains unbuilt; this slice only presents saved evidence.
+
+### 2026-10-02 — Approved 24-case decision comparison
+
+- Completed the approved 96 calls across Jev Direct, Clef, Clef Flash, and Nano.
+  Each returned 24/24 expected labels with zero errors on the same synthetic
+  support-ticket stress cases. No client retries/cache/fallback/escalation.
+- Median wall times: 554/869/574/1,007 ms respectively. Reported Jev charges plus
+  estimates for the other models totaled $0.0042828, under the $0.10 stop threshold.
+  This is not invoice reconciliation or a provider-enforced cap.
+- Added a dry-run-first comparison script with case fingerprints, retained raw
+  responses/usage/model identity, unknown-billing stop, cost threshold, atomic
+  evidence snapshots, and no overwriting of previous runs. Four offline regressions
+  cover balance/uniqueness, failure/unknown billing, budget stop, and evidence preservation.
+- Findings and limitations: [decision comparison](decision_comparison.md).
+  Quality ties suggest this set is still too easy; independently labeled realistic
+  tickets should precede stronger conclusions. No leaderboard data changed.
+  Full evidence remains local in Git-ignored decision-stress-comparison-2026-10-02.log.
+- Validation: 417 Python tests and Ruff passed after final runner changes;
+  CLI dry-run confirmed no inference is invoked by default. No commits, pushes,
+  or deployments.
+
 ### 2026-10-02 — Approved Clef/Flash live smoke trial
 
 - Ran six fresh calls on the billing/technical/account synthetic tickets: three
