@@ -43,7 +43,12 @@ adapter or passing test suite does not establish a trustworthy provider ranking.
   records to `results/`; `metrics.py` aggregates them.
 - `router.py` combines provider fallback, exact caching, and optional escalation.
 - `site/`: Astro 5 static site reading `site/src/data/results.json`; it makes no
-  inference calls. Aggregate results explicitly before rebuilding the site.
+  inference calls for saved results. Aggregate results explicitly before rebuilding.
+- Local playground: optional FastAPI API in `playground_api.py` and persistent
+  SQLite limits in `playground_limits.py`; Astro dev proxies `/api` to localhost:8000.
+  Default demo fixtures make no inference calls. Live mode requires explicit
+  process opt-in and separate paid-call approval. Run one loopback API process;
+  public hosting/access controls remain unimplemented. See `docs/playground.md`.
 - `config.py` loads server-side keys from environment variables or local `.env`.
 
 ### Key Decisions
@@ -68,10 +73,10 @@ Run Python commands from `python/`, site commands from `site/`.
 
 ```powershell
 # Python setup; installs existing project dependencies
-uv sync --extra dev
+uv sync --extra dev --extra playground
 # Offline verification
-uv run pytest
-uv run ruff check src tests scripts
+uv run --extra dev --extra playground pytest
+uv run --extra dev --extra playground ruff check src tests scripts
 uv run verdict providers
 # Site setup and static build
 npm ci --no-fund --no-audit

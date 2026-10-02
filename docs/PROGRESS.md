@@ -5,8 +5,9 @@
 The first public version and subsequent measurement/SDK/configuration fixes are
 on GitHub, including benchmark model identity (9a7d93b). Direct Jev through
 OpenRouter is published in f766870 with limited live smoke evidence. Cloudflare
-Clef/Flash adapters are implemented locally with offline tests and three live
-smoke checks each. Session entries
+Clef/Flash adapters are published in e02038b with offline tests and three live
+smoke checks each. The synthetic comparison is published in 307139f; the local
+playground has offline tests and limited live smoke evidence. Session entries
 record implementation evidence.
 
 ### Implemented
@@ -152,6 +153,44 @@ Only this progress record was edited during the initial review. Runtime, dataset
 results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
+
+### 2026-10-02 — Approved four-call live playground API smoke test
+
+- One synthetic export-crash ticket ran through the real HTTP API across Jev
+  Direct, Clef, Clef Flash, and Nano. All four chose the expected `technical`
+  label with no errors. Jev/Clef/Flash returned distributions; Nano did not.
+- Observed wall times were 1,902/1,230/1,186/2,056 ms respectively. This single
+  request verifies integration, not comparative speed, quality, or calibration.
+- Combined reported Jev charge and Clef/Nano estimates were $0.000148496.
+  The ledger conservatively rounded individual charges upward to microdollars,
+  totaling $0.000151 against the approved $0.04 application budget.
+- Replaying the same request returned saved results without additional allocated
+  calls. A fifth request returned HTTP 429 before inference. Four-call limit held.
+- Used a separate loopback port and ledger; the visible playground stayed in demo
+  mode. Stopped the live server afterward. Evidence remains Git-ignored in
+  `python/playground-live-smoke-2026-10-02.log` and its SQLite ledger.
+- No public deployment, invoice reconciliation, commit, or push. Broader live
+  failure behavior remains covered by offline tests rather than deliberately
+  induced paid failures.
+
+### 2026-10-02 — Local playground and persistent limits
+
+- Added the Astro `/playground` form and optional FastAPI API: custom question,
+  choices/input, four supported providers, result distributions/confidence when
+  available, wall time, cost basis, model identity, and JSON download.
+- Default demo fixtures make no provider calls. Live mode requires process-level
+  opt-in; missing credentials fail before allocating calls. No paid playground
+  calls were made for this slice.
+- SQLite atomically reserves comparison costs/slots and enforces cumulative
+  budget/calls, hourly loopback-client calls, and concurrent-call limits. UUIDs
+  replay completed results without new calls. Unknown, excessive, or interrupted
+  billing holds funds and pauses further calls. Invoice caps are not guaranteed.
+- API is loopback-only with local Host/Origin checks and bounded JSON inputs.
+  No public hosting/authentication or automatic billing reconciliation is built.
+- Verification: 443 Python tests, Ruff, six Node tests, and eleven-page site build
+  passed. Desktop/mobile demo checks covered submission, distribution/model
+  details, download, duplicate-choice validation, and simulated API failure/retry.
+- Setup, limits, privacy, and operating boundaries: [local playground](playground.md).
 
 ### 2026-10-02 — Separate comparison page
 

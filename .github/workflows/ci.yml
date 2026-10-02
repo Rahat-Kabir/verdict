@@ -17,11 +17,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install
-        run: uv sync --extra dev
+        run: uv sync --extra dev --extra playground
       - name: Lint
-        run: uv run ruff check src tests scripts
+        run: uv run --extra dev --extra playground ruff check src tests scripts
       - name: Tests
-        run: uv run pytest
+        run: uv run --extra dev --extra playground pytest
 
   site:
     runs-on: ubuntu-latest

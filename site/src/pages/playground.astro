@@ -1,0 +1,87 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Verdict — decision playground" description="Try finite-choice decisions with your own question, inputs, and allowed answers.">
+  <p class="eyebrow">Your task. Your choices.</p>
+  <h1>Decision playground</h1>
+  <p class="tagline">Compare how decision models handle the same input. Inspect their choices,
+    available distributions, response time, and cost.</p>
+  <p id="connection" class="callout" role="status">Connecting to the local API…</p>
+
+  <div class="workspace">
+    <form id="decision-form">
+      <div class="form-heading"><h2>Define your decision</h2><button type="button" id="example">Load example</button></div>
+      <label for="question">Question and decision policy</label>
+      <textarea id="question" required maxlength="2000" rows="4" placeholder="Which support team should handle this ticket? Define each team and any rules for mixed requests."></textarea>
+      <label for="answers">Allowed answers <span>One per line · 2–12 unique choices</span></label>
+      <textarea id="answers" required rows="4" placeholder="billing&#10;technical&#10;account&#10;other"></textarea>
+      <label for="context">Input to decide on</label>
+      <textarea id="context" required maxlength="6000" rows="5" placeholder="Paste a ticket, message, or task here."></textarea>
+      <fieldset><legend>Models to compare</legend><div id="providers"><p>Loading models…</p></div></fieldset>
+      <p id="call-preview" class="muted">Choose at least one model.</p>
+      <button type="submit" id="run" disabled>Run comparison</button>
+      <button type="button" id="retry" hidden>Retry the same request safely</button>
+      <p id="form-status" role="status" aria-live="polite"></p>
+    </form>
+
+    <aside class="limits-panel">
+      <h2>Call allowance</h2>
+      <dl id="limits"><dt>Server</dt><dd>Connecting…</dd></dl>
+      <p id="limit-note" class="muted"></p>
+      <h3>What leaves your computer?</h3>
+      <p>In live mode, your question, choices, and input go to the selected providers.
+        Avoid secrets and private data. Demo mode sends no provider requests.</p>
+      <p>The local ledger stores request fingerprints, result summaries, and accounting.
+        It does not store submitted question or input text. Provider data policies still apply.</p>
+    </aside>
+  </div>
+
+  <section id="result-section" hidden aria-labelledby="results-title">
+    <div class="form-heading"><h2 id="results-title">Results</h2><button id="download" type="button">Download JSON</button></div>
+    <p id="result-summary" role="status"></p>
+    <div id="results" class="result-grid"></div>
+  </section>
+  <p class="muted caveat">Agreement is not correctness. Distributions and confidence are provider-reported,
+    not calibrated guarantees. Wall time includes network and adapter work. Costs may be estimates;
+    application spending limits do not guarantee a provider's final invoice.</p>
+  <noscript>This playground requires JavaScript and the local Python API.</noscript>
+</Base>
+
+<script>
+  import { initializePlayground } from "../scripts/playground.js";
+  initializePlayground();
+</script>
+
+<style>
+  .eyebrow { color: var(--accent-2); margin-top: 30px; }
+  .workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: 24px; margin: 24px 0; align-items: start; }
+  form, .limits-panel { border: 1px solid var(--border); background: var(--panel); padding: 22px; border-radius: 12px; min-width: 0; }
+  h2 { margin-top: 0; }
+  .form-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .form-heading h2 { margin: 0; }
+  label { display: block; font-weight: 600; margin: 18px 0 8px; }
+  label span { display: block; font-weight: normal; color: var(--muted); font-size: 12px; }
+  textarea { width: 100%; box-sizing: border-box; resize: vertical; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font: inherit; line-height: 1.5; }
+  textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  button { cursor: pointer; border-radius: 8px; border: 1px solid var(--border); padding: 10px 14px; font: inherit; background: var(--bg); color: var(--text); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  #run { background: var(--accent); color: #10141c; font-weight: 700; }
+  fieldset { border: 0; padding: 0; margin-top: 22px; }
+  legend { font-weight: 600; }
+  .muted, .limits-panel p { color: var(--muted); font-size: 13px; }
+  .limits-panel dl { display: grid; grid-template-columns: 1fr auto; gap: 10px; font-size: 13px; }
+  .limits-panel dd { margin: 0; text-align: right; }
+  .caveat { margin-top: 32px; }
+  .result-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 700px) { .workspace, .result-grid { grid-template-columns: 1fr; } .form-heading { flex-wrap: wrap; } }
+  :global(.model-option) { display: flex; align-items: center; gap: 10px; margin: 10px 0; font-size: 14px; }
+  :global(.model-option small) { display: block; color: var(--muted); font-weight: normal; }
+  :global(.result-card) { padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); overflow-wrap: anywhere; }
+  :global(.result-card h3) { margin-top: 0; }
+  :global(.result-card .choice) { font-size: 24px; color: var(--accent-2); }
+  :global(.result-card p) { font-size: 13px; color: var(--muted); }
+  :global(.distribution-row) { display: grid; grid-template-columns: minmax(0, 1fr) 80px 50px; gap: 10px; align-items: center; font-size: 13px; margin: 8px 0; }
+  :global(.distribution-row meter) { width: 80px; }
+  :global(.error-message) { color: #ffbc80 !important; }
+</style>

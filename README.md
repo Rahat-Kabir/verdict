@@ -18,7 +18,12 @@ is not a measurement of the real Decisions API.
 The site's `/comparison` page presents a separate October 2 synthetic-ticket run
 for Jev Direct, Clef, Clef Flash, and Nano. All four passed 24/24; this small set
 does not identify a quality winner. See the [run report](docs/decision_comparison.md)
-for cost bases and limitations. The interactive playground is still unbuilt.
+for cost bases and limitations.
+
+The [local playground](docs/playground.md) supports custom inputs and comparison
+of Jev Direct, Clef, Clef Flash, and Nano. It starts in no-paid demo mode, with a
+Python API and persistent call/spending controls. Live inference requires explicit
+operator opt-in; public hosting and abuse controls remain unimplemented.
 
 Project context and current limits:
 

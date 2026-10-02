@@ -9,6 +9,15 @@ Python 3.11+ with httpx and python-dotenv, packaged by Hatchling. Pytest and Ruf
 are dev dependencies. The `verdict` CLI dispatches to `cli.main`. Astro 5 renders
 a static site from saved JSON; the browser does not hold provider credentials.
 
+The optional `playground` extra adds FastAPI and its development server.
+`playground_api.py` exposes `/api/playground` configuration and
+`/api/playground/decide` comparison endpoints. The Astro dev proxy forwards
+same-origin requests to the loopback API. `playground_limits.py` uses SQLite
+transactions and integer microdollars to reserve costs/slots before provider
+calls, settle measured costs, and retain unknown/interrupted spend. Demo is the
+default; explicit process configuration enables live adapters. This is a local,
+single-process API, not a reviewed public deployment. See [playground](playground.md).
+
 ## Contracts
 
 `types.py` defines shared dataclasses:

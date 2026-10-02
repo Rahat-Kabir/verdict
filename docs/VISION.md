@@ -11,8 +11,10 @@ The intended product is a hosted developer playground: visitors bring their own
 input, question, and allowed answers and compare model choices, available
 distributions, latency, cost, and failures. The operator's account funds calls.
 Server-side credentials and access/spend controls must precede public inference.
-This playground is not implemented yet; the CLI, adapters, and harness provide
-its current foundation. Benchmarks support workload comparisons.
+The local playground is implemented with an Astro form, Python API, and SQLite
+call/spending controls. It defaults to demo fixtures; a four-provider live HTTP
+API smoke test passed. Public hosting and visitor abuse controls remain unimplemented.
+Benchmarks support workload comparisons.
 
 Developers implementing finite-choice decisions need comparable evidence rather
 than vendor claims. Verdict provides a reusable evaluation harness, transparent
@@ -25,7 +27,8 @@ Jev Router is an additional complete-pipeline comparison, not native Jev output.
 
 ## Current scope
 
-This is an experimental local harness, SDK, and static leaderboard. Direct Jev
+This is an experimental local harness, SDK, static leaderboard, and local
+playground. Direct Jev
 through OpenRouter is offline-tested and passed three synthetic live smoke checks;
 representative comparison remains pending.
 Native OpenAI Decisions has a provisional
