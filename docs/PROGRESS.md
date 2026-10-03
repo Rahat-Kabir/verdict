@@ -154,6 +154,28 @@ results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
 
+### 2026-10-04 — Account abuse limits and public-hosting review
+
+- Open-sign-up policy recorded. Added configurable per-identity lifetime and
+  pending-call caps (defaults: 20 lifetime, four reserved at once) alongside
+  existing hourly/shared limits. Counts include failures/skipped allocations;
+  completed requests still replay without spending new quota. Existing SQLite
+  records count toward the caps; no evidence or normal ledgers were reset.
+- Authentication now precedes real provider setup. Quotas use the verified
+  Clerk subject in live mode; demo uses the loopback peer. The UI labels account
+  versus computer correctly and displays the configured caps.
+- Ten offline regressions cover simultaneous reservations, independent users,
+  rejected batches allocating nothing, lifetime persistence after an hour and
+  restart, replay at exhaustion, slot release, configuration, and auth ordering.
+- Hosting recommendation: one persistent server/API process with same-origin
+  HTTPS routing and persistent SQLite. Public access stays disabled. Host/proxy
+  trust, Clerk production OAuth/bot protection, edge traffic controls, persistent
+  deployment/backup behavior, and launch spend approval remain prerequisites;
+  see the public-hosting review in playground.md.
+- Validation: 482 Python tests, Ruff, six Node tests, and eleven-page site build
+  passed. Chrome demo submission and configured allowance labels passed with a
+  scratch ledger. No new dependencies, paid calls, commits/pushes, or deployment.
+
 ### 2026-10-04 — Reject malformed Clerk tokens cleanly
 
 - Catch JWT parsing errors during signing-key lookup so malformed Bearer tokens
@@ -162,6 +184,19 @@ results, public copy, licensing, Git history, and workflows were left unchanged.
   Bearer challenge, zero reserved calls, and no JWKS fetch or provider construction.
 - Validation: 472 Python tests and Ruff passed. Signed-in live requests and
   public hosting remain unverified. No paid calls, new dependencies, or publication.
+
+### 2026-10-04 — Real-session backend authentication check
+
+- Signed-in Chrome submitted the bundled example through the real Clerk verifier
+  to four fake providers. The API returned HTTP 200; every recorded model was
+  `offline-fixture`, with zero cost. The temporary SQLite ledger used a Clerk
+  user id rather than the loopback peer as its quota identity.
+- Sign-out disabled Run. A direct HTTP request without Authorization returned
+  401 with a Bearer challenge; allocated calls stayed at 12 before and after
+  rejection. The signed-in comparison increased the scratch ledger from 8 to 12.
+- No paid inference calls or normal-ledger writes. This verifies the local
+  browser/token/backend flow with fake providers, not public deployment or
+  real-provider integration. No runtime changes or publication in this check.
 
 ### 2026-10-03 — Clerk sign-in for live playground mode
 

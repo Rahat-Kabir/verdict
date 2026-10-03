@@ -68,9 +68,13 @@ export function initializePlayground() {
     configuration.limits = limits;
     const list = find("limits");
     list.replaceChildren();
+    const quotaIdentityLabel = configuration.mode === "live" ? "account" : "computer";
     const entries = [["Total budget", formatCost(limits.budget_usd)], ["Measured cost", formatCost(limits.measured_usd)],
       ["Committed (including holds)", formatCost(limits.committed_usd)], ["Remaining", formatCost(limits.remaining_usd)],
-      ["Calls allocated", `${limits.calls_used} / ${limits.call_limit}`], ["Per hour on this computer", `${limits.hourly_client_calls} calls`]];
+      ["Calls allocated", `${limits.calls_used} / ${limits.call_limit}`],
+      [`Per hour per ${quotaIdentityLabel}`, `${limits.hourly_client_calls} calls`],
+      [`Lifetime per ${quotaIdentityLabel}`, `${limits.total_client_calls} calls`],
+      [`Reserved at once per ${quotaIdentityLabel}`, `${limits.concurrent_client_calls} calls`]];
     for (const [label, value] of entries) list.append(element("dt", label), element("dd", value));
     find("limit-note").textContent = limits.blocked ? `Calls paused: ${limits.blocked}`
       : "Shared allowance persists across restarts. Unknown billing retains its reservation and pauses new calls. Demo and live allowances are separate.";

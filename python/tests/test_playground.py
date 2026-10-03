@@ -164,9 +164,10 @@ def test_missing_credentials_fail_before_allocating(tmp_path, monkeypatch):
     def missing(name):
         raise playground_api.ProviderError("credential missing")
     monkeypatch.setattr(playground_api, "configured_provider", missing)
-    browser = client(tmp_path, live=True)
+    browser = TestClient(create_app(Settings(live=True, database=tmp_path / "limits.sqlite3"),
+                                   token_verifier=StubVerifier()))
     assert not any(provider["available"] for provider in browser.get("/api/playground").json()["providers"])
-    assert browser.post("/api/playground/decide", json=payload()).status_code == 503
+    assert browser.post("/api/playground/decide", json=payload(), headers=bearer()).status_code == 503
     assert browser.get("/api/playground").json()["limits"]["calls_used"] == 0
 
 
@@ -259,3 +260,109 @@ def test_live_without_configured_authentication_rejects_before_reserving(tmp_pat
     browser = client(tmp_path, live=True)
     assert browser.post("/api/playground/decide", json=payload()).status_code == 503
     assert browser.get("/api/playground").json()["limits"]["calls_used"] == 0
+
+
+def test_authentication_precedes_real_provider_setup(tmp_path, monkeypatch):
+    from verdict_router import playground_api
+
+    def forbidden_provider_setup(provider_name):
+        pytest.fail("Unauthenticated request reached provider setup")
+
+    monkeypatch.setattr(playground_api, "configured_provider", forbidden_provider_setup)
+    application = create_app(Settings(live=True, database=tmp_path / "limits.sqlite3"),
+                             token_verifier=StubVerifier())
+    browser = TestClient(application)
+    response = browser.post("/api/playground/decide", json=payload())
+    assert response.status_code == 401
+    assert application.state.ledger.status()["calls_used"] == 0
+
+
+def test_account_lifetime_allowance_persists_but_replay_still_works(tmp_path, monkeypatch):
+    from verdict_router import playground_limits
+
+    limits = Limits(total_client_calls=2, hourly_client_calls=10)
+    settings = Settings(live=True, database=tmp_path / "limits.sqlite3", limits=limits)
+    provider_calls = []
+
+    class Provider:
+        def decide(self, request):
+            provider_calls.append(request)
+            return DecisionResponse("billing", "fake", "fake", 1, cost_usd=0)
+
+    browser = TestClient(create_app(settings, lambda name: Provider(),
+                                   token_verifier=StubVerifier()))
+    original_payload = payload(["jev-direct", "clef"])
+    assert browser.post("/api/playground/decide", json=original_payload,
+                        headers=bearer()).status_code == 200
+    current_time = playground_limits.time.time()
+    monkeypatch.setattr(playground_limits.time, "time", lambda: current_time + 3601)
+    restarted = TestClient(create_app(settings, lambda name: Provider(),
+                                     token_verifier=StubVerifier()))
+    response = restarted.post("/api/playground/decide", json=payload(), headers=bearer())
+    assert response.status_code == 429 and "Account call allowance" in response.text
+    assert restarted.post("/api/playground/decide", json=original_payload,
+                          headers=bearer()).json()["replayed"]
+    assert len(provider_calls) == 2
+    assert restarted.post("/api/playground/decide", json=payload(),
+                          headers=bearer("user_stub-2")).status_code == 200
+
+
+@pytest.mark.parametrize("quota", ["lifetime", "concurrent"])
+def test_account_reservations_are_atomic_and_isolated(tmp_path, quota):
+    limits = Limits(total_client_calls=1 if quota == "lifetime" else 100,
+                    concurrent_client_calls=1 if quota == "concurrent" else 100,
+                    hourly_client_calls=100, concurrent_calls=100)
+    database_path = tmp_path / "limits.sqlite3"
+    Ledger(database_path, limits, "live")
+
+    def reserve_for_same_account(request_number):
+        try:
+            Ledger(database_path, limits, "live").reserve(
+                str(request_number), "user_same", str(request_number), ["clef"])
+            return True
+        except LimitError:
+            return False
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        assert sum(pool.map(reserve_for_same_account, range(8))) == 1
+    ledger = Ledger(database_path, limits, "live")
+    assert ledger.status()["calls_used"] == 1
+    # Another account can use its own allowance while the first has a hold.
+    ledger.reserve("another", "user_other", "another", ["clef"])
+    assert ledger.status()["calls_used"] == 2
+
+
+def test_account_concurrency_releases_after_settlement(tmp_path):
+    ledger = Ledger(tmp_path / "limits.sqlite3", Limits(concurrent_client_calls=2), "live")
+    ledger.reserve("first", "user_same", "first", ["clef", "clef-flash"])
+    with pytest.raises(LimitError, match="Account is busy"):
+        ledger.reserve("second", "user_same", "second", ["clef"])
+    ledger.settle("first", "clef", 0)
+    ledger.reserve("second", "user_same", "second", ["clef"])
+
+
+@pytest.mark.parametrize("quota", ["lifetime", "concurrent"])
+def test_account_batch_rejection_allocates_nothing(tmp_path, quota):
+    limits = Limits(total_client_calls=1 if quota == "lifetime" else 20,
+                    concurrent_client_calls=1 if quota == "concurrent" else 4)
+    ledger = Ledger(tmp_path / "limits.sqlite3", limits, "live")
+    with pytest.raises(LimitError, match="Account"):
+        ledger.reserve("batch", "user_same", "batch", ["clef", "clef-flash"])
+    status = ledger.status()
+    assert status["calls_used"] == 0 and status["committed_usd"] == 0
+    # The rejected UUID is not consumed; a smaller retry can still reserve.
+    ledger.reserve("batch", "user_same", "smaller", ["clef"])
+
+
+def test_account_controls_load_from_process_environment(monkeypatch):
+    monkeypatch.setenv("VERDICT_PLAYGROUND_ACCOUNT_CALL_LIMIT", "8")
+    monkeypatch.setenv("VERDICT_PLAYGROUND_ACCOUNT_CONCURRENT_CALLS", "4")
+    settings = Settings.from_environment()
+    assert settings.limits.total_client_calls == 8
+    assert settings.limits.concurrent_client_calls == 4
+
+
+@pytest.mark.parametrize("setting", ["total_client_calls", "concurrent_client_calls"])
+def test_account_limits_must_be_positive(setting):
+    with pytest.raises(ValueError, match="Call limits must be positive"):
+        Limits(**{setting: 0})

@@ -50,6 +50,8 @@ $env:VERDICT_PLAYGROUND_BUDGET_USD = '1.00'
 $env:VERDICT_PLAYGROUND_RESERVATION_USD = '0.01'
 $env:VERDICT_PLAYGROUND_CALL_LIMIT = '100'
 $env:VERDICT_PLAYGROUND_HOURLY_CALLS = '12'
+$env:VERDICT_PLAYGROUND_ACCOUNT_CALL_LIMIT = '20'
+$env:VERDICT_PLAYGROUND_ACCOUNT_CONCURRENT_CALLS = '4'
 $env:VERDICT_PLAYGROUND_DB = 'playground.sqlite3'
 ```
 
@@ -73,9 +75,19 @@ atomically. Concurrent requests cannot each claim the same remaining balance.
 Money is stored in integer microdollars, rounded upward. Limits are cumulative
 per database and mode; they do not reset each day. Defaults are a $1 allowance,
 $0.01 reservation per call, 100 allocated calls, 12 calls/hour per client identity,
-and eight simultaneous reserved calls. The live-mode identity is the verified
+20 lifetime calls per identity, four reserved calls at once per identity,
+and eight simultaneous reserved calls across the server. The live-mode identity is the verified
 Clerk user id; demo mode keeps the loopback peer. Skipped slots remain counted
 conservatively. Demo/live accounting is separate.
+
+One comparison selecting four providers uses four calls. The default account
+allowance therefore permits five full comparisons over that identity's lifetime
+in this database, subject to hourly and shared limits. Failures/skipped allocations
+also count. Replaying a completed request uses no new calls. The account totals
+are read and reserved in the same SQLite transaction as the shared budget, so
+concurrent requests cannot race past them. Waiting an hour or restarting the API
+does not restore the lifetime allowance. Separate accounts have separate quotas;
+this does not prevent a person from creating multiple accounts.
 
 Known cost, including failed returned responses, replaces the reservation. Jev
 uses reported charges; Clef/Nano costs are estimates. Unknown billing keeps the
@@ -94,6 +106,43 @@ requires operator billing review; there is deliberately no browser reset control
 Do not delete the database or switch paths to bypass unresolved charges. After
 reconciling charges, back it up and reconcile held costs/circuit state offline.
 No automatic unblocking or reconciliation tool is implemented yet.
+
+## Public hosting review — 2026-10-04
+
+Access policy: anyone who signs up may use the playground, within the account
+and shared allowances. The API still rejects remote peers; this review does not
+enable public inference.
+
+Start with one persistent server, one API process, and persistent SQLite storage.
+Serve the static Astro build and `/api` under the same HTTPS origin through a
+reverse proxy. The development proxy is not part of a static build. This avoids
+introducing another database or cross-origin authentication for the first host.
+Do not run multiple replicas/workers or overlap processes against this ledger:
+startup recovery assumes the process owns all pending calls.
+
+Before deployment, resolve these remaining controls:
+
+- Choose the host, domain, persistent volume, and backup process. Review
+  restart/redeploy behavior so deployments do not erase quotas or interrupt
+  unresolved billing. Validate the server/proxy setup with fake providers first.
+- Configure exact public Host/Origin and Clerk authorized-origin allowlists.
+  Trust forwarded headers only from the actual proxy; a caller-supplied header
+  is not an authenticated identity. The existing loopback boundary stays in place
+  until that topology is selected and tested.
+- Set up a Clerk production instance and production Google OAuth credentials.
+  Enable/review Clerk bot sign-up protection before opening registration.
+  Authentication plus account quotas does not stop multi-account abuse.
+- Apply request-rate, connection, and request-timeout limits at the public edge,
+  including unauthenticated requests, configuration reads, and replays. Current
+  call quotas protect inference allocation, not traffic or JWT-verification load.
+  The 32 KB application body limit does not stop slow clients holding connections.
+- Approve launch call/budget allowances and provider-side spending controls where
+  available. Reservations and estimated charges are not an invoice cap; multiple
+  in-flight calls can exceed reservations before the billing circuit pauses work.
+
+References: [FastAPI proxy trust](https://fastapi.tiangolo.com/advanced/behind-a-proxy/),
+[Clerk production setup](https://clerk.com/docs/guides/development/deployment/production),
+and [Clerk bot protection](https://clerk.com/docs/guides/secure/bot-protection).
 
 ## Local boundary and verification
 
@@ -123,6 +172,8 @@ and malformed-token 401s, unconfigured-auth rejections before reservation,
 verified-subject quota identity,
 concurrency across SQLite connections, rate/lifetime limits, known/unknown failure
 billing, overshoot, restart recovery, and missing keys.
+Account tests cover durable lifetime limits, independent users, atomic reservations,
+concurrency-slot release, replay after exhaustion, and authentication before provider setup.
 Browser checks exercise demo submission, choices, distributions, model details,
 JSON download, validation, failure/retry UI, and desktop/mobile layout. These
 checks establish local behavior. A separately approved four-call HTTP API smoke

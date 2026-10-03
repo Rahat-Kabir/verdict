@@ -34,11 +34,14 @@ class Limits:
     total_calls: int = 100
     hourly_client_calls: int = 12
     concurrent_calls: int = 8
+    total_client_calls: int = 20
+    concurrent_client_calls: int = 4
 
     def __post_init__(self):
         if cost_units(self.budget_usd) <= 0 or cost_units(self.reservation_usd) <= 0:
             raise ValueError("Budget and per-call reservation must be positive")
-        if min(self.total_calls, self.hourly_client_calls, self.concurrent_calls) < 1:
+        if min(self.total_calls, self.hourly_client_calls, self.concurrent_calls,
+               self.total_client_calls, self.concurrent_client_calls) < 1:
             raise ValueError("Call limits must be positive")
 
 
@@ -96,6 +99,8 @@ class Ledger:
             "reserved_per_call_usd": self.limits.reservation_usd,
             "calls_used": totals["calls"], "call_limit": self.limits.total_calls,
             "hourly_client_calls": self.limits.hourly_client_calls,
+            "total_client_calls": self.limits.total_client_calls,
+            "concurrent_client_calls": self.limits.concurrent_client_calls,
             "blocked": circuit["reason"] if circuit else None,
         }
 
@@ -121,17 +126,27 @@ class Ledger:
                 "SUM(CASE WHEN state='pending' THEN 1 ELSE 0 END) AS active "
                 "FROM calls WHERE mode=?", (self.mode,)
             ).fetchone()
-            client_calls = connection.execute(
-                "SELECT COUNT(*) FROM calls JOIN runs ON calls.run_id=runs.id "
-                "WHERE runs.client=? AND runs.mode=? AND runs.created>?",
-                (client, self.mode, time.time() - 3600),
-            ).fetchone()[0]
+            # Check lifetime, hourly, and pending allocations inside the same
+            # write transaction as insertion so concurrent requests cannot
+            # each claim the same remaining account allowance.
+            client_totals = connection.execute(
+                "SELECT COUNT(*) AS lifetime_calls, "
+                "COALESCE(SUM(CASE WHEN runs.created>? THEN 1 ELSE 0 END),0) AS hourly_calls, "
+                "COALESCE(SUM(CASE WHEN calls.state='pending' THEN 1 ELSE 0 END),0) AS active_calls "
+                "FROM calls JOIN runs ON calls.run_id=runs.id "
+                "WHERE runs.client=? AND runs.mode=?",
+                (time.time() - 3600, client, self.mode),
+            ).fetchone()
             count = len(providers)
             reservation = cost_units(self.limits.reservation_usd)
             if totals["calls"] + count > self.limits.total_calls:
                 raise LimitError("Server call allowance exhausted")
-            if client_calls + count > self.limits.hourly_client_calls:
+            if client_totals["lifetime_calls"] + count > self.limits.total_client_calls:
+                raise LimitError("Account call allowance exhausted")
+            if client_totals["hourly_calls"] + count > self.limits.hourly_client_calls:
                 raise LimitError("Hourly call allowance reached; try again later")
+            if client_totals["active_calls"] + count > self.limits.concurrent_client_calls:
+                raise LimitError("Account is busy; wait for existing calls to finish")
             if (totals["active"] or 0) + count > self.limits.concurrent_calls:
                 raise LimitError("Server is busy; try again later")
             if totals["held"] + reservation * count > cost_units(self.limits.budget_usd):

@@ -80,6 +80,9 @@ class Settings:
                 reservation_usd=float(os.getenv("VERDICT_PLAYGROUND_RESERVATION_USD", "0.01")),
                 total_calls=int(os.getenv("VERDICT_PLAYGROUND_CALL_LIMIT", "100")),
                 hourly_client_calls=int(os.getenv("VERDICT_PLAYGROUND_HOURLY_CALLS", "12")),
+                total_client_calls=int(os.getenv("VERDICT_PLAYGROUND_ACCOUNT_CALL_LIMIT", "20")),
+                concurrent_client_calls=int(os.getenv(
+                    "VERDICT_PLAYGROUND_ACCOUNT_CONCURRENT_CALLS", "4")),
             ),
         )
 
@@ -180,12 +183,6 @@ def create_app(settings: Settings | None = None, provider_factory=build_provider
 
     @application.post("/api/playground/decide")
     def decide(payload: PlaygroundInput, request: Request) -> dict:
-        prepared_providers = {}
-        if settings.live and provider_factory is build_provider:
-            try:
-                prepared_providers = {name: configured_provider(name) for name in payload.providers}
-            except ProviderError as exception:
-                raise HTTPException(503, "Selected provider credentials are missing or invalid") from exception
         fingerprint = hashlib.sha256(payload.model_dump_json().encode()).hexdigest()
         client = request.client.host
         if require_authentication:
@@ -200,6 +197,12 @@ def create_app(settings: Settings | None = None, provider_factory=build_provider
             except ClerkAuthError as exception:
                 raise HTTPException(401, str(exception),
                                     headers={"WWW-Authenticate": "Bearer"}) from exception
+        prepared_providers = {}
+        if settings.live and provider_factory is build_provider:
+            try:
+                prepared_providers = {name: configured_provider(name) for name in payload.providers}
+            except ProviderError as exception:
+                raise HTTPException(503, "Selected provider credentials are missing or invalid") from exception
         try:
             previous = ledger.reserve(payload.request_id, client, fingerprint, payload.providers)
         except LimitError as exception:

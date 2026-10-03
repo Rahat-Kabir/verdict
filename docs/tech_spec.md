@@ -1,6 +1,6 @@
 # Verdict as-built technical spec
 
-This describes the implementation as of 2026-10-02. Unresolved defects are tracked
+This describes the implementation as of 2026-10-04. Unresolved defects are tracked
 in PROGRESS; intended capabilities belong in VISION.
 
 ## Runtime and boundaries
@@ -20,6 +20,11 @@ requires a Clerk publishable key: `clerk_auth.py` verifies the presented session
 JWT (RS256 signature via the instance's public JWKS, issuer, expiry, and `azp`
 pinned to the four local dev origins) and the verified `sub` becomes the ledger's
 quota identity; without a key, live decisions return 503 before reservation.
+Authenticated decisions validate identity before provider setup. Account limits
+default to 20 lifetime calls and four reserved calls at once, alongside 12 hourly
+calls and the shared budget/call/concurrency limits. All quota checks and
+reservations share one SQLite write transaction; completed requests replay
+without new allocation. Account limits persist across process restarts.
 No Clerk secret key is used. This is a local,
 single-process API, not a reviewed public deployment. See [playground](playground.md).
 
