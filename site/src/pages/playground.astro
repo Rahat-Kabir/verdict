@@ -1,5 +1,24 @@
 ---
 import Base from "../layouts/Base.astro";
+
+// The publishable key is a build-time PUBLIC_* env var (site/.env, written by
+// `clerk env pull`). Without one the page renders no sign-in machinery and
+// demo mode works exactly as before.
+const publishableKey = import.meta.env.PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+// Publishable keys embed the Frontend API domain as base64(domain + "$"),
+// which also serves the clerk-js scripts for this instance.
+function clerkFrontendApiDomain(key) {
+  const encoded = key.replace(/^pk_(?:test|live)_/, "");
+  const padded = encoded.padEnd(encoded.length + ((4 - (encoded.length % 4)) % 4), "=");
+  return atob(padded).replace(/\$$/, "");
+}
+let clerkDomain;
+try {
+  clerkDomain = publishableKey ? clerkFrontendApiDomain(publishableKey) : undefined;
+} catch {
+  clerkDomain = undefined;
+}
 ---
 
 <Base title="Verdict — decision playground" description="Try finite-choice decisions with your own question, inputs, and allowed answers.">
@@ -8,6 +27,17 @@ import Base from "../layouts/Base.astro";
   <p class="tagline">Compare how decision models handle the same input. Inspect their choices,
     available distributions, response time, and cost.</p>
   <p id="connection" class="callout" role="status">Connecting to the local API…</p>
+
+  {clerkDomain && (
+    <div id="auth-bar" hidden>
+      <span id="auth-status" class="muted"></span>
+      <span class="auth-controls">
+        <button type="button" id="sign-in" hidden>Sign in</button>
+        <button type="button" id="sign-out" hidden>Sign out</button>
+        <div id="user-button" hidden></div>
+      </span>
+    </div>
+  )}
 
   <div class="workspace">
     <form id="decision-form">
@@ -46,6 +76,15 @@ import Base from "../layouts/Base.astro";
     not calibrated guarantees. Wall time includes network and adapter work. Costs may be estimates;
     application spending limits do not guarantee a provider's final invoice.</p>
   <noscript>This playground requires JavaScript and the local Python API.</noscript>
+
+  {clerkDomain && (
+    <script is:inline defer crossorigin="anonymous"
+      src={`https://${clerkDomain}/npm/@clerk/ui@1/dist/ui.browser.js`}></script>
+  )}
+  {clerkDomain && (
+    <script is:inline defer crossorigin="anonymous" data-clerk-publishable-key={publishableKey}
+      src={`https://${clerkDomain}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`}></script>
+  )}
 </Base>
 
 <script>
@@ -73,6 +112,10 @@ import Base from "../layouts/Base.astro";
   .limits-panel dl { display: grid; grid-template-columns: 1fr auto; gap: 10px; font-size: 13px; }
   .limits-panel dd { margin: 0; text-align: right; }
   .caveat { margin-top: 32px; }
+  #auth-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0 0; }
+  #auth-bar[hidden] { display: none; }
+  .auth-controls { display: flex; align-items: center; gap: 10px; }
+  #user-button[hidden] { display: none; }
   .result-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   @media (max-width: 700px) { .workspace, .result-grid { grid-template-columns: 1fr; } .form-heading { flex-wrap: wrap; } }
   :global(.model-option) { display: flex; align-items: center; gap: 10px; margin: 10px 0; font-size: 14px; }

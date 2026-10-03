@@ -15,6 +15,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .clerk_auth import ClerkAuthError, ClerkTokenVerifier
 from .playground_limits import Ledger, LimitError, Limits, cost_units
 from .providers import PROVIDER_META, build_provider
 from .providers.base import ProviderError, validate_response
@@ -117,8 +118,15 @@ def configured_provider(provider_name: str):
     return provider
 
 
-def create_app(settings: Settings | None = None, provider_factory=build_provider) -> FastAPI:
+def create_app(settings: Settings | None = None, provider_factory=build_provider,
+               token_verifier: ClerkTokenVerifier | None = None) -> FastAPI:
     settings = settings or Settings.from_environment()
+    # Real live mode verifies a signed-in user before spending; fake-provider
+    # test apps request authentication only by passing a verifier explicitly.
+    if settings.live and provider_factory is build_provider and token_verifier is None:
+        token_verifier = ClerkTokenVerifier.from_environment(LOCAL_ORIGINS)
+    require_authentication = settings.live and (
+        token_verifier is not None or provider_factory is build_provider)
     ledger = Ledger(settings.database, settings.limits, "live" if settings.live else "demo")
 
     @asynccontextmanager
@@ -180,6 +188,18 @@ def create_app(settings: Settings | None = None, provider_factory=build_provider
                 raise HTTPException(503, "Selected provider credentials are missing or invalid") from exception
         fingerprint = hashlib.sha256(payload.model_dump_json().encode()).hexdigest()
         client = request.client.host
+        if require_authentication:
+            # Authentication runs before reservation so a rejected caller never
+            # occupies budget or call slots. The verified `sub` claim — not the
+            # socket peer or any browser-supplied field — becomes the quota id.
+            if token_verifier is None:
+                raise HTTPException(
+                    503, "Live mode requires sign-in, but server authentication is not configured")
+            try:
+                client = token_verifier.verified_subject(request.headers.get("authorization"))
+            except ClerkAuthError as exception:
+                raise HTTPException(401, str(exception),
+                                    headers={"WWW-Authenticate": "Bearer"}) from exception
         try:
             previous = ledger.reserve(payload.request_id, client, fingerprint, payload.providers)
         except LimitError as exception:

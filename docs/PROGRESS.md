@@ -154,6 +154,52 @@ results, public copy, licensing, Git history, and workflows were left unchanged.
 
 ## Session updates
 
+### 2026-10-04 — Reject malformed Clerk tokens cleanly
+
+- Catch JWT parsing errors during signing-key lookup so malformed Bearer tokens
+  return 401 instead of an uncaught server error.
+- Four offline API regressions use the real PyJWKClient parser and verify the
+  Bearer challenge, zero reserved calls, and no JWKS fetch or provider construction.
+- Validation: 472 Python tests and Ruff passed. Signed-in live requests and
+  public hosting remain unverified. No paid calls, new dependencies, or publication.
+
+### 2026-10-03 — Clerk sign-in for live playground mode
+
+- Created the "Verdict" Clerk application (development instance) via the logged-in
+  Clerk CLI and linked it; keys live in Git-ignored `site/.env`
+  (`PUBLIC_CLERK_PUBLISHABLE_KEY`) and root `.env` (`CLERK_PUBLISHABLE_KEY`).
+  The existing "Reckon" and "frontend" apps were not touched.
+- Live playground decisions now require a verified Clerk session. The Astro
+  playground page loads clerk-js only when the build has a publishable key, adds
+  a sign-in/user button in live mode, and attaches a fresh `Bearer` session token
+  per decide attempt. Demo mode stays open without sign-in; the auth bar is
+  hidden in demo.
+- Backend: new `clerk_auth.py` verifies RS256 session JWTs against the instance's
+  public JWKS (issuer, expiry, and `azp` pinned to the four local dev origins) and
+  returns the verified `sub`, which replaces the socket peer as the ledger's quota
+  identity in live mode. Authentication runs before reservation, so rejected
+  callers hold nothing. Real live mode without a configured key returns 503 before
+  reserving, mirroring missing-credential handling; fake-provider test apps keep
+  their unauthenticated offline behavior unless given a verifier. No Clerk secret
+  key is used anywhere.
+- New Python dependency in the `playground` extra: `pyjwt[crypto]>=2.8` (approved
+  as the recommended option in the auth-slice discussion). `uv sync` also removed
+  the stray manual install `fastar`, which no source file imports.
+- Validation: 468 Python tests passed (16 new: publishable-key decoding, forged
+  and rotated signing keys, expired/wrong-issuer/wrong-origin/missing-claim
+  rejection, unauthenticated 401s, 503 without configured auth, verified-subject
+  quota identity, demo unaffected); Ruff passed; six Node tests passed; the site
+  built eleven pages with both clerk-js script tags and the auth bar present.
+  Browser checks passed against local servers: demo mode kept the auth bar
+  hidden and ran a full fixture comparison; a scratch-ledger live server showed
+  the auth bar, kept Run disabled while signed out, and opened the Verdict
+  Clerk sign-in modal. No decide request was submitted in live mode, so no
+  provider calls or Clerk sign-ups occurred; servers were stopped and the
+  scratch ledger deleted afterward.
+- No paid inference calls were made; nothing was committed, pushed, or deployed.
+  Public hosting still requires abuse controls, trusted-proxy configuration, and
+  a reviewed deployment setup; this slice adds identity only.
+
 ### 2026-10-02 — Approved four-call live playground API smoke test
 
 - One synthetic export-crash ticket ran through the real HTTP API across Jev

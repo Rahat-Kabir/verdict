@@ -13,10 +13,17 @@ export function formatCost(cost) {
 export function initializePlayground() {
   const find = (id) => document.getElementById(id);
   const form = find("decision-form");
+  const authBar = find("auth-bar");
   let configuration;
   let latestResult;
   let pendingPayload;
   let busy = false;
+  // Auth state: `undefined` while clerk-js initializes, `null` when it failed
+  // to load, and the Clerk instance once ready. Demo mode never requires it.
+  let clerk;
+  let userButtonMounted = false;
+  const signedIn = () => Boolean(clerk?.isSignedIn);
+  const runBlockedByAuth = () => configuration?.mode === "live" && !signedIn();
   const element = (tag, text, className) => {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
@@ -29,7 +36,33 @@ export function initializePlayground() {
     find("call-preview").textContent = configuration
       ? `${count} ${configuration.mode === "demo" ? "demo results" : "paid calls"} · ${formatCost(count * configuration.limits.reserved_per_call_usd)} reserved before starting`
       : "API unavailable.";
-    find("run").disabled = busy || !configuration || count === 0 || Boolean(configuration.limits.blocked);
+    if (runBlockedByAuth() && !authBar) {
+      find("call-preview").textContent = "This server runs live mode, but the page was built without sign-in support. Rebuild the site with PUBLIC_CLERK_PUBLISHABLE_KEY set.";
+    }
+    find("run").disabled = busy || !configuration || count === 0
+      || Boolean(configuration.limits.blocked) || runBlockedByAuth();
+  };
+  const updateAuthUi = () => {
+    if (!authBar) return;
+    const live = configuration?.mode === "live";
+    authBar.hidden = !live;
+    if (!live) return;
+    const isSignedIn = signedIn();
+    find("sign-in").hidden = isSignedIn;
+    find("sign-out").hidden = !isSignedIn;
+    const userButton = find("user-button");
+    userButton.hidden = !isSignedIn;
+    find("auth-status").textContent = isSignedIn
+      ? `Signed in${clerk.user?.primaryEmailAddress?.emailAddress ? ` as ${clerk.user.primaryEmailAddress.emailAddress}` : ""}. Paid calls are attributed and limited per account.`
+      : clerk === null
+        ? "Sign-in is unavailable because Clerk failed to load; live comparisons stay disabled. Demo mode still works."
+        : clerk === undefined
+          ? "Loading sign-in…"
+          : "Sign in to run live comparisons. The server attributes paid calls to your account.";
+    if (isSignedIn && !userButtonMounted) {
+      clerk.mountUserButton(userButton);
+      userButtonMounted = true;
+    }
   };
   const updateLimits = (limits) => {
     configuration.limits = limits;
@@ -66,6 +99,7 @@ export function initializePlayground() {
       find("providers").append(label);
     }
     updateLimits(configuration.limits);
+    updateAuthUi();
   };
   const showResults = (result, submitted) => {
     latestResult = { ...result, question: submitted.question, answers: submitted.answers, context: submitted.context };
@@ -108,7 +142,14 @@ export function initializePlayground() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 270_000);
     try {
-      const response = await fetch("/api/playground/decide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal: controller.signal });
+      // Session tokens are short-lived; fetch a fresh one per attempt so a
+      // retried request never reuses a possibly expired token.
+      const headers = { "Content-Type": "application/json" };
+      if (signedIn() && clerk?.session) {
+        const token = await clerk.session.getToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await fetch("/api/playground/decide", { method: "POST", headers, body: JSON.stringify(payload), signal: controller.signal });
       if (!response.ok) {
         let message = "Request failed. Try again later.";
         try {
@@ -154,5 +195,21 @@ export function initializePlayground() {
     find("answers").value = "billing\ntechnical\naccount\nother";
     find("context").value = "The app crashed yesterday, but that is fixed. Now please correct my invoice.";
   });
+  const initializeAuth = async () => {
+    if (!authBar) return;
+    try {
+      if (!window.Clerk) throw new Error("clerk-js did not load");
+      await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+      clerk = window.Clerk;
+      clerk.addListener(() => { updateAuthUi(); updatePreview(); });
+      find("sign-in").addEventListener("click", () => clerk?.openSignIn());
+      find("sign-out").addEventListener("click", () => clerk?.signOut());
+    } catch {
+      clerk = null;
+    }
+    updateAuthUi();
+    updatePreview();
+  };
+  window.addEventListener("load", initializeAuth);
   refresh().catch(() => { find("connection").textContent = "API unavailable. Start the local Python API on port 8000, then reload this page."; });
 }

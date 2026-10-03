@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from verdict_router.clerk_auth import ClerkAuthError
 from verdict_router.playground_api import Settings, create_app
 from verdict_router.playground_limits import Ledger, LimitError, Limits
 from verdict_router.types import DecisionResponse
@@ -16,6 +17,23 @@ def payload(providers=None):
 
 def client(tmp_path, **settings):
     return TestClient(create_app(Settings(database=tmp_path / "limits.sqlite3", **settings)))
+
+
+class StubVerifier:
+    """Echoes the presented token as the verified subject so tests can act as
+    distinct users without any network access or real JWT work."""
+
+    def verified_subject(self, authorization_header):
+        scheme, separator, token = (authorization_header or "").partition(" ")
+        if scheme.lower() != "bearer" or not separator or not token.strip():
+            raise ClerkAuthError("Sign in to run live comparisons")
+        if token.strip() == "expired":
+            raise ClerkAuthError("Session token is invalid or expired")
+        return token.strip()
+
+
+def bearer(subject="user_stub-1"):
+    return {"Authorization": f"Bearer {subject}"}
 
 
 def test_demo_never_constructs_remote_provider_and_replays(tmp_path):
@@ -191,3 +209,53 @@ def test_live_result_distribution_and_no_raw_or_input_persistence(tmp_path):
     assert result["reported_model"] == "snapshot" and result["confidence"] == 0.8
     database_bytes = (tmp_path / "limits.sqlite3").read_bytes()
     assert b"private-ticket-text" not in database_bytes and b"not-persisted" not in database_bytes
+
+
+def test_live_requires_verified_user_before_reserving(tmp_path):
+    class Provider:
+        def decide(self, request):
+            return DecisionResponse("billing", "fake", "fake", 1, cost_usd=0)
+    application = create_app(Settings(live=True, database=tmp_path / "limits.sqlite3"),
+                             lambda name: Provider(), token_verifier=StubVerifier())
+    browser = TestClient(application)
+    assert browser.post("/api/playground/decide", json=payload()).status_code == 401
+    assert browser.post("/api/playground/decide", json=payload(),
+                        headers={"Authorization": "Token abc"}).status_code == 401
+    assert browser.post("/api/playground/decide", json=payload(),
+                        headers=bearer("expired")).status_code == 401
+    assert browser.get("/api/playground").json()["limits"]["calls_used"] == 0
+    assert browser.post("/api/playground/decide", json=payload(), headers=bearer()).status_code == 200
+
+
+def test_ledger_quota_identity_is_the_verified_subject(tmp_path):
+    class Provider:
+        def decide(self, request):
+            return DecisionResponse("billing", "fake", "fake", 1, cost_usd=0)
+    # One call per hour per identity: identical subjects collide, distinct ones do not.
+    limits = Limits(hourly_client_calls=1, total_calls=100, budget_usd=1, reservation_usd=0.01)
+    application = create_app(Settings(live=True, database=tmp_path / "limits.sqlite3", limits=limits),
+                             lambda name: Provider(), token_verifier=StubVerifier())
+    browser = TestClient(application)
+    assert browser.post("/api/playground/decide", json=payload(), headers=bearer()).status_code == 200
+    assert browser.post("/api/playground/decide", json=payload(), headers=bearer()).status_code == 429
+    assert browser.post("/api/playground/decide", json=payload(),
+                        headers=bearer("user_stub-2")).status_code == 200
+
+
+def test_demo_mode_runs_without_authorization(tmp_path):
+    browser = client(tmp_path)
+    assert browser.post("/api/playground/decide", json=payload()).status_code == 200
+
+
+def test_live_without_configured_authentication_rejects_before_reserving(tmp_path, monkeypatch):
+    from verdict_router import playground_api
+
+    class Unconfigured:
+        @classmethod
+        def from_environment(cls, allowed_origins):
+            return None
+
+    monkeypatch.setattr(playground_api, "ClerkTokenVerifier", Unconfigured)
+    browser = client(tmp_path, live=True)
+    assert browser.post("/api/playground/decide", json=payload()).status_code == 503
+    assert browser.get("/api/playground").json()["limits"]["calls_used"] == 0

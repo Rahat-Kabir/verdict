@@ -6,6 +6,11 @@ answers, input text, and one to four providers. Results expose choices, availabl
 distributions, uncalibrated confidence, client wall time, cost basis, and model
 identity. Downloaded JSON includes the submitted input and result summaries.
 
+Live mode requires Clerk sign-in. The page presents a short-lived session token
+with each decide call; the server verifies it against Clerk's published JWKS and
+uses the verified user id as the spending-ledger identity. Demo mode never asks
+you to sign in.
+
 ## Start locally
 
 From `python/`:
@@ -49,7 +54,13 @@ $env:VERDICT_PLAYGROUND_DB = 'playground.sqlite3'
 ```
 
 Missing/invalid credentials disable the provider in the UI and fail before call
-allocation. Each selected provider runs once, sequentially, with existing adapter
+allocation. Live mode also requires a Clerk publishable key in `CLERK_PUBLISHABLE_KEY`
+(server) and `PUBLIC_CLERK_PUBLISHABLE_KEY` in `site/.env` (page build); without
+either, the API starts but every live decision returns 503 before anything is
+reserved, and the page explains that sign-in support was not built in. No Clerk
+secret key is used: verification only needs the public JWKS.
+
+Each selected provider runs once, sequentially, with existing adapter
 timeouts, no inference retries, cache, fallback, or escalation. The UI offers
 explicit safe retries using the same UUID: finished results replay without new
 calls, and pending/interrupted requests return a conflict. A new comparison gets
@@ -61,8 +72,9 @@ SQLite `BEGIN IMMEDIATE` reserves budget and call slots for the entire compariso
 atomically. Concurrent requests cannot each claim the same remaining balance.
 Money is stored in integer microdollars, rounded upward. Limits are cumulative
 per database and mode; they do not reset each day. Defaults are a $1 allowance,
-$0.01 reservation per call, 100 allocated calls, 12 calls/hour per connecting
-computer, and eight simultaneous reserved calls. Skipped slots remain counted
+$0.01 reservation per call, 100 allocated calls, 12 calls/hour per client identity,
+and eight simultaneous reserved calls. The live-mode identity is the verified
+Clerk user id; demo mode keeps the loopback peer. Skipped slots remain counted
 conservatively. Demo/live accounting is separate.
 
 Known cost, including failed returned responses, replaces the reservation. Jev
@@ -87,10 +99,14 @@ No automatic unblocking or reconciliation tool is implemented yet.
 
 Only loopback peers, approved local Host/Origin values, and JSON POST bodies up
 to 32 KB are accepted. Forwarded headers and browser-supplied identities are not
-used for quota identity. Run one API process, without multiple workers sharing
+used for quota identity. The one trusted identity source is a Clerk session JWT
+whose signature, issuer, expiry, and authorized origin (`azp`) the server checks
+against Clerk's public keys; its pinned origins are the four local dev origins.
+Run one API process, without multiple workers sharing
 this database: startup recovery assumes it owns all reservations. Do not bind
-this service publicly. Public hosting still needs authenticated visitor identity,
-abuse controls, trusted proxy configuration, and a reviewed deployment setup.
+this service publicly. Public hosting still needs authenticated visitor identity
+(now provided for live calls), abuse controls, trusted proxy configuration, and a
+reviewed deployment setup.
 
 ```powershell
 # From python/: offline tests, including fake-provider live paths
@@ -102,8 +118,11 @@ npm run build
 ```
 
 API tests cover no-paid demo behavior, replay/conflicts, validation, local request
-boundaries, concurrency across SQLite connections, rate/lifetime limits,
-known/unknown failure billing, overshoot, restart recovery, and missing keys.
+boundaries, Clerk token verification (offline, against a generated key), unauthenticated
+and malformed-token 401s, unconfigured-auth rejections before reservation,
+verified-subject quota identity,
+concurrency across SQLite connections, rate/lifetime limits, known/unknown failure
+billing, overshoot, restart recovery, and missing keys.
 Browser checks exercise demo submission, choices, distributions, model details,
 JSON download, validation, failure/retry UI, and desktop/mobile layout. These
 checks establish local behavior. A separately approved four-call HTTP API smoke

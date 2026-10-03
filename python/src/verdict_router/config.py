@@ -75,3 +75,8 @@ def get_cloudflare_account_id() -> str:
 def get_cloudflare_token() -> str:
     _load_dotenv_once()
     return os.environ.get("CLOUDFLARE_AUTH_TOKEN", "").strip()
+
+
+def get_clerk_publishable_key() -> str:
+    _load_dotenv_once()
+    return os.environ.get("CLERK_PUBLISHABLE_KEY", "").strip()
