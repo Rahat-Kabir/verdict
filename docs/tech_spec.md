@@ -280,6 +280,14 @@ totals for 24 calls per model. The page labels the run as recorded internal eval
 and links to the playground. It does not use or replace historical leaderboard data, and
 neither page makes inference calls. Full comparison evidence remains local.
 
+First-visit guidance links the historical page prominently to the playground.
+The playground displays configured trial terms before login, labels temporary
+budget holds separately from recorded prices, and puts availability beside Run.
+Public limits include the configured account budget, but personal usage still
+requires verified identity. Navigation keeps each label intact when wrapping.
+Comparison policy links open the disclosure, including direct hash URLs; methodology
+starts with a short guide to expected answers, failures, time, and cost before audit details.
+
 The distribution bundles routing (198 support-ticket samples, CC-BY-NC-4.0) and
 agent_next_action (200 generated examples, MIT). Classification and moderation
 raw text are excluded from the repository, reachable history, source archives,

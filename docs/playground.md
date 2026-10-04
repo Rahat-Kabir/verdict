@@ -97,8 +97,15 @@ budget or call limit stops new allocations. `/api/playground` accepts a verified
 Bearer session to return only that account's totals; unsigned live configuration
 does not expose personal usage. The UI refreshes totals after sign-in and clears
 them on sign-out. Keep the same SQLite database across restarts to retain trials.
-The trial panel shows remaining budget, remaining model calls, and one status
-message. Personal recorded costs and holds are available under "Cost details".
+Unsigned configuration exposes the configured lifetime budget and call limit so
+visitors can understand the offer before signing in; it does not expose their usage.
+The page states that Verdict funds the trial and visitors need no API keys. The
+preview labels reservations as temporary holds, not prices, and the availability
+message appears immediately above Run on desktop and mobile. Demo hides the trial
+offer and shows no paid calls. Trial values come from API configuration.
+The trial panel shows remaining budget and remaining model calls. A single
+availability message appears beside Run. Personal recorded costs and holds are
+available under "Cost details".
 Hourly/concurrent limits and shared server accounting are enforced by the API
 but omitted from the developer-facing panel.
 

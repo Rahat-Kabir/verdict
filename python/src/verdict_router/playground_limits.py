@@ -120,6 +120,7 @@ class Ledger:
             "calls_used": totals["calls"], "call_limit": self.limits.total_calls,
             "hourly_client_calls": self.limits.hourly_client_calls,
             "total_client_calls": self.limits.total_client_calls,
+            "client_budget_usd": self.limits.client_budget_usd,
             "concurrent_client_calls": self.limits.concurrent_client_calls,
             "blocked": circuit["reason"] if circuit else None,
             "account": account,

@@ -1,5 +1,24 @@
 # Verdict progress
 
+## First-visit journey fixes — 2026-10-04
+
+- Playground shows configured lifetime trial terms before login ($0.50 / up to
+  40 model calls by default), says Verdict funds the trial, and explains temporary
+  holds separately from recorded costs. Public configuration includes the account
+  budget limit without exposing personal usage. Demo hides the live trial offer.
+- Availability now appears directly above Run on desktop/mobile. Status also
+  explains partial shared call capacity when fewer models are required.
+- Navigation wraps between whole labels. The comparison policy link opens its
+  disclosure on click and direct/reloaded hash URLs. Methodology starts with a
+  simple interpretation guide; the historical landing page emphasizes the playground.
+- Verification: 44 focused offline playground tests, Ruff, eight Node tests,
+  and the 11-page build passed. Browser checks covered signed-out trial terms,
+  model-selection hold updates, disabled Run/status placement, policy click/reload,
+  methodology heading order, and mobile navigation without page overflow.
+- Restarted local API/preview with existing settings and the same ledger. The
+  shared four-call test allowance remains exhausted; no new paid calls or resets.
+  No deployment, commit, or push. A fresh successful live run remains outside this slice.
+
 ## Example-first comparison — 2026-10-04
 
 - Comparison now identifies the October 2 recorded internal evaluation and opens

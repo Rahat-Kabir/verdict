@@ -23,9 +23,24 @@ const suiteRows = Object.entries(suites).map(([name, s]: [string, any]) => ({
   <p class="tagline">
     Verdict compares included provider adapters on labeled tasks with a common finite-choice contract:
     <em>given a question with a finite set of allowed answers and some context, choose exactly one answer</em>.
-    Saved summaries can be rebuilt from historical records. Rerunning classification and moderation
-    requires separately obtained local inputs under their source terms.
+    Start with the task you need to solve, then inspect whether the measurements
+    support a decision on that workload.
   </p>
+
+  <h2>How to read the results</h2>
+  <ol class="tagline">
+    <li><strong>Same task, same inputs.</strong> Each model receives the same question,
+      allowed answers, and input in that evaluation.</li>
+    <li><strong>Check against expected answers.</strong> Benchmark accuracy compares choices
+      with dataset labels. In the playground, you judge your own input; model agreement
+      alone does not mean the answer is correct.</li>
+    <li><strong>Check failures, time, and cost together.</strong> A useful model must return
+      usable answers within your application's budget and response-time needs.
+      Reported confidence is not a validated probability of correctness.</li>
+  </ol>
+  <p class="tagline">The recorded results describe these particular datasets and runs.
+    To choose a model for your application, test representative inputs with reviewed
+    expected answers. <a href="/playground">Try your own decision →</a></p>
 
   <h2>What our internal evaluation means</h2>
   <p class="tagline">Verdict ran these experiments and calculated the reported metrics.
@@ -139,6 +154,9 @@ DecisionResponse:
   </ul>
 
   <h2>Reproduce it</h2>
+  <p class="tagline">Saved summaries can be rebuilt from historical records without inference.
+    Rerunning classification and moderation requires permitted private inputs under
+    their source terms. New measurements make paid provider calls.</p>
   <pre><code>{`cd python
 uv sync --extra dev
 # Rebuild the saved historical summary; no inference calls:

@@ -10,6 +10,29 @@ export function formatCost(cost) {
   return typeof cost === "number" && Number.isFinite(cost) ? `$${cost.toFixed(6)}` : "Unknown";
 }
 
+export function comparisonAvailabilityStatus(mode, limits, selectedModelCount, isSignedIn) {
+  const account = limits.account;
+  const reservedCost = selectedModelCount * limits.reserved_per_call_usd;
+  if (limits.blocked) return "Comparisons paused while provider billing is reviewed.";
+  if (limits.calls_used >= limits.call_limit || reservedCost > limits.remaining_usd) {
+    return "Comparisons are currently unavailable. Please check back later.";
+  }
+  if (selectedModelCount + limits.calls_used > limits.call_limit) {
+    return "Select fewer models; comparisons are currently limited.";
+  }
+  if (mode === "live" && !isSignedIn) return "Sign in to run a comparison using your trial.";
+  if (mode === "live" && !account) return "Loading your trial allowance…";
+  if (account && account.calls_used >= account.call_limit) return "Your lifetime model-call allowance is exhausted.";
+  if (account && selectedModelCount + account.calls_used > account.call_limit) return "Select fewer models to fit your remaining calls.";
+  if (account && reservedCost > account.remaining_usd) return "Not enough trial budget for the selected models. Try fewer models.";
+  if (selectedModelCount === 0) return "Select at least one model to compare.";
+  return "Ready to compare your decision.";
+}
+
+export function trialOfferText(limits) {
+  return `$${limits.client_budget_usd.toFixed(2)} lifetime trial · Up to ${limits.total_client_calls} model calls · No daily refill.`;
+}
+
 export function initializePlayground() {
   const find = (id) => document.getElementById(id);
   const form = find("decision-form");
@@ -36,7 +59,9 @@ export function initializePlayground() {
   const updatePreview = () => {
     const count = selectedProviders().length;
     find("call-preview").textContent = configuration
-      ? `${count} ${configuration.mode === "demo" ? "demo results" : "paid calls"} · ${formatCost(count * configuration.limits.reserved_per_call_usd)} reserved before starting`
+      ? configuration.mode === "demo"
+        ? `${count} demo results · No paid model calls.`
+        : `${count} model calls · Temporary budget hold: ${formatCost(count * configuration.limits.reserved_per_call_usd)}. This is not the price; the recorded cost replaces the hold when billing is known.`
       : "API unavailable.";
     if (runBlockedByAuth() && !authBar) {
       find("call-preview").textContent = "This server runs live mode, but the page was built without sign-in support. Rebuild the site with PUBLIC_CLERK_PUBLISHABLE_KEY set.";
@@ -51,20 +76,9 @@ export function initializePlayground() {
     if (configuration) updateTrialStatus(configuration.limits);
   };
   const updateTrialStatus = (limits) => {
-    const account = limits.account;
-    const count = selectedProviders().length;
-    let status = "Ready to compare your decision.";
-    if (limits.blocked) status = "Comparisons paused while provider billing is reviewed.";
-    else if (limits.calls_used >= limits.call_limit
-      || count * limits.reserved_per_call_usd > limits.remaining_usd) {
-      status = "Comparisons are currently unavailable. Please check back later.";
-    } else if (configuration.mode === "live" && !signedIn()) status = "Sign in to see your remaining trial.";
-    else if (configuration.mode === "live" && !account) status = "Loading your trial allowance…";
-    else if (account && account.calls_used >= account.call_limit) status = "Your lifetime model-call allowance is exhausted.";
-    else if (account && count + account.calls_used > account.call_limit) status = "Select fewer models to fit your remaining calls.";
-    else if (account && count * limits.reserved_per_call_usd > account.remaining_usd) status = "Not enough trial budget for the selected models. Try fewer models.";
-    else if (count === 0) status = "Select at least one model to compare.";
-    find("limit-note").textContent = status;
+    find("limit-note").textContent = comparisonAvailabilityStatus(
+      configuration.mode, limits, selectedProviders().length, signedIn(),
+    );
   };
   const updateAuthUi = () => {
     if (!authBar) return;
@@ -90,6 +104,9 @@ export function initializePlayground() {
   };
   const updateLimits = (limits) => {
     configuration.limits = limits;
+    find("trial-offer").hidden = configuration.mode !== "live";
+    find("trial-offer").textContent = configuration.mode === "live" ? trialOfferText(limits) : "";
+    find("allowance-title").textContent = configuration.mode === "demo" ? "Your demo allowance" : "Your lifetime trial";
     const list = find("limits");
     list.replaceChildren();
     const account = limits.account;
@@ -118,7 +135,7 @@ export function initializePlayground() {
     configuration = await response.json();
     find("connection").textContent = configuration.mode === "demo"
       ? "Demo mode · No paid calls. Fixtures always choose your first answer and show an illustrative uniform distribution. These are not model outputs."
-      : "Live mode · Your server account pays for each selected model. Submit only data you are allowed to share.";
+      : "Live mode · Verdict funds your trial. You do not need your own API keys. Submit only data you are allowed to share.";
     find("providers").replaceChildren();
     for (const provider of configuration.providers) {
       const label = element("label", undefined, "model-option");

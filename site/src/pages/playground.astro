@@ -27,6 +27,7 @@ try {
   <p class="tagline">Compare how decision models handle the same input. Inspect their choices,
     available distributions, response time, and cost.</p>
   <p id="connection" class="callout" role="status">Connecting to the local API…</p>
+  <p id="trial-offer" class="trial-offer" hidden></p>
 
   {clerkDomain && (
     <div id="auth-bar" hidden>
@@ -50,16 +51,18 @@ try {
       <textarea id="context" required maxlength="6000" rows="5" placeholder="Paste a ticket, message, or task here."></textarea>
       <fieldset><legend>Models to compare</legend><div id="providers"><p>Loading models…</p></div></fieldset>
       <p id="call-preview" class="muted">Choose at least one model.</p>
+      <p id="limit-note" class="availability-note" role="status" aria-live="polite"></p>
       <button type="submit" id="run" disabled>Run comparison</button>
       <button type="button" id="retry" hidden>Retry the same request safely</button>
       <p id="form-status" role="status" aria-live="polite"></p>
     </form>
 
     <aside class="limits-panel">
-      <h2>Your lifetime trial</h2>
+      <h2 id="allowance-title">Your allowance</h2>
       <dl id="limits"><dt>Server</dt><dd>Connecting…</dd></dl>
-      <p id="limit-note" class="muted" role="status"></p>
-      <p class="muted">One-time trial · No daily refill.<br />Each selected model uses one call.</p>
+      <p class="muted">Each selected model uses one call. Four models use four calls.
+        Comparisons stop when either your budget or model-call allowance runs out.
+        Service availability also applies.</p>
       <details id="usage-details" class="allowance-details" hidden>
         <summary>Cost details</summary>
         <dl id="limit-details"></dl>
@@ -101,6 +104,8 @@ try {
 
 <style>
   .eyebrow { color: var(--accent-2); margin-top: 30px; }
+  .trial-offer { color: var(--accent-2); font-weight: 600; font-size: 14px; }
+  .availability-note { font-size: 14px; color: var(--accent-2); margin: 16px 0 10px; }
   .workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: 24px; margin: 24px 0; align-items: start; }
   form, .limits-panel { border: 1px solid var(--border); background: var(--panel); padding: 22px; border-radius: 12px; min-width: 0; }
   h2 { margin-top: 0; }

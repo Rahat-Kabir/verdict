@@ -417,7 +417,10 @@ def test_account_status_requires_verified_identity_and_replay_refreshes(tmp_path
 
     browser = TestClient(create_app(Settings(live=True, database=tmp_path / "limits.sqlite3"),
                                    lambda name: Provider(), token_verifier=StubVerifier()))
-    assert browser.get("/api/playground").json()["limits"]["account"] is None
+    public_limits = browser.get("/api/playground").json()["limits"]
+    assert public_limits["account"] is None
+    assert public_limits["client_budget_usd"] == browser.app.state.ledger.limits.client_budget_usd
+    assert public_limits["total_client_calls"] == browser.app.state.ledger.limits.total_client_calls
     assert browser.get("/api/playground", headers=bearer("expired")).status_code == 401
     first_payload = payload()
     first = browser.post("/api/playground/decide", json=first_payload, headers=bearer()).json()
