@@ -48,6 +48,23 @@ export function initializePlayground() {
       || count * configuration.limits.reserved_per_call_usd > configuration.limits.remaining_usd
       || count + (configuration.limits.account?.calls_used ?? 0) > (configuration.limits.account?.call_limit ?? Infinity)
       || count * configuration.limits.reserved_per_call_usd > (configuration.limits.account?.remaining_usd ?? Infinity);
+    if (configuration) updateTrialStatus(configuration.limits);
+  };
+  const updateTrialStatus = (limits) => {
+    const account = limits.account;
+    const count = selectedProviders().length;
+    let status = "Ready to compare your decision.";
+    if (limits.blocked) status = "Comparisons paused while provider billing is reviewed.";
+    else if (limits.calls_used >= limits.call_limit
+      || count * limits.reserved_per_call_usd > limits.remaining_usd) {
+      status = "Comparisons are currently unavailable. Please check back later.";
+    } else if (configuration.mode === "live" && !signedIn()) status = "Sign in to see your remaining trial.";
+    else if (configuration.mode === "live" && !account) status = "Loading your trial allowance…";
+    else if (account && account.calls_used >= account.call_limit) status = "Your lifetime model-call allowance is exhausted.";
+    else if (account && count + account.calls_used > account.call_limit) status = "Select fewer models to fit your remaining calls.";
+    else if (account && count * limits.reserved_per_call_usd > account.remaining_usd) status = "Not enough trial budget for the selected models. Try fewer models.";
+    else if (count === 0) status = "Select at least one model to compare.";
+    find("limit-note").textContent = status;
   };
   const updateAuthUi = () => {
     if (!authBar) return;
@@ -60,12 +77,12 @@ export function initializePlayground() {
     const userButton = find("user-button");
     userButton.hidden = !isSignedIn;
     find("auth-status").textContent = isSignedIn
-      ? `Signed in${clerk.user?.primaryEmailAddress?.emailAddress ? ` as ${clerk.user.primaryEmailAddress.emailAddress}` : ""}. Paid calls are attributed and limited per account.`
+      ? `Signed in${clerk.user?.primaryEmailAddress?.emailAddress ? ` as ${clerk.user.primaryEmailAddress.emailAddress}` : ""}.`
       : clerk === null
         ? "Sign-in is unavailable because Clerk failed to load; live comparisons stay disabled. Demo mode still works."
         : clerk === undefined
           ? "Loading sign-in…"
-          : "Sign in to run live comparisons. The server attributes paid calls to your account.";
+          : "Sign in to use your lifetime trial.";
     if (isSignedIn && !userButtonMounted) {
       clerk.mountUserButton(userButton);
       userButtonMounted = true;
@@ -75,33 +92,24 @@ export function initializePlayground() {
     configuration.limits = limits;
     const list = find("limits");
     list.replaceChildren();
-    const quotaIdentityLabel = configuration.mode === "live" ? "account" : "computer";
     const account = limits.account;
+    const summaryEntries = account ? [
+      ["Budget remaining", formatCost(account.remaining_usd)],
+      ["Model calls remaining", `${Math.max(0, account.call_limit - account.calls_used)} / ${account.call_limit}`],
+    ] : [["Budget remaining", "Sign in to view"], ["Model calls remaining", "Sign in to view"]];
+    if (configuration.mode === "demo" && !account) {
+      summaryEntries.splice(0, 2, ["Demo calls remaining", `${Math.max(0, limits.call_limit - limits.calls_used)} / ${limits.call_limit}`]);
+    }
+    for (const [label, value] of summaryEntries) list.append(element("dt", label), element("dd", value));
+    const details = find("limit-details");
+    find("usage-details").hidden = !account;
+    details.replaceChildren();
     const entries = account ? [
-      ["Your lifetime budget", formatCost(account.budget_usd)],
+      ["Lifetime budget", formatCost(account.budget_usd)],
       ["Your recorded cost", formatCost(account.measured_usd)],
       ["Your committed cost (with holds)", formatCost(account.committed_usd)],
-      ["Your remaining budget", formatCost(account.remaining_usd)],
-      ["Your model calls used", `${account.calls_used} / ${account.call_limit}`],
     ] : [];
-    entries.push(["Shared server budget", formatCost(limits.budget_usd)],
-      ["Server remaining", formatCost(limits.remaining_usd)],
-      ["Server calls allocated", `${limits.calls_used} / ${limits.call_limit}`],
-      [`Per hour per ${quotaIdentityLabel}`, `${limits.hourly_client_calls} calls`],
-      [`Lifetime per ${quotaIdentityLabel}`, `${limits.total_client_calls} calls`],
-      [`Reserved at once per ${quotaIdentityLabel}`, `${limits.concurrent_client_calls} calls`]);
-    for (const [label, value] of entries) list.append(element("dt", label), element("dd", value));
-    find("limit-note").textContent = limits.blocked ? `Calls paused: ${limits.blocked}`
-      : configuration.mode === "live" && !account ? "Sign in to see your remaining lifetime trial."
-        : "No daily refill. Each selected model uses one call; four models use four calls. Holds are released when known costs settle. Account and shared server limits both apply.";
-    if (account && account.calls_used >= account.call_limit) {
-      find("limit-note").textContent += " Your lifetime model-call allowance is exhausted.";
-    } else if (account && selectedProviders().length * limits.reserved_per_call_usd > account.remaining_usd) {
-      find("limit-note").textContent += " Your remaining budget cannot reserve all selected models. Select fewer models if possible.";
-    }
-    if (limits.calls_used >= limits.call_limit) {
-      find("limit-note").textContent += " The shared server call allowance is exhausted.";
-    }
+    for (const [label, value] of entries) details.append(element("dt", label), element("dd", value));
     updatePreview();
   };
   const refresh = async () => {

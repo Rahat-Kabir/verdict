@@ -1,5 +1,20 @@
 # Verdict progress
 
+## Minimal trial panel — 2026-10-04
+
+- Simplified the default trial panel to remaining budget, remaining model calls,
+  and a single status message. Personal cost accounting stays in a collapsed
+  "Cost details" section. Server budgets/call counts and hourly/concurrent limit
+  labels are omitted from the UI; backend limits are unchanged.
+- Status updates when model selection changes and explains insufficient account
+  allowance or exhausted shared allowance. Each selected model uses one call.
+- Six Node tests and the 11-page Astro build passed. Browser check verified the
+  signed-out view, unavailable-service status, disabled Run, and omission of server
+  and per-account limit rows. Details expand/collapse was checked before the final
+  change to personal cost details, which are hidden while signed out.
+  No paid calls. Signed-in numbers were verified in the preceding trial slice;
+  this compact view has not yet been checked with a real signed-in session.
+
 ## Lifetime account trial — 2026-10-04
 
 - Added a configurable $0.50 lifetime spending allowance per verified Clerk

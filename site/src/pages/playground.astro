@@ -58,7 +58,14 @@ try {
     <aside class="limits-panel">
       <h2>Your lifetime trial</h2>
       <dl id="limits"><dt>Server</dt><dd>Connecting…</dd></dl>
-      <p id="limit-note" class="muted"></p>
+      <p id="limit-note" class="muted" role="status"></p>
+      <p class="muted">One-time trial · No daily refill.<br />Each selected model uses one call.</p>
+      <details id="usage-details" class="allowance-details" hidden>
+        <summary>Cost details</summary>
+        <dl id="limit-details"></dl>
+        <p class="muted">A temporary budget hold is reserved before calls start,
+          then replaced by the recorded cost.</p>
+      </details>
       <h3>What leaves your computer?</h3>
       <p>In live mode, your question, choices, and input go to the selected providers.
         Avoid secrets and private data. Demo mode sends no provider requests.</p>
@@ -111,6 +118,8 @@ try {
   .muted, .limits-panel p { color: var(--muted); font-size: 13px; }
   .limits-panel dl { display: grid; grid-template-columns: 1fr auto; gap: 10px; font-size: 13px; }
   .limits-panel dd { margin: 0; text-align: right; }
+  .allowance-details { border-top: 1px solid var(--border); padding-top: 14px; margin: 18px 0; font-size: 13px; }
+  .allowance-details summary { cursor: pointer; color: var(--muted); }
   .caveat { margin-top: 32px; }
   #auth-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0 0; }
   #auth-bar[hidden] { display: none; }
