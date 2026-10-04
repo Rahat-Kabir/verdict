@@ -34,12 +34,15 @@ class Limits:
     total_calls: int = 100
     hourly_client_calls: int = 12
     concurrent_calls: int = 8
-    total_client_calls: int = 20
+    total_client_calls: int = 40
     concurrent_client_calls: int = 4
+    client_budget_usd: float = 0.50
 
     def __post_init__(self):
         if cost_units(self.budget_usd) <= 0 or cost_units(self.reservation_usd) <= 0:
             raise ValueError("Budget and per-call reservation must be positive")
+        if cost_units(self.client_budget_usd) <= 0:
+            raise ValueError("Account budget must be positive")
         if min(self.total_calls, self.hourly_client_calls, self.concurrent_calls,
                self.total_client_calls, self.concurrent_client_calls) < 1:
             raise ValueError("Call limits must be positive")
@@ -82,7 +85,7 @@ class Ledger:
                                    (self.mode, "interrupted calls require operator billing review"))
             connection.commit()
 
-    def status(self) -> dict:
+    def status(self, client: str | None = None) -> dict:
         with closing(self.connect()) as connection:
             totals = connection.execute(
                 "SELECT COUNT(*) AS calls, COALESCE(SUM(held),0) AS committed, "
@@ -91,6 +94,23 @@ class Ledger:
             circuit = connection.execute(
                 "SELECT reason FROM circuit WHERE mode=?", (self.mode,)
             ).fetchone()
+            account = None
+            if client is not None:
+                account_totals = connection.execute(
+                    "SELECT COUNT(*) AS calls, COALESCE(SUM(calls.held),0) AS committed, "
+                    "COALESCE(SUM(calls.cost),0) AS measured FROM calls "
+                    "JOIN runs ON calls.run_id=runs.id WHERE runs.client=? AND runs.mode=?",
+                    (client, self.mode),
+                ).fetchone()
+                account = {
+                    "budget_usd": self.limits.client_budget_usd,
+                    "committed_usd": account_totals["committed"] / 1e6,
+                    "measured_usd": account_totals["measured"] / 1e6,
+                    "remaining_usd": max(0, cost_units(self.limits.client_budget_usd)
+                                         - account_totals["committed"]) / 1e6,
+                    "calls_used": account_totals["calls"],
+                    "call_limit": self.limits.total_client_calls,
+                }
         return {
             "budget_usd": self.limits.budget_usd,
             "committed_usd": totals["committed"] / 1e6,
@@ -102,6 +122,7 @@ class Ledger:
             "total_client_calls": self.limits.total_client_calls,
             "concurrent_client_calls": self.limits.concurrent_client_calls,
             "blocked": circuit["reason"] if circuit else None,
+            "account": account,
         }
 
     def reserve(self, run_id: str, client: str, fingerprint: str, providers: list[str]):
@@ -131,6 +152,7 @@ class Ledger:
             # each claim the same remaining account allowance.
             client_totals = connection.execute(
                 "SELECT COUNT(*) AS lifetime_calls, "
+                "COALESCE(SUM(calls.held),0) AS committed, "
                 "COALESCE(SUM(CASE WHEN runs.created>? THEN 1 ELSE 0 END),0) AS hourly_calls, "
                 "COALESCE(SUM(CASE WHEN calls.state='pending' THEN 1 ELSE 0 END),0) AS active_calls "
                 "FROM calls JOIN runs ON calls.run_id=runs.id "
@@ -143,6 +165,10 @@ class Ledger:
                 raise LimitError("Server call allowance exhausted")
             if client_totals["lifetime_calls"] + count > self.limits.total_client_calls:
                 raise LimitError("Account call allowance exhausted")
+            if client_totals["committed"] + reservation * count > cost_units(
+                self.limits.client_budget_usd
+            ):
+                raise LimitError("Insufficient account lifetime budget for this comparison")
             if client_totals["hourly_calls"] + count > self.limits.hourly_client_calls:
                 raise LimitError("Hourly call allowance reached; try again later")
             if client_totals["active_calls"] + count > self.limits.concurrent_client_calls:

@@ -366,3 +366,74 @@ def test_account_controls_load_from_process_environment(monkeypatch):
 def test_account_limits_must_be_positive(setting):
     with pytest.raises(ValueError, match="Call limits must be positive"):
         Limits(**{setting: 0})
+
+
+def test_account_budget_is_atomic_and_separate_from_shared_budget(tmp_path):
+    limits = Limits(budget_usd=1, client_budget_usd=0.01, hourly_client_calls=100)
+    database_path = tmp_path / "limits.sqlite3"
+    Ledger(database_path, limits, "live")
+
+    def reserve(request_number):
+        try:
+            Ledger(database_path, limits, "live").reserve(
+                str(request_number), "user_same", str(request_number), ["clef"])
+            return True
+        except LimitError:
+            return False
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        assert sum(pool.map(reserve, range(8))) == 1
+    ledger = Ledger(database_path, limits, "live")
+    assert ledger.status("user_same")["account"]["remaining_usd"] == 0
+    ledger.reserve("other", "user_other", "other", ["clef"])
+    assert ledger.status()["committed_usd"] == 0.02
+
+
+def test_account_budget_settlement_restart_and_no_daily_refill(tmp_path, monkeypatch):
+    from verdict_router import playground_limits
+
+    limits = Limits(client_budget_usd=0.02)
+    database_path = tmp_path / "limits.sqlite3"
+    ledger = Ledger(database_path, limits, "live")
+    ledger.reserve("first", "user_same", "first", ["clef", "clef-flash"])
+    ledger.settle("first", "clef", 0.005)
+    ledger.settle("first", "clef-flash", 0.01)
+    ledger.finish("first", {"results": []})
+    current_time = playground_limits.time.time()
+    monkeypatch.setattr(playground_limits.time, "time", lambda: current_time + 86400)
+    restarted = Ledger(database_path, limits, "live")
+    assert restarted.status("user_same")["account"]["remaining_usd"] == 0.005
+    with pytest.raises(LimitError, match="account lifetime budget"):
+        restarted.reserve("second", "user_same", "second", ["clef"])
+    assert restarted.status("user_same")["account"]["calls_used"] == 2
+    assert restarted.reserve("first", "user_same", "first", ["clef", "clef-flash"]) == {
+        "results": []}
+
+
+def test_account_status_requires_verified_identity_and_replay_refreshes(tmp_path):
+    class Provider:
+        def decide(self, request):
+            return DecisionResponse("billing", "fake", "fake", 1, cost_usd=0.001)
+
+    browser = TestClient(create_app(Settings(live=True, database=tmp_path / "limits.sqlite3"),
+                                   lambda name: Provider(), token_verifier=StubVerifier()))
+    assert browser.get("/api/playground").json()["limits"]["account"] is None
+    assert browser.get("/api/playground", headers=bearer("expired")).status_code == 401
+    first_payload = payload()
+    first = browser.post("/api/playground/decide", json=first_payload, headers=bearer()).json()
+    assert first["limits"]["account"]["call_limit"] == 40
+    assert first["limits"]["account"]["remaining_usd"] == 0.499
+    browser.post("/api/playground/decide", json=payload(), headers=bearer())
+    replay = browser.post("/api/playground/decide", json=first_payload, headers=bearer()).json()
+    assert replay["limits"]["account"]["calls_used"] == 2
+    other = browser.get("/api/playground", headers=bearer("user_other")).json()
+    assert other["limits"]["account"]["calls_used"] == 0
+    assert other["limits"]["account"]["remaining_usd"] == 0.5
+
+
+def test_account_budget_configuration_and_validation(monkeypatch):
+    monkeypatch.setenv("VERDICT_PLAYGROUND_ACCOUNT_BUDGET_USD", "0.25")
+    assert Settings.from_environment().limits.client_budget_usd == 0.25
+    for invalid_budget in (0, -1, float("nan")):
+        with pytest.raises(ValueError):
+            Limits(client_budget_usd=invalid_budget)

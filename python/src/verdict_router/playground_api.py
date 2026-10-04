@@ -80,7 +80,8 @@ class Settings:
                 reservation_usd=float(os.getenv("VERDICT_PLAYGROUND_RESERVATION_USD", "0.01")),
                 total_calls=int(os.getenv("VERDICT_PLAYGROUND_CALL_LIMIT", "100")),
                 hourly_client_calls=int(os.getenv("VERDICT_PLAYGROUND_HOURLY_CALLS", "12")),
-                total_client_calls=int(os.getenv("VERDICT_PLAYGROUND_ACCOUNT_CALL_LIMIT", "20")),
+                total_client_calls=int(os.getenv("VERDICT_PLAYGROUND_ACCOUNT_CALL_LIMIT", "40")),
+                client_budget_usd=float(os.getenv("VERDICT_PLAYGROUND_ACCOUNT_BUDGET_USD", "0.50")),
                 concurrent_client_calls=int(os.getenv(
                     "VERDICT_PLAYGROUND_ACCOUNT_CONCURRENT_CALLS", "4")),
             ),
@@ -167,7 +168,15 @@ def create_app(settings: Settings | None = None, provider_factory=build_provider
         return response
 
     @application.get("/api/playground")
-    def configuration() -> dict:
+    def configuration(request: Request) -> dict:
+        client = request.client.host if not settings.live else None
+        if require_authentication and request.headers.get("authorization"):
+            if token_verifier is None:
+                raise HTTPException(503, "Server authentication is not configured")
+            try:
+                client = token_verifier.verified_subject(request.headers.get("authorization"))
+            except ClerkAuthError as exception:
+                raise HTTPException(401, str(exception)) from exception
         providers = []
         for name in PROVIDERS:
             available = True
@@ -178,7 +187,7 @@ def create_app(settings: Settings | None = None, provider_factory=build_provider
                     available = False
             providers.append({"id": name, "name": PROVIDER_META[name]["display_name"],
                               "kind": PROVIDER_META[name]["kind"], "available": available})
-        return {"mode": "live" if settings.live else "demo", "limits": ledger.status(),
+        return {"mode": "live" if settings.live else "demo", "limits": ledger.status(client),
                 "providers": providers}
 
     @application.post("/api/playground/decide")
@@ -208,7 +217,7 @@ def create_app(settings: Settings | None = None, provider_factory=build_provider
         except LimitError as exception:
             raise HTTPException(exception.status, str(exception)) from exception
         if previous is not None:
-            return {**previous, "replayed": True, "limits": ledger.status()}
+            return {**previous, "replayed": True, "limits": ledger.status(client)}
         decision_request = DecisionRequest(payload.question, payload.answers, payload.context)
         results = []
         stopped = False
@@ -252,7 +261,7 @@ def create_app(settings: Settings | None = None, provider_factory=build_provider
             stopped = not ledger.settle(payload.request_id, provider_name, cost)
             results.append(result)
         result = {"request_id": payload.request_id, "mode": "live" if settings.live else "demo",
-                  "results": results, "replayed": False, "limits": ledger.status()}
+                  "results": results, "replayed": False, "limits": ledger.status(client)}
         ledger.finish(payload.request_id, result)
         return result
 

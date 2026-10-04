@@ -22,6 +22,8 @@ export function initializePlayground() {
   // to load, and the Clerk instance once ready. Demo mode never requires it.
   let clerk;
   let userButtonMounted = false;
+  let allowanceRefreshVersion = 0;
+  let allowanceSubject;
   const signedIn = () => Boolean(clerk?.isSignedIn);
   const runBlockedByAuth = () => configuration?.mode === "live" && !signedIn();
   const element = (tag, text, className) => {
@@ -40,7 +42,12 @@ export function initializePlayground() {
       find("call-preview").textContent = "This server runs live mode, but the page was built without sign-in support. Rebuild the site with PUBLIC_CLERK_PUBLISHABLE_KEY set.";
     }
     find("run").disabled = busy || !configuration || count === 0
-      || Boolean(configuration.limits.blocked) || runBlockedByAuth();
+      || Boolean(configuration.limits.blocked) || runBlockedByAuth()
+      || (configuration.mode === "live" && !configuration.limits.account)
+      || count + configuration.limits.calls_used > configuration.limits.call_limit
+      || count * configuration.limits.reserved_per_call_usd > configuration.limits.remaining_usd
+      || count + (configuration.limits.account?.calls_used ?? 0) > (configuration.limits.account?.call_limit ?? Infinity)
+      || count * configuration.limits.reserved_per_call_usd > (configuration.limits.account?.remaining_usd ?? Infinity);
   };
   const updateAuthUi = () => {
     if (!authBar) return;
@@ -69,15 +76,32 @@ export function initializePlayground() {
     const list = find("limits");
     list.replaceChildren();
     const quotaIdentityLabel = configuration.mode === "live" ? "account" : "computer";
-    const entries = [["Total budget", formatCost(limits.budget_usd)], ["Measured cost", formatCost(limits.measured_usd)],
-      ["Committed (including holds)", formatCost(limits.committed_usd)], ["Remaining", formatCost(limits.remaining_usd)],
-      ["Calls allocated", `${limits.calls_used} / ${limits.call_limit}`],
+    const account = limits.account;
+    const entries = account ? [
+      ["Your lifetime budget", formatCost(account.budget_usd)],
+      ["Your recorded cost", formatCost(account.measured_usd)],
+      ["Your committed cost (with holds)", formatCost(account.committed_usd)],
+      ["Your remaining budget", formatCost(account.remaining_usd)],
+      ["Your model calls used", `${account.calls_used} / ${account.call_limit}`],
+    ] : [];
+    entries.push(["Shared server budget", formatCost(limits.budget_usd)],
+      ["Server remaining", formatCost(limits.remaining_usd)],
+      ["Server calls allocated", `${limits.calls_used} / ${limits.call_limit}`],
       [`Per hour per ${quotaIdentityLabel}`, `${limits.hourly_client_calls} calls`],
       [`Lifetime per ${quotaIdentityLabel}`, `${limits.total_client_calls} calls`],
-      [`Reserved at once per ${quotaIdentityLabel}`, `${limits.concurrent_client_calls} calls`]];
+      [`Reserved at once per ${quotaIdentityLabel}`, `${limits.concurrent_client_calls} calls`]);
     for (const [label, value] of entries) list.append(element("dt", label), element("dd", value));
     find("limit-note").textContent = limits.blocked ? `Calls paused: ${limits.blocked}`
-      : "Shared allowance persists across restarts. Unknown billing retains its reservation and pauses new calls. Demo and live allowances are separate.";
+      : configuration.mode === "live" && !account ? "Sign in to see your remaining lifetime trial."
+        : "No daily refill. Each selected model uses one call; four models use four calls. Holds are released when known costs settle. Account and shared server limits both apply.";
+    if (account && account.calls_used >= account.call_limit) {
+      find("limit-note").textContent += " Your lifetime model-call allowance is exhausted.";
+    } else if (account && selectedProviders().length * limits.reserved_per_call_usd > account.remaining_usd) {
+      find("limit-note").textContent += " Your remaining budget cannot reserve all selected models. Select fewer models if possible.";
+    }
+    if (limits.calls_used >= limits.call_limit) {
+      find("limit-note").textContent += " The shared server call allowance is exhausted.";
+    }
     updatePreview();
   };
   const refresh = async () => {
@@ -104,6 +128,28 @@ export function initializePlayground() {
     }
     updateLimits(configuration.limits);
     updateAuthUi();
+    refreshAccountAllowance();
+  };
+  const refreshAccountAllowance = async () => {
+    if (!configuration || configuration.mode !== "live") return;
+    const refreshVersion = ++allowanceRefreshVersion;
+    updateLimits({ ...configuration.limits, account: null });
+    if (!signedIn()) return;
+    try {
+      const token = await clerk.session.getToken();
+      if (!token) throw new Error("Session unavailable");
+      const response = await fetch("/api/playground", {
+        cache: "no-store", headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Allowance unavailable");
+      const refreshed = await response.json();
+      // Ignore responses from a previous account after sign-out or account switching.
+      if (refreshVersion === allowanceRefreshVersion) updateLimits(refreshed.limits);
+    } catch {
+      if (refreshVersion === allowanceRefreshVersion) {
+        find("limit-note").textContent = "Could not load your trial allowance. Reload to retry; live comparisons stay disabled.";
+      }
+    }
   };
   const showResults = (result, submitted) => {
     latestResult = { ...result, question: submitted.question, answers: submitted.answers, context: submitted.context };
@@ -205,7 +251,15 @@ export function initializePlayground() {
       if (!window.Clerk) throw new Error("clerk-js did not load");
       await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
       clerk = window.Clerk;
-      clerk.addListener(() => { updateAuthUi(); updatePreview(); });
+      clerk.addListener(() => {
+        updateAuthUi(); updatePreview();
+        const subject = clerk.user?.id ?? null;
+        if (subject !== allowanceSubject) {
+          allowanceSubject = subject;
+          refreshAccountAllowance();
+        }
+      });
+      refreshAccountAllowance();
       find("sign-in").addEventListener("click", () => clerk?.openSignIn());
       find("sign-out").addEventListener("click", () => clerk?.signOut());
     } catch {

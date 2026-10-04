@@ -96,7 +96,8 @@ For the local playground API tests, install its optional extra first:
 `uv run --extra dev --extra playground pytest`. These tests inject fake providers
 for live paths and make no paid calls. `test_playground.py` covers validation,
 local boundaries, replay after account exhaustion, atomic per-account lifetime
-and concurrency quotas, authentication before provider setup, unknown billing, and restart
+and concurrency quotas, atomic lifetime spending with no daily refill, private
+account status, authentication before provider setup, unknown billing, and restart
 recovery. See [local setup and browser workflow](playground.md).
 
 From `site/`:

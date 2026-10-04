@@ -21,10 +21,13 @@ JWT (RS256 signature via the instance's public JWKS, issuer, expiry, and `azp`
 pinned to the four local dev origins) and the verified `sub` becomes the ledger's
 quota identity; without a key, live decisions return 503 before reservation.
 Authenticated decisions validate identity before provider setup. Account limits
-default to 20 lifetime calls and four reserved calls at once, alongside 12 hourly
+default to a $0.50 lifetime budget, 40 lifetime calls and four reserved calls at once, alongside 12 hourly
 calls and the shared budget/call/concurrency limits. All quota checks and
 reservations share one SQLite write transaction; completed requests replay
 without new allocation. Account limits persist across process restarts.
+Authenticated configuration returns the verified account's spending and call
+totals. Unsigned live configuration returns no account totals. Pending holds
+count toward both account and shared budgets; no daily refill is performed.
 No Clerk secret key is used. This is a local,
 single-process API, not a reviewed public deployment. See [playground](playground.md).
 

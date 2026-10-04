@@ -1,5 +1,28 @@
 # Verdict progress
 
+## Lifetime account trial — 2026-10-04
+
+- Added a configurable $0.50 lifetime spending allowance per verified Clerk
+  account and changed the default lifetime model-call allowance to 40. There is
+  no daily refill. Existing hourly, concurrent, and shared server limits still apply.
+- Account spending includes settled charges and pending/unknown reservations.
+  Budget and call checks run in the same SQLite write transaction before inference.
+  Existing ledger entries count toward the trial; no database migration or reset.
+- Authenticated configuration returns only the verified account's totals. The
+  playground shows account and shared allowances separately, clears personal
+  totals on sign-out, and disables comparisons that exceed available allocations.
+- Verification: 486 offline Python tests, Ruff, six Node tests, and the 11-page
+  Astro build passed. Browser check verified signed-out privacy, the sign-in modal,
+  and the exhausted shared-call message with Run disabled. Authenticated account
+  isolation, replay, restart persistence, no refill, and concurrent spending were
+  verified with offline providers and a stub verifier. The user's subsequent
+  real-session screenshot confirmed $0.50 lifetime budget, $0.000156 recorded
+  cost, $0.499844 remaining, and 4/40 model calls, with the shared 4/4 limit exhausted.
+- Restarted the local API using the existing dogfood ledger. The earlier four
+  paid calls remain recorded; the shared four-call test allowance stays exhausted.
+  No new paid calls, deployment, commit, or push in this slice. Public signup/edge
+  abuse controls and the wider UX review remain separate work.
+
 ## Current state — 2026-10-02
 
 The first public version and subsequent measurement/SDK/configuration fixes are

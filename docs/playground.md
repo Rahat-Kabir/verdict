@@ -50,7 +50,8 @@ $env:VERDICT_PLAYGROUND_BUDGET_USD = '1.00'
 $env:VERDICT_PLAYGROUND_RESERVATION_USD = '0.01'
 $env:VERDICT_PLAYGROUND_CALL_LIMIT = '100'
 $env:VERDICT_PLAYGROUND_HOURLY_CALLS = '12'
-$env:VERDICT_PLAYGROUND_ACCOUNT_CALL_LIMIT = '20'
+$env:VERDICT_PLAYGROUND_ACCOUNT_CALL_LIMIT = '40'
+$env:VERDICT_PLAYGROUND_ACCOUNT_BUDGET_USD = '0.50'
 $env:VERDICT_PLAYGROUND_ACCOUNT_CONCURRENT_CALLS = '4'
 $env:VERDICT_PLAYGROUND_DB = 'playground.sqlite3'
 ```
@@ -75,19 +76,27 @@ atomically. Concurrent requests cannot each claim the same remaining balance.
 Money is stored in integer microdollars, rounded upward. Limits are cumulative
 per database and mode; they do not reset each day. Defaults are a $1 allowance,
 $0.01 reservation per call, 100 allocated calls, 12 calls/hour per client identity,
-20 lifetime calls per identity, four reserved calls at once per identity,
+$0.50 lifetime budget and 40 lifetime calls per identity, four reserved calls at once per identity,
 and eight simultaneous reserved calls across the server. The live-mode identity is the verified
 Clerk user id; demo mode keeps the loopback peer. Skipped slots remain counted
 conservatively. Demo/live accounting is separate.
 
 One comparison selecting four providers uses four calls. The default account
-allowance therefore permits five full comparisons over that identity's lifetime
+allowance therefore permits ten full comparisons over that identity's lifetime
 in this database, subject to hourly and shared limits. Failures/skipped allocations
 also count. Replaying a completed request uses no new calls. The account totals
 are read and reserved in the same SQLite transaction as the shared budget, so
 concurrent requests cannot race past them. Waiting an hour or restarting the API
 does not restore the lifetime allowance. Separate accounts have separate quotas;
 this does not prevent a person from creating multiple accounts.
+
+The account budget includes settled costs and pending/unknown holds. Both the
+account budget and shared server budget must cover the whole comparison before
+it starts. This is a one-time trial with no daily refill; the first exhausted
+budget or call limit stops new allocations. `/api/playground` accepts a verified
+Bearer session to return only that account's totals; unsigned live configuration
+does not expose personal usage. The UI refreshes totals after sign-in and clears
+them on sign-out. Keep the same SQLite database across restarts to retain trials.
 
 Known cost, including failed returned responses, replaces the reservation. Jev
 uses reported charges; Clef/Nano costs are estimates. Unknown billing keeps the
