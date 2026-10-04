@@ -1,0 +1,14 @@
+{
+  "item_id": "ticket-05",
+  "dataset_sha256": "45dbf44d45ee129bad8685c15359c415f4a8359a77eca240871573b2e933b576",
+  "category": "mixed",
+  "context": "The app crashed yesterday, but that is fixed. Now please correct my invoice.",
+  "expected": "billing",
+  "explanation": "The crash is already resolved. The current requested action is to correct an invoice, so the policy assigns billing.",
+  "responses": [
+    { "provider": "jev-direct", "answer": "billing" },
+    { "provider": "clef", "answer": "billing" },
+    { "provider": "clef-flash", "answer": "billing" },
+    { "provider": "gpt-5.4-nano", "answer": "billing" }
+  ]
+}

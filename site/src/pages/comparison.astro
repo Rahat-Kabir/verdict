@@ -1,34 +1,60 @@
 ---
 import Base from "../layouts/Base.astro";
 import comparison from "../data/decision-comparison.json";
+import example from "../data/decision-comparison-example.json";
 
 const formatCost = (value: number | null) => value === null ? "Unknown" : `$${value.toFixed(6)}`;
 ---
 
 <Base title="Verdict — decision-model comparison" description="A dated synthetic support-ticket comparison of Jev Direct, Clef, Clef Flash, and GPT-5.4 Nano.">
-  <p class="eyebrow">Live comparison · {comparison.run_date} · synthetic tickets</p>
+  <p class="eyebrow">Verdict internal evaluation · Recorded October 2, 2026</p>
   <h1>Four models. The same 24 tickets.</h1>
   <p class="tagline">
     Jev Direct, Clef, Clef Flash, and Nano each chose the expected team on all 24
     tickets. This run shows their observed response time and cost; it does not
     identify a decision-quality winner.
   </p>
+  <p><a class="playground-link" href="/playground">Try your own decision →</a></p>
+
+  <section class="recorded-example" aria-labelledby="example-heading">
+    <p class="example-label">One recorded example · {example.item_id} · mixed request</p>
+    <h2 id="example-heading">Which team should handle this ticket?</h2>
+    <p class="table-note">Question summary: choose the team for the primary requested action.
+      <a href="#shared-policy">Read the full policy</a>.</p>
+    <h3>Allowed answers</h3>
+    <div class="case-tags">{comparison.answers.map((answer) => <span>{answer}</span>)}</div>
+    <h3>Ticket input</h3>
+    <blockquote>{example.context}</blockquote>
+    <p><strong>Expected answer: <span class="good">{example.expected}</span></strong></p>
+    <p class="table-note">{example.explanation}</p>
+    <h3>Recorded model choices</h3>
+    <dl class="example-results">
+      {example.responses.map((response) => <div>
+        <dt>{comparison.providers.find((provider) => provider.id === response.provider)?.name}</dt>
+        <dd class="good">{response.answer}</dd>
+      </div>)}
+    </dl>
+    <p class="table-note">An original synthetic benchmark item from this run, with labels authored
+      by Verdict. These are saved responses; opening this page makes no model calls.</p>
+  </section>
 
   <div class="run-facts" aria-label="Run overview">
     <div><strong>{comparison.n_cases}</strong><span>unique synthetic tickets</span></div>
     <div><strong>{comparison.n_calls}</strong><span>live calls · no retries or cache</span></div>
-    <div><strong>0</strong><span>errors across all four models</span></div>
+    <div><strong>{comparison.providers.reduce((total, provider) => total + provider.errors, 0)}</strong><span>errors across all four models</span></div>
   </div>
 
   <h2>Observed results</h2>
-  <p class="table-note">Cost is for all 24 calls per provider. Estimates and reported charges are labeled separately.</p>
+  <p class="table-note">Each model answered {comparison.n_cases} tickets. Cost below is the total for
+    those {comparison.n_cases} calls per model, not the cost of the single example above.
+    Estimates and reported charges are labeled separately.</p>
   <div class="table-scroll" role="region" aria-label="Decision comparison results" tabindex="0">
     <table class="board comparison-board">
       <caption class="sr-only">Results from the October 2, 2026 synthetic support-ticket run</caption>
       <thead><tr>
         <th scope="col">Provider</th><th scope="col">Correct / attempted</th>
         <th scope="col">Errors</th><th scope="col">Median wall time</th>
-        <th scope="col">Cost / 24 calls</th><th scope="col">Cost basis</th>
+        <th scope="col">Total cost / {comparison.n_cases} calls</th><th scope="col">Cost basis</th>
       </tr></thead>
       <tbody>
         {comparison.providers.map((provider) => <tr>
@@ -57,7 +83,7 @@ const formatCost = (value: number | null) => value === null ? "Unknown" : `$${va
   <div class="case-tags" aria-label="Case categories">
     {comparison.categories.map((category) => <span>{category}</span>)}
   </div>
-  <details>
+  <details id="shared-policy">
     <summary>Read the shared routing policy</summary>
     <p>{comparison.question}</p>
   </details>
@@ -84,19 +110,31 @@ const formatCost = (value: number | null) => value === null ? "Unknown" : `$${va
     <p class="updated">Run started: {comparison.started_at} (UTC).</p>
     <p class="fingerprint">Case fingerprint: <code>{comparison.dataset_sha256}</code></p>
     <p>Original synthetic case definitions are in <code>python/scripts/compare_decisions.py</code>.
-      Full request/response evidence is retained locally; this page publishes aggregate results.</p>
+      Full request/response evidence is retained locally; this page publishes aggregate results
+      and the recorded choices for {example.item_id}.</p>
   </details>
 
   <p class="next-note">
     Looking for the previous suite results? <a href="/">View the historical leaderboard</a>.
-    This comparison is separate from that snapshot. Try your own task in the
-    <a href="/playground">local playground</a> (demo by default).
+    This comparison is separate from that snapshot. <a href="/methodology">Read the methodology</a>
+    or <a href="/playground">try your own decision</a>.
   </p>
 </Base>
 
 <style>
   .eyebrow { color: var(--accent-2); margin: 30px 0 0; font-size: 13px; }
   h1 { margin-top: 8px; }
+  .playground-link { display: inline-block; background: var(--accent); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; }
+  .recorded-example { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin: 26px 0; }
+  .example-label { color: var(--accent-2); font-size: 13px; margin: 0; }
+  .recorded-example h2 { margin-top: 10px; }
+  .recorded-example h3 { font-size: 14px; margin: 20px 0 8px; }
+  .recorded-example .case-tags { margin: 8px 0; }
+  blockquote { margin: 0; padding: 16px; background: var(--bg); border-left: 3px solid var(--accent); border-radius: 4px; line-height: 1.6; }
+  .example-results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .example-results > div { border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .example-results dt { font-size: 13px; color: var(--muted); }
+  .example-results dd { margin: 6px 0 0; font-weight: 600; }
   .run-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 26px 0; }
   .run-facts > div { border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 16px; }
   .run-facts strong { display: block; font-size: 26px; }
@@ -116,6 +154,8 @@ const formatCost = (value: number | null) => value === null ? "Unknown" : `$${va
   .fingerprint code { word-break: break-all; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
   @media (max-width: 600px) {
+    .recorded-example { padding: 16px; }
+    .example-results { grid-template-columns: repeat(2, 1fr); }
     .run-facts { grid-template-columns: 1fr; }
     .run-facts > div { display: flex; align-items: center; gap: 14px; padding: 10px 16px; }
     .run-facts strong { min-width: 36px; }

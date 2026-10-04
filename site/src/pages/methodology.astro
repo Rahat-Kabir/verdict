@@ -1,23 +1,19 @@
 ---
 import Base from "../layouts/Base.astro";
 import results from "../data/results.json";
+import historicalDatasets from "../data/historical-datasets.json";
 
 const suites = (results.suites ?? {}) as Record<string, any>;
 
 // Compute table rows in frontmatter — conditional bare <tr> expressions break
 // Astro's HTML compiler (table elements get hoisted out of expressions).
-const srcFor = (name: string) =>
-  name === "classification"
-    ? "ag_news (HF)"
-    : name === "routing"
-      ? "customer-support-tickets (HF)"
-      : name === "moderation"
-        ? "tweet_eval/hate (HF)"
-        : "synthetic (seeded)";
 const suiteRows = Object.entries(suites).map(([name, s]: [string, any]) => ({
-  name,
+  name: historicalDatasets[name]?.name ?? name,
   n: s.n_items,
-  src: srcFor(name),
+  src: historicalDatasets[name]?.source ?? "Source unknown",
+  uniqueInputs: historicalDatasets[name]?.unique_inputs ?? "Unknown",
+  inputStatus: historicalDatasets[name]?.input_status ?? "Unknown",
+  balance: historicalDatasets[name]?.balance ?? "Unknown",
   task: `${s.n_answers}-way choice`,
 }));
 ---
@@ -30,6 +26,35 @@ const suiteRows = Object.entries(suites).map(([name, s]: [string, any]) => ({
     Saved summaries can be rebuilt from historical records. Rerunning classification and moderation
     requires separately obtained local inputs under their source terms.
   </p>
+
+  <h2>What our internal evaluation means</h2>
+  <p class="tagline">Verdict ran these experiments and calculated the reported metrics.
+    This is an internal evaluation, not an independent assessment or a claim of production reliability.</p>
+  <ul class="tagline">
+    <li><a href="/">Historical results</a>: six model/pipeline entries across four suites,
+      totaling 4,746 saved observations. These records predate parser and accounting fixes.</li>
+    <li><a href="/comparison">October 2 comparison</a>: Jev Direct, Clef, Clef Flash, and Nano
+      on 24 unique, authored synthetic support tickets each (96 live calls). All matched the
+      authored labels; this small set did not separate decision quality. It is a different
+      dataset and provider roster, so it does not replace the historical tables.</li>
+  </ul>
+  <h2>What we checked on October 4, 2026</h2>
+  <ul class="tagline">
+    <li>All 4,746 saved observations have consistent correctness flags and expected labels
+      across providers. Headline historical table metrics match recalculation.</li>
+    <li>Archived classification and moderation inputs, plus their 12 provider-result files,
+      match the SHA-256 checksums saved during the October 1 archive. This confirms the files
+      are unchanged since that archive.</li>
+    <li>For classification and moderation, all 2,358 observations align with the archived
+      item IDs, expected labels, and allowed choices. Each provider covers the same items,
+      with no duplicate item IDs or blank inputs.</li>
+    <li>Bundled agent-action and routing inputs also align with recorded expected labels
+      and allowed choices. Their distinct-input counts and label balance are disclosed below.</li>
+  </ul>
+  <p class="callout">This audit establishes file integrity, record alignment, and arithmetic consistency.
+    It does not independently establish human label quality, original provider-call authenticity,
+    source permissions, model provenance, calibrated confidence, or invoice accuracy.
+    Missing raw outputs cannot be rechecked with the current parser.</p>
 
   <h2>The contract every provider must satisfy</h2>
   <pre><code>{`DecisionRequest:
@@ -66,21 +91,29 @@ DecisionResponse:
     decision fields. Dataset use is noncommercial, with attribution required; it is provided without
     warranties and without endorsement. The source describes synthetic ticket generation.
   </p>
+  <div class="table-scroll" role="region" aria-label="Historical dataset summary" tabindex="0">
   <table class="board">
-    <thead><tr><th>Suite</th><th>Items</th><th>Source</th><th>Task</th></tr></thead>
+    <thead><tr><th>Task</th><th>Items</th><th>Unique inputs</th><th>Input status</th><th>Choices</th></tr></thead>
     <tbody>
       {suiteRows.map((r: any) => (
         <tr>
-          <td>{r.name.replace("_", " ")}</td>
+          <td>{r.name}</td>
           <td class="num">{r.n}</td>
-          <td class="num">{r.src}</td>
+          <td class="num">{r.uniqueInputs}</td>
+          <td>{r.inputStatus}</td>
           <td class="num">{r.task}</td>
         </tr>
       ))}
     </tbody>
   </table>
+  </div>
+  <details class="dataset-details">
+    <summary>Configured sources and label balance</summary>
+    {suiteRows.map(row => <div><h3>{row.name}</h3><p>{row.src}</p><p>{row.balance}</p></div>)}
+  </details>
   <p class="tagline">
-    Source names reflect the original builder configuration; row-level source manifests were not
+    Source names reflect the original builder configuration, which supports generated fallbacks;
+    they are not verified row-level provenance. Source revisions and row-level manifests were not
     retained. The agent-action suite has 200 rows but only 105 distinct inputs from 12 templates,
     and does not evaluate tool execution, prerequisites, or completed agent workflows.
   </p>
@@ -88,7 +121,7 @@ DecisionResponse:
   <h2>Metrics</h2>
   <ul class="tagline">
     <li><strong>Accuracy</strong> — exact verbatim match against the labeled answer, over successful responses. Completion rate is successful responses / all items; all-item accuracy counts failures as incorrect. The leaderboard retains successful-response accuracy for ranking and shows completion separately.</li>
-    <li><strong>Latency p50/p95</strong> — future benchmark records measure total item wall time, including retries, backoff, and billing lookups; executor queue time is excluded. The saved snapshot predates this correction and used concurrency 4.</li>
+    <li><strong>Median / 95th-percentile response time (p50/p95)</strong> — p50 is the middle recorded time; p95 is the time at or below which 95% of observations fall. Future benchmark records measure total item wall time, including retries, backoff, and billing lookups; executor queue time is excluded. The saved snapshot predates this correction and used concurrency 4.</li>
     <li><strong>Cost per 1,000 items</strong> — total recorded cost / all items × 1,000, including failed items. This metric and total spend are unknown unless every item is priced. Cost coverage reports priced items / all items; the known subtotal remains a partial sum when coverage is incomplete. Future records include all retry costs. OpenRouter exact mode uses reported account charges, including zero; missing charges stay unknown. OpenAI uses published standard token-rate estimates with cache discounts. The displayed historical costs have not been repaired.</li>
     <li><strong>ECE</strong> — expected calibration error over 10 equal-width confidence bins, using successful items with reported confidence. Lower values mean a smaller observed gap between confidence and correctness on these samples; they do not validate thresholds on another workload.</li>
     <li><strong>Escalation curves</strong> — offline simulations joining recorded answers by item ID (GPT-6 Luna by default). A successful primary with confidence below the threshold attempts escalation; primary failures and missing confidence do not. Failed escalation retains the primary answer, while its cost and time are included. Costs are known per simulated item only if every contributing record is priced. Missing required escalation records make simulated accuracy, cost, and latency unknown; failed and missing counts are displayed. Latency sums recorded primary and attempted escalation durations, including failures; this does not measure a live cascade or validate thresholds on held-out data.</li>
@@ -118,3 +151,9 @@ uv run verdict bench --all --out ../new-results
 # Defaults: routing + agent_next_action. Optional local suites require
 # VERDICT_DATASET_DIR and an explicit --suite classification or moderation.`}</code></pre>
 </Base>
+
+<style>
+  .table-scroll { overflow-x: auto; }
+  .dataset-details { margin: 18px 0; color: var(--muted); font-size: 14px; }
+  .dataset-details summary { cursor: pointer; color: var(--accent); }
+</style>

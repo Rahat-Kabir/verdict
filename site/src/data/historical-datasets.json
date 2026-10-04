@@ -1,0 +1,38 @@
+{
+  "agent_next_action": {
+    "name": "Agent action",
+    "items": 200,
+    "unique_inputs": 105,
+    "input_status": "Generated examples · Bundled",
+    "source": "Verdict's seeded support-agent templates",
+    "balance": "lookup_order 34; issue_refund 34; check_payment_status 33; escalate_to_human 33; send_faq_link 33; update_shipping_address 33",
+    "limitation": "Twelve templates; evaluates next-tool selection, not tool execution or completed workflows."
+  },
+  "classification": {
+    "name": "Text classification",
+    "items": 200,
+    "unique_inputs": 200,
+    "input_status": "Private archived inputs",
+    "source": "Configured source: fancyzhx/ag_news (Hugging Face)",
+    "balance": "World 50; Sports 50; Business 50; Sci/Tech 50",
+    "limitation": "The builder could fall back to generated inputs. Original source revisions and row-level manifests were not retained."
+  },
+  "moderation": {
+    "name": "Content moderation",
+    "items": 193,
+    "unique_inputs": 193,
+    "input_status": "Private archived inputs",
+    "source": "Configured source: cardiffnlp/tweet_eval, hate subset (Hugging Face)",
+    "balance": "not_hate 100; hate 93",
+    "limitation": "Two-label hate-speech evaluation, not general moderation. The builder could fall back to generated inputs; original source manifests were not retained."
+  },
+  "routing": {
+    "name": "Support routing",
+    "items": 198,
+    "unique_inputs": 198,
+    "input_status": "Adapted support-ticket samples · Bundled · CC-BY-NC-4.0",
+    "source": "Configured source: Tobi-Bueck/customer-support-tickets (Hugging Face); source describes synthetic generation",
+    "balance": "Technical Support 50; Product Support 50; Customer Service 50; Billing and Payments 48",
+    "limitation": "Original source revisions and row-level manifests were not retained. The builder supports generated fallback inputs."
+  }
+}

@@ -1,5 +1,74 @@
 # Verdict progress
 
+## Example-first comparison — 2026-10-04
+
+- Comparison now identifies the October 2 recorded internal evaluation and opens
+  with one actual synthetic benchmark ticket, its expected label and rationale,
+  and all four recorded model choices. A prominent link opens the playground.
+- Verified ticket-05 against the local saved run: input, label, category, four
+  answers, shared question/choices, and dataset fingerprint match. The public
+  example contains original synthetic text; private datasets remain undisclosed.
+- Cost headers explain totals for 24 calls per model. Existing measurements,
+  no-quality-winner limitations, and expandable policy/model/run details remain.
+- Six site tests and the 11-page build passed. Browser checks verified the example,
+  cost table, and expanded policy/model evidence. No new inference or publication.
+
+## Historical evidence presentation completed — 2026-10-04
+
+- Located private inputs under the operator's Codex private-datasets directory.
+  Classification has 200 unique inputs (50 per label); moderation has 193 unique
+  inputs (100 not_hate / 93 hate). Both input files and all 12 associated result
+  files match the October 1 archive checksums. All 2,358 observations match item
+  coverage, expected labels, allowed choices, and correctness flags; no issues found.
+  Private text remains outside the repository and is not displayed.
+- Added audited dataset descriptions in `site/src/data/historical-datasets.json`,
+  shared by the historical page and methodology. Counts, balance, input availability,
+  configured sources, and scope limits are explicit; configured sources are not
+  presented as verified row-level provenance.
+- Historical tables now show six primary columns without rank numbers. p95,
+  ECE, and cost coverage remain available with plain definitions in expandable
+  details. Saved measurements and ranks in the underlying JSON are unchanged.
+- Methodology explains internal evaluation, the archive/alignment audit, and its
+  verification boundary. It separates the old 4,746-observation snapshot from
+  the October 2, 96-call synthetic comparison; neither establishes a universal winner.
+- Six Node tests and the 11-page build passed. Browser checks verified all task
+  summaries, six-column tables, median-time sorting, expanded metrics, and the
+  methodology evidence. No new inference, dataset/result regeneration, or publication.
+
+## Historical internal-evaluation audit — 2026-10-04
+
+- Read-only audit of all 4,746 saved observations found no conflicting expected
+  labels across providers, duplicate item IDs per provider/suite, invalid latency,
+  or incorrect correctness flags. Headline table metrics match recalculation
+  with current `suite_metrics`; no record or summary files were regenerated.
+- Bundled inputs match recorded labels and allowed answers: agent action has
+  200 items / 105 distinct inputs, routing has 198 / 198. Private classification
+  (200 items) and moderation (193) inputs were not located in the checkout, so
+  their input-level validity was not independently rechecked. Source manifests,
+  raw outputs, and historical billing usage remain unavailable.
+- Page now labels results as Verdict's internal evaluation, explicitly separate
+  from independent assessment, and discloses private inputs and provenance limits.
+  Internal consistency does not establish provider authenticity, label quality,
+  source permissions, calibrated confidence, or production reliability.
+
+## Example-first historical results — 2026-10-04
+
+- Added a plain introduction, a playground link, and an original illustrative
+  example before each task's historical table. Examples show question, choices,
+  input, expected answer, and rationale; they are explicitly not recorded items.
+  No private classification/moderation text or third-party routing text is copied.
+- Task labels are Agent action, Text classification, Content moderation, and
+  Support routing. Tabs switch the example and table together. Saved measurements,
+  rankings, and dataset files are unchanged.
+- Kept a short historical-evidence warning visible and moved detailed limitations
+  and aggregation time into expandable run details. The separate October 2
+  comparison is linked after the historical table with its different scope stated.
+- Six Node tests and the 11-page Astro build passed. Browser checks verified all
+  four example/table views and the playground link. No paid calls or publication.
+- Dense metric columns and rank presentation were subsequently addressed in the
+  evidence presentation slice above. Mobile interaction beyond responsive styles
+  remains unverified.
+
 ## Minimal trial panel — 2026-10-04
 
 - Simplified the default trial panel to remaining budget, remaining model calls,

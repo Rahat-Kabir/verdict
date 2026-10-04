@@ -50,6 +50,13 @@ locally in Git-ignored `decision-stress-comparison-2026-10-02.log`. Original
 historical JSONL records and the public site's aggregate data were not changed.
 The log is local evidence, not an artifact distributed with this report.
 
+The public comparison page starts with `ticket-05`, the resolved-crash/current-invoice
+example, and its four recorded `billing` answers. Its input, expected label, category,
+answers, shared policy, and dataset fingerprint were checked against that log on
+October 4. The example is exported separately to
+`site/src/data/decision-comparison-example.json`; existing aggregate measurements
+remain unchanged. Table costs cover all 24 calls per model, not this one ticket.
+
 ## Interpretation and next step
 
 Jev and Flash had similar observed median latency; a 20 ms difference here does

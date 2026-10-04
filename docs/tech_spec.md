@@ -253,6 +253,18 @@ Historical records are unchanged and lack token usage needed for repricing.
    labels and marked as such, not presented as reconstructed original inputs.
    `generated_at` is aggregation time, not necessarily the inference run time.
 7. Astro renders the leaderboard, methodology, and provider pages from that JSON.
+   The historical page introduces each task with an original illustrative example
+   before its table. Examples are not benchmark records or source-dataset excerpts;
+   expected answers are assigned for explanation. Task tabs switch both example
+   and table, and a prominent link opens the playground. Historical evidence limits
+   remain visible, with additional run details expandable.
+   `site/src/data/historical-datasets.json` supplies audited dataset counts, label
+   balance, availability, and provenance limits to historical and methodology pages.
+   The main table shows model/pipeline, accuracy, completion, median time, cost per
+   1,000 decisions, and item count. Additional metrics are expandable; saved rank
+   numbers remain in the JSON but are omitted from the main table. Methodology
+   records the October 4 archive and alignment audit separately from label-quality,
+   source-provenance, billing, and provider-authenticity claims.
    Numeric sorting uses each header's actual table column and unrounded numeric
    values. Repeated clicks toggle direction, with unknown values last in either
    direction and stable ties. Direction arrows and `aria-sort` identify the active
@@ -261,7 +273,11 @@ Historical records are unchanged and lack token usage needed for repricing.
 The separate `/comparison` page reads `site/src/data/decision-comparison.json`,
 an aggregate export of the approved October 2 synthetic ticket run. It displays
 all four providers without ranks, with cost bases, model identities, settings,
-and limitations. It does not use or replace historical leaderboard data, and
+and limitations. `decision-comparison-example.json` contains one original synthetic
+ticket and four recorded choices verified against the local run evidence and
+matching dataset fingerprint. This example precedes the table; costs are explicitly
+totals for 24 calls per model. The page labels the run as recorded internal evaluation
+and links to the playground. It does not use or replace historical leaderboard data, and
 neither page makes inference calls. Full comparison evidence remains local.
 
 The distribution bundles routing (198 support-ticket samples, CC-BY-NC-4.0) and
