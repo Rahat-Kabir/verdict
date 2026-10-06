@@ -1,227 +1,222 @@
 # ⚖ Verdict
 
-**An experimental evaluation harness and Python router SDK for finite-choice AI decisions.**
+**Compare AI models that choose one answer from a predefined list.**
 
-A "decision" here means choosing one answer from a predefined list: classify a
-ticket, select a support queue, or choose an agent's next tool.
-Verdict compares providers on labeled tasks and exposes a common Python interface
-with fallback, exact caching, and optional confidence-based escalation.
+Verdict is an experimental local playground, Python evaluation harness, and router
+SDK for developers building classification, support routing, or agent tool selection.
+Give each model the same question, allowed answers, and input, then compare its
+choice, failures, response time, and cost.
 
-It is currently an experimental harness and SDK. Existing results are internally
-consistent with their original labels, but historical accounting and dataset quality
-limit what can be concluded from the rankings. Direct Jev through OpenRouter has
-offline contract tests and three successful synthetic live smoke checks, but no
-representative benchmark results.
-The OpenAI Decisions proxy uses Nano and
-is not a measurement of the real Decisions API.
+For example:
 
-The site's `/comparison` page presents a separate October 2 synthetic-ticket run
-for Jev Direct, Clef, Clef Flash, and Nano. All four passed 24/24; this small set
-does not identify a quality winner. See the [run report](docs/decision_comparison.md)
-for cost bases and limitations.
-
-The [local playground](docs/playground.md) supports custom inputs and comparison
-of Jev Direct, Clef, Clef Flash, and Nano. It starts in no-paid demo mode, with a
-Python API and persistent call/spending controls. Live inference requires explicit
-operator opt-in; public hosting and abuse controls remain unimplemented.
-
-Project context and current limits:
-
-- [Vision](docs/VISION.md) — who this serves and how to establish value.
-- [Progress](docs/PROGRESS.md) — verified work, known issues, and next slices.
-- [Technical spec](docs/tech_spec.md) — implemented contracts and data flow.
-- [Testing](docs/testing.md) — offline checks and separately approved live runs.
-- [Agent instructions](AGENTS.md) — working rules for this repository.
-
-## Repository layout
-
-```
-verdict/
-├── python/                  # the verdict-router package (harness + SDK)
-│   ├── src/verdict_router/
-│   │   ├── providers/       # adapters: jev-router, solar-mini4, gpt-5.4-*, gpt-6-luna,
-│   │   │                    # provisional openai-decisions + labeled proxy, ollama
-│   │   ├── datasets/        # routing + synthetic agent suite; two optional local suites
-│   │   ├── runner.py        # benchmark matrix runner
-│   │   ├── metrics.py       # accuracy, latency, cost, ECE, escalation curves
-│   │   ├── router.py        # the SDK: fallback + cache + threshold + escalation
-│   │   ├── cache.py         # exact-match decision cache
-│   │   └── cost.py          # editable pricing table (dated snapshot)
-│   ├── scripts/build_datasets.py   # rebuilds suites from public data (seeded)
-│   └── tests/               # offline regression tests, including mocked HTTP
-├── site/                    # Astro static site displaying saved benchmark records
-│   └── src/pages/           # index, /providers/[id], /methodology
-├── results/                 # historical benchmark records (JSONL)
-├── .github/workflows/       # offline CI and scheduled benchmark scaffold
-├── docs/                    # vision, progress, as-built spec, verification workflow
-└── .env                     # your keys (git-ignored) — see .env.example
+```text
+Question: Which support team should handle this ticket?
+Choices:  billing, technical, account
+Input:    My card was charged twice this month.
+Expected: billing
 ```
 
-## Quickstart
+The model chooses a label; your application handles the action that follows.
 
-```bash
-# Install and verify locally; no API keys or inference calls required.
-cd python && uv sync --extra dev
-uv run pytest
+## Try the local demo
+
+You need Python 3.11+, [uv](https://docs.astral.sh/uv/), and Node.js 22+ with npm.
+Start from the repository root. In one terminal:
+
+```powershell
+cd python
+uv sync --extra dev --extra playground
+.\.venv\Scripts\fastapi.exe dev --host 127.0.0.1 --port 8000
+```
+
+In another terminal, also starting from the repository root:
+
+```powershell
+cd site
+npm ci --no-fund --no-audit
+npm run dev -- --host 127.0.0.1
+```
+
+Open [the playground](http://127.0.0.1:4321/playground) and click **Load example**,
+then **Run comparison**. You can also enter your own question, 2–12 unique answers,
+and input.
+
+Demo mode needs no API keys and makes no model calls. Its fixtures always choose
+the first answer and show an illustrative uniform distribution. This lets you
+explore the interface; the results are not model predictions.
+
+Live mode compares Jev Direct, Clef, Clef Flash, and GPT-5.4 Nano. It requires
+server-side provider keys, Clerk sign-in, explicit operator opt-in, and approval
+for paid calls. SQLite persists call and spending limits. See
+[playground setup](docs/playground.md) for configuration and operating limits.
+Public hosting and visitor abuse controls remain unimplemented.
+
+The dev server proxies `/api` to the Python service. A static build or
+`npm run preview` displays saved pages but does not provide the playground API.
+
+## Explore saved results
+
+The site has two separate evaluations, both displayed without inference calls:
+
+- **Historical results** (`/`): six model/pipeline entries across four task suites.
+  These records predate parser and accounting fixes; raw outputs were not saved,
+  so they cannot be revalidated with the current parser or repriced offline.
+- **Decision comparison** (`/comparison`): an October 2, 2026 run on 24 authored
+  synthetic tickets per model. Jev Direct, Clef, Clef Flash, and Nano each returned
+  all 24 expected labels. This small set did not identify a quality winner. See the
+  [run report](docs/decision_comparison.md).
+
+Results describe those datasets and runs, not production reliability or a universal
+provider ranking. Confidence is provider-reported and has not been established as
+a calibrated probability of correctness. Costs mix reported charges and estimates;
+unknown costs stay unknown. See `/methodology` and [Progress](docs/PROGRESS.md)
+for the evidence limits.
+
+## Evaluate a labeled task
+
+The harness sends the same labeled items to each selected provider, saves JSONL
+records, and calculates accuracy, completion rate, latency, cost, and confidence
+metrics. Routing and synthetic agent-action suites are bundled. Classification
+and moderation require permitted private JSONL inputs via `VERDICT_DATASET_DIR`.
+
+From `python/`, list providers and available suites without making inference calls:
+
+```powershell
 uv run verdict providers
-
-# Preview the saved historical snapshot.
-cd ../site && npm ci && npm run build && npm run preview
 ```
 
-For new measurements, set `OPENAI_API_KEY` or `OPENROUTER_API_KEY` in the
-process environment, review dataset terms and current pricing, and use a fresh
-output directory. From `python/`, this example makes paid inference calls:
+For a new paid measurement, configure the selected provider's key in the process
+environment or a local `.env` using [.env.example](.env.example). Review dataset
+terms and current pricing, approve the call scope and spend, and choose a fresh
+output directory. This example makes paid calls:
 
-```bash
+```powershell
 uv run verdict bench --provider gpt-5.4-nano --suite routing --limit 5 --out ../new-results
 ```
 
-`--all` selects all benchmark providers; default suites are routing and
-agent_next_action. See [Testing](docs/testing.md) for aggregation and dataset
-rebuilding, and [the technical spec](docs/tech_spec.md) for configuration lookup order.
+Default suites are `routing` and `agent_next_action`. `--all` selects the benchmark
+roster; Jev Direct, Clef, Clef Flash, and the provisional OpenAI Decisions adapter
+require explicit selection. Saving overwrites an existing provider/suite file in
+the chosen output directory.
 
-## Using the router SDK
+Aggregation reads records without making inference calls. To display a new run,
+from `python/`:
+
+```powershell
+uv run verdict aggregate --results ../new-results --out ../site/src/data/results.json
+cd ../site
+npm run build
+```
+
+This replaces the site's historical results data with your run's summary. Keep
+review-only summaries in a scratch file instead. See [Testing](docs/testing.md)
+for the full workflow and [the dataset notice](python/DATASET_NOTICE.md) before
+using or rebuilding datasets.
+
+## Use the Python router SDK
+
+The SDK tries providers in order, falls back on failed decisions, and optionally
+caches exact requests or escalates answers below a confidence threshold.
+This example makes paid calls and requires an OpenAI key:
 
 ```python
 from verdict_router import Router
 from verdict_router.providers import build_provider
 
 router = Router(
-    providers=[build_provider("jev-router"), build_provider("gpt-5.4-nano")],
-    cache="decision_cache.jsonl",        # exact-match caching
-    threshold=0.85,                      # confidence gate
-    escalate_to=build_provider("gpt-6-luna"),
-    usage_log="usage.jsonl",             # append-only audit trail
+    providers=[build_provider("gpt-5.4-nano")],
+    cache="decision_cache.jsonl",
 )
 
 result = router.decide(
-    question="Which team should handle this ticket?",
+    question="Which support team should handle this ticket?",
     answers=["billing", "technical", "account"],
     context="My card was charged twice this month.",
 )
-print(result.answer, result.confidence, result.served_by, result.escalated)
+if result.ok:
+    print(result.answer, result.confidence, result.cost_usd)
+else:
+    print(result.error)
 ```
 
-Answers must belong to the supplied list. Chat adapters accept a single JSON decision,
-a bare or quoted label, or a short explicit declaration such as `Answer: billing`.
-Ambiguous prose and reasoning-only responses are errors, so the router can try the next
-provider. Invalid escalation answers cannot replace the primary answer, and invalid cached
-answers are ignored. JSON decisions also support a zero-based answer index.
-Duplicate JSON keys are rejected. Nonfinite or invalid confidence becomes missing;
-a valid answer is still usable. Cache TTL applies to both memory and file caches,
-using the entry's original write time rather than its last access.
-Router cache keys include request metadata and the ordered provider/model settings,
-escalation provider, and threshold. Changing that setup causes a cache miss; old
-entries without routing policy are not reused. Custom providers can extend
-`cache_identity()` with nonsecret settings that affect their decisions. Metadata
-and provider identities must be JSON-serializable when caching is enabled.
+Returned answers must belong to the supplied list. Add more providers to the list
+for fallback, `threshold` and `escalate_to` for escalation, or `usage_log` for an
+append-only usage log. Confidence thresholds need evaluation on your own workload;
+missing confidence bypasses escalation, and failed escalation retains the primary
+answer. Parsing, cache policy, model identity, and accounting details are in the
+[technical spec](docs/tech_spec.md#sdk-flow).
 
-Malformed provider response bodies become failed decisions so fallback and
-benchmark retries can continue. Known charges are retained even when the answer
-payload is broken. Malformed billing data leaves cost unknown without discarding
-a valid answer. Remote HTTP failures and missing keys still raise `ProviderError`.
+## Providers
 
-New benchmark records distinguish `requested_model` from `reported_model` (the
-model ID supplied by the final response). Missing identity stays unknown; old
-results are not backfilled. SDK responses, usage logs, and `verdict decide` also
-retain reported identity. These are provider reports, not independent verification.
-
-SDK cost totals include failed fallback and escalation attempts. If any attempt's
-cost is unknown (including a raised provider error with no billing metadata), the
-total is `None`. Latency measures the whole decision through cache persistence,
-excluding usage-log writing. Cache hits report zero API cost and fresh lookup
-latency, clear token usage, and do not count as new escalations. Benchmark records
-also include retry costs and elapsed time, including backoff. OpenRouter exact mode
-uses account charges (including zero); missing charges stay unknown. OpenAI uses
-verified standard-rate estimates with cached-input discounts, not account invoices.
-
-Benchmark summaries include failed items in cost and latency. Cost per 1,000 items
-and total cost stay unknown unless every item is priced; billing coverage and the
-known subtotal are reported separately. Completion rate and all-item accuracy
-show failures alongside accuracy among successful responses. Offline escalation
-simulations include failed attempts and preserve unknown costs.
-
-The committed benchmark snapshot predates this stricter parser. Its raw model output was
-not saved, so those results cannot be revalidated offline; a fresh benchmark is required.
-
-Confidence is model-reported. The example threshold is illustrative; this project
-has not established that it produces reliable escalation on your workload.
-Missing confidence bypasses escalation, and failed escalation retains the primary answer.
-
-One-off from the CLI (paid calls with remote providers):
-
-```bash
-uv run verdict decide "Which team?" --answers billing --answers technical \
-  --context "charged twice" --threshold 0.85 --escalate-to gpt-6-luna
-```
-
-## Featured providers
-
-Cloudflare Clef and Clef Flash are available as `clef` and `clef-flash`, selected
-explicitly through `build_provider(...)` or `verdict decide --providers ...`.
-Set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_AUTH_TOKEN` in your local `.env`.
-These text-choice adapters are offline-tested and each passed three synthetic
-live smoke checks; representative evaluation is pending.
-Costs use published input-token estimates, not account charges. Keys stay on the
-server in any future hosted playground; hosted access/spend controls are unbuilt.
-
-Direct Jev uses your existing `OPENROUTER_API_KEY`. Select `jev-direct` explicitly
-in `build_provider("jev-direct")` or `verdict decide --providers jev-direct` with
-the usual question/answers/context arguments. It is outside the default `--all`
-roster. Remote decisions are paid calls. This adapter supports one typed choice;
-multi-question, noul, and score requests are outside this slice. Its request/response
-contract follows the [OpenRouter Jev example](https://openrouter.ai/blog/insights/what-is-jev/).
-
-| Provider | Vendor | Note |
+| Provider ID | What it measures | Key or service |
 | --- | --- | --- |
-| `jev-router` | TypeSafe (OpenRouter) | Jev selects a downstream answering model; not native Jev decisions |
-| `jev-direct` | TypeSafe (OpenRouter) | Typed choice through the alpha Decisions API; explicit selection only, live smoke-tested |
-| `clef` / `clef-flash` | Cloudflare Workers AI | Direct typed text choice; explicit selection only; live smoke-tested; estimated cost |
-| `solar-mini4` | Upstage (OpenRouter) | Chat baseline using JSON-object output |
-| `gpt-5.4-nano` / `gpt-5.4-mini` | OpenAI | Chat baselines using strict answer-enum JSON schemas |
-| `gpt-6-luna` | OpenAI | Chat baseline and default offline escalation reference |
-| `openai-decisions-proxy` | harness | Nano wrapper — **labeled proxy**, not native Decisions results |
-| `openai-decisions` | OpenAI | provisional `/v1/decisions` adapter; no verified native benchmark |
+| `jev-direct` | Native typed choice through OpenRouter's alpha Decisions API | `OPENROUTER_API_KEY` |
+| `clef` / `clef-flash` | Native typed text choice through Cloudflare Workers AI; estimated cost | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_AUTH_TOKEN` |
+| `jev-router` | Jev selects a downstream answering model; a complete routing pipeline | `OPENROUTER_API_KEY` |
+| `solar-mini4` | Chat baseline with JSON-object output | `OPENROUTER_API_KEY` |
+| `gpt-5.4-nano` / `gpt-5.4-mini` / `gpt-6-luna` | Chat baselines with strict answer-enum JSON schemas | `OPENAI_API_KEY` |
+| `openai-decisions-proxy` | Nano wrapper; shares the Nano backend and is not native Decisions evidence | `OPENAI_API_KEY` |
+| `openai-decisions` | Provisional native adapter; successful live handling is unverified, with no native benchmark records | `OPENAI_API_KEY` |
+| `ollama:<model>` | Local chat baseline with JSON output | Running Ollama server |
 
-## Status / roadmap
+Jev Direct and Clef/Flash have limited synthetic live evidence; representative
+evaluation remains pending. Jev Router results do not measure native Jev choices.
 
-- [x] provider adapters + explicit answer parsing and allowed-answer validation
-- [x] 4 suite types: bundled support-ticket routing (CC-BY-NC-4.0) and synthetic
-  agent actions (MIT); classification and moderation are optional local inputs
-- [x] runner + metrics (accuracy, p50/p95, $/1k, ECE, escalation curves)
-- [x] Astro snapshot tables, provider pages, and methodology; known sorting limitations
-- [x] router SDK with fallback, cache, threshold escalation, usage log
-- [x] nightly benchmark workflow scaffold (commits locally; does not push)
-- [x] failure-inclusive cost/latency summaries and explicit billing coverage
-- [ ] run/dataset/model provenance
-- [ ] representative datasets and held-out confidence evaluation
-- [ ] live verification and representative comparison of the direct Jev adapter
+## Repository and development
 
-The scheduled benchmark workflow is a scaffold: it makes paid calls when configured,
-has no enforced spending cap, and commits results locally without pushing them.
-Its presence does not establish successful nightly publication.
+```text
+verdict/
+├── python/
+│   ├── src/verdict_router/
+│   │   ├── providers/            # common decision interface and adapters
+│   │   ├── datasets/             # bundled JSONL suites and private-suite loading
+│   │   ├── runner.py             # benchmark calls and records
+│   │   ├── metrics.py            # summaries and offline escalation simulations
+│   │   ├── router.py, cache.py   # SDK fallback, escalation, and exact caching
+│   │   └── playground_*.py      # local API and persistent SQLite limits
+│   ├── scripts/                  # dataset builder and synthetic comparison
+│   └── tests/                    # offline tests with fake providers/mocked HTTP
+├── site/src/                     # Astro pages, browser scripts, and saved data
+├── results/                      # historical benchmark records
+├── docs/                         # project direction, contracts, and workflows
+└── .github/workflows/            # offline CI and paid benchmark scaffold
+```
 
-## Notes
-
-- Prices in `cost.py` were verified on 2026-10-01; billing limits and sources are in
-  the [technical spec](docs/tech_spec.md). Saved benchmark costs were not repriced:
-  those records lack token usage and raw billing metadata.
-- The maintained project docs live in `docs/`; historical findings and debugging
-  lessons are consolidated there.
-- Original code and documentation are [MIT licensed](LICENSE). Bundled third-party
-  support-ticket text remains CC-BY-NC-4.0, with attribution and noncommercial-use
-  conditions in [the dataset notice](python/DATASET_NOTICE.md). AG News and TweetEval
-  hate text are excluded from public distributions and publishable Git history.
-
-To use optional local suites, place permitted JSONL inputs in a private folder
-outside this repository and set the environment variable before running the CLI:
+Run the offline Python checks from `python/`:
 
 ```powershell
-$env:VERDICT_DATASET_DIR = "C:/path/to/private-datasets"
-# After checking source terms and approving inference spend:
-uv run verdict bench --provider gpt-5.4-nano --suite classification --limit 5 --out ../trial-results
+uv run --extra dev --extra playground pytest
+uv run --extra dev --extra playground ruff check src tests scripts
 ```
 
-Use the same JSONL fields as the bundled suites. Changing dataset contents requires
-new results; the saved historical snapshot does not measure your replacement data.
+Run site checks from `site/`:
+
+```powershell
+npm test
+npm run build
+```
+
+The scheduled benchmark workflow makes paid calls when configured, has no enforced
+spending cap, and commits locally without pushing. It is a scaffold, not evidence
+of successful nightly publication.
+
+Further reading:
+
+- [Vision](docs/VISION.md) — intended users and what would establish value.
+- [Progress](docs/PROGRESS.md) — verified work, unresolved issues, and next slices.
+- [Technical spec](docs/tech_spec.md) — contracts, configuration, and data flow.
+- [Testing](docs/testing.md) — offline verification and approved live workflows.
+- [Agent instructions](AGENTS.md) — repository working rules.
+
+Next measurement priorities are representative labeled datasets, run/dataset and
+per-attempt provenance, and held-out confidence evaluation. Current model identity
+fields retain provider-reported IDs; they do not independently verify serving models.
+
+## License and datasets
+
+Original code, documentation, and synthetic agent examples are [MIT licensed](LICENSE).
+Bundled third-party routing text remains **CC-BY-NC-4.0**, with attribution and
+noncommercial-use conditions in [the dataset notice](python/DATASET_NOTICE.md).
+AG News and TweetEval hate raw text are excluded from public distributions and
+publishable Git history. Commercial users can use the MIT code with their own
+permitted data. Replacing dataset inputs requires new measurements.

@@ -1,5 +1,18 @@
 # Verdict progress
 
+## README onboarding cleanup — 2026-10-06
+
+- Reorganized the root README around a concrete decision example, local demo,
+  saved evaluations, benchmarking, and SDK use. Linked detailed contracts instead
+  of repeating parser/cache/accounting internals.
+- Corrected full-test extras, distinguished the dev proxy from static preview,
+  clarified output replacement, and aligned provider/status descriptions with
+  the implementation. Updated the package README's stale native-Jev statement.
+- Documentation-only: no runtime, dataset, benchmark record, or site-data changes.
+- Verification: local links/anchor, code fences, Python example syntax, SDK
+  arguments, provider IDs, CLI flags, and diff whitespace checked. Runtime tests
+  were not rerun; no inference calls or publication.
+
 ## First-visit journey fixes — 2026-10-04
 
 - Playground shows configured lifetime trial terms before login ($0.50 / up to
