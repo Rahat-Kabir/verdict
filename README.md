@@ -1,11 +1,13 @@
 # ⚖ Verdict
 
-**Compare AI models that choose one answer from a predefined list.**
+**An experimental comparison of dedicated decision APIs on the same labeled tasks.**
 
-Verdict is an experimental local playground, Python evaluation harness, and router
-SDK for developers building classification, support routing, or agent tool selection.
-Give each model the same question, allowed answers, and input, then compare its
-choice, failures, response time, and cost.
+Verdict is an experimental research project comparing dedicated decision APIs
+from OpenAI, TypeSafe/Jev, and Cloudflare on the same labeled finite-choice
+tasks. It measures decision accuracy, failures, latency, and cost, and provides
+a Python evaluation harness and playground for exploring the results. The same
+question, allowed answers, and input go to every provider; the comparison
+covers each model's choice, failures, response time, and cost.
 
 For example:
 
@@ -202,6 +204,7 @@ of successful nightly publication.
 
 Further reading:
 
+- [Research design](docs/RESEARCH.md) — the study's questions, hypotheses, and fairness rules.
 - [Vision](docs/VISION.md) — intended users and what would establish value.
 - [Progress](docs/PROGRESS.md) — verified work, unresolved issues, and next slices.
 - [Technical spec](docs/tech_spec.md) — contracts, configuration, and data flow.

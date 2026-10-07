@@ -1,5 +1,54 @@
 # Verdict progress
 
+## First research study narrowed to BANKING77 — 2026-10-07
+
+- Confirmed the first study: native OpenAI Decisions, Jev Direct, Clef, and
+  Clef Flash on the untouched BANKING77 test split, with frozen shared label
+  definitions. Outcomes are accuracy, failures, latency, and labeled costs.
+- Revised RESEARCH and VISION around research first, a second dataset to examine
+  generalization afterward, and hosting/product work later. Removed the mandatory
+  Ollama score gate, four-task scope, and chat-baseline win requirement.
+- Replaced binary support/refute rules and guaranteed five-point sensitivity
+  with paired comparisons, uncertainty, and inconclusive results. Defined failure
+  versus wrong-label reporting, sequential rotated order, separate stability
+  repeats, and one primary call per provider/item without client retries.
+- Corrected implementation boundaries: Chat Completions cannot directly test a
+  Responses latency claim; the general runner lacks the pilot script's unknown-cost
+  stop/threshold and omits raw/usage/run provenance. These remain future work.
+- Dataset audit/import, 77-choice API compatibility, definitions, detailed analysis
+  settings, native OpenAI alignment, and new-study runner verification are pending.
+  The intended 12,320-call primary evaluation requires separate scope/spend approval.
+- Verification: reviewed focused documentation diffs, relative links, and Git
+  whitespace checks. Documentation-only; runtime tests were not rerun. Existing
+  README edits are preserved. No code, inputs, saved results, or site data changed;
+  no paid calls, dependencies, deployment, commit, or push.
+
+## Research design documented — 2026-10-07
+
+- Locked the user-approved primary research question: comparing dedicated
+  decision APIs from OpenAI, TypeSafe/Jev, and Cloudflare on the same labeled
+  finite-choice tasks. Added `docs/RESEARCH.md` with secondary questions
+  (same-model control via `gpt-6-luna`, the documented Decisions latency
+  claim), hypotheses H1–H4 with support/refute criteria, the provider matrix,
+  measurement fairness rules, dataset acceptance criteria (difficulty gate via
+  local Ollama, ≥200 items per suite), budget/stop conditions, and an evidence
+  status table.
+- README now opens with the research identity and links the design doc first
+  in further reading.
+- Recorded new external evidence supplied by the user: official OpenAI
+  Decisions documentation shows a public beta on `POST /v1/decisions`
+  (`gpt-6-luna` only, $0.10 per 1M input tokens with input-only billing,
+  choice/predicate/score question types, refusal answers). This supersedes the
+  stale "Decision API is not enabled for this user" probe as the working
+  assumption, but the adapter remains provisional and account access stays
+  unchecked until an approved one-call probe.
+- Decided with the user that all previous results (the 4,746-observation
+  archive and the October 2 comparison) are retained as dated historical
+  evidence; the new study writes to fresh result directories and site data.
+  No records were deleted, rebuilt, or overwritten.
+- Documentation-only: no code, dataset, record, or site-data changes; no paid
+  calls, new dependencies, deployment, commit, or push.
+
 ## Comparison homepage — 2026-10-07
 
 - Root `/` now renders the existing comparison page; `/comparison` remains available.
