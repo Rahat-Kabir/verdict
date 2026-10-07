@@ -89,7 +89,8 @@ data shape, or charge values do not discard a valid answer. Invalid generation I
 do not trigger billing requests. Ollama failures retain zero API charge, which
 does not measure local infrastructure spend. Missing keys and remote HTTP failures
 retain ProviderError behavior; native HTTP error messages tolerate malformed bodies
-and preserve the HTTP status. The native adapter is still provisional.
+and preserve the HTTP status. Native OpenAI uses the documented typed Decisions
+contract and has shared 77-choice training-request live evidence.
 
 | Provider | Implemented behavior | Evidence boundary |
 | --- | --- | --- |
@@ -97,10 +98,21 @@ and preserve the HTTP status. The native adapter is still provisional.
 | `jev-router` | OpenRouter chat completions; Jev selects a downstream answering model | Complete routing pipeline, not native Jev choices/confidence |
 | `solar-mini4` | OpenRouter chat with JSON-object output | Chat baseline, not verified Solar Decide |
 | `openai-decisions-proxy` | Wraps the Nano adapter and changes provider attribution | Same backend as Nano, not an independent native API |
-| `openai-decisions` | POST to `/v1/decisions`, with provisional answer extraction | Adapter exists; no native results or verified success contract |
+| `openai-decisions` | POST to `/v1/decisions` with `gpt-6-luna`, input and one named choice question | Offline contract tests and shared 77-choice training-request live evidence; study results recorded separately |
 | `ollama:<model>` | Local `/api/chat` with JSON output | Requires an independently running local server |
-| `jev-direct` | OpenRouter `/api/alpha/decisions`, typed `choice` | Offline tests and three synthetic live smoke checks; explicit selection only; no representative benchmark |
+| `jev-direct` | OpenRouter `/api/alpha/decisions`, typed `choice` | Offline tests and balanced BANKING77 evidence; explicit selection only |
 | `clef`, `clef-flash` | Workers AI REST, typed text `choice` | Offline tests and three live smoke checks each; explicit selection; estimated cost |
+
+`OpenAIDecisionsProvider` maps context to `input` and the question to instructions.
+Ordered labels become choices with their label as description; shared definitions
+belong in the common instructions. Require exactly one matching named answer,
+typed `choice`, a supplied string choice, and a complete normalized probability
+distribution consistent with that explicit choice. Typed refusals fail; no label
+is inferred from probabilities. Preserve raw JSON, usage, model and known cost
+on parsed failures. The separate Decisions estimate uses $0.10/M input tokens,
+without chat-model output/cache charges. Regional/account adjustments are excluded;
+usage beyond 272,000 input tokens stays unknown until its rate is verified.
+See the [native contract](https://developers.openai.com/api/reference/resources/decisions/methods/create).
 
 `CloudflareDecisionProvider` calls `/accounts/{account_id}/ai/run/@cf/cloudflare/{model}`
 using `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_AUTH_TOKEN`. It requires a successful
@@ -123,6 +135,17 @@ representative quality has been verified. A subsequent approved trial verified
 live text-choice access with three synthetic examples per model. Responses named
 `clef` / `clef-flash` rather than dated snapshots. Models remain outside `--all`.
 
+`OpenRouterDecisionProvider` supplies `cloudflare/clef` or `cloudflare/clef-flash`
+to `/api/alpha/decisions` using `OPENROUTER_API_KEY`. Friendly names end in
+`-openrouter` so direct Workers AI observations cannot be merged with gateway
+measurements. Requests pin the Cloudflare provider and disable fallbacks. State,
+complete instructions and the 2–255 distinct choices are preserved. Replies must
+name the expected model and upstream, have one explicit named choice, and contain
+a valid complete probability distribution. Failures retain raw replies and known
+usage charges; `usage.cost` is a reported charge, never a token-price guess.
+The adapter makes one POST with no retry. Both routes passed a live shared
+77-choice training request on October 8; this alone is not quality evidence.
+
 `JevProvider` uses model `typesafe/jev-1.13`, the existing OpenRouter key, text
 context as `state`, question as `instructions`, and answer labels as criterion
 names/descriptions. Duplicate labels become one criterion; empty labels and more
@@ -140,7 +163,8 @@ lookup fallback. Missing charges stay unknown. Its confidence summarizes the
 distribution rather than the winning option's probability; existing ECE/threshold
 calculations must not be interpreted as calibrated correctness for Jev.
 `jev-direct` works with explicit CLI/SDK selection and stays outside `--all` and
-the scheduled roster pending representative evaluation. No historical/site data is backfilled.
+the scheduled roster. The separate balanced BANKING77 study provides initial
+exploratory evidence. No historical records are backfilled.
 
 OpenRouter parses final content only, not reasoning. Exact-cost mode uses the
 account charge from `usage.cost`, then `/generation`'s `total_cost`, including zero.
@@ -219,6 +243,11 @@ Historical records are unchanged and lack token usage needed for repricing.
 
 ## Benchmark and site flow
 
+`runner.run_bench` rejects a limit below one or concurrency below one before
+loading data or creating providers. `run_provider_suite` also rejects negative
+retry counts. Omitting the limit runs the full selected suite; zero is invalid.
+The dedicated BANKING77 scripts use a separate frozen study workflow.
+
 1. `datasets.load_suite` reads the packaged JSONL suite.
 2. `runner.run_provider_suite` creates a request for each item and validates the
    response. It retries up to once by default on returned errors or ProviderError,
@@ -270,7 +299,17 @@ Historical records are unchanged and lack token usage needed for repricing.
    direction and stable ties. Direction arrows and `aria-sort` identify the active
    sort; saved ranks remain the original benchmark ranks.
 
-The homepage `/` and its existing `/comparison` route share the comparison page;
+The homepage `/` now shares the BANKING77 research page with `/banking77`.
+It reads `site/src/data/banking77-balanced.json`, exported from the verified
+154-message / 616-attempt local study summary and manifest. All four provider
+metrics remain exact; display rounding is applied only when rendering. The page
+shows valid-response median/p95 latency, all-attempt accuracy, failures, billing
+coverage, labeled costs and unknown Flash total. It includes sample limitations
+and expandable 77-intent counts. No raw dataset messages are published. The
+complete report is served as static Markdown at `/research/banking77-balanced.md`;
+keep that copy synchronized with `docs/BANKING77_BALANCED.md`.
+
+The earlier `/comparison` route retains its synthetic comparison page;
 
 historical results remain at `/historical`. The comparison page reads `site/src/data/decision-comparison.json`,
 an aggregate export of the approved October 2 synthetic ticket run. It displays

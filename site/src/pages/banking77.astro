@@ -1,0 +1,130 @@
+---
+import Base from "../layouts/Base.astro";
+import study from "../data/banking77-balanced.json";
+
+const percent = (value: number) => `${(value * 100).toFixed(2)}%`;
+const money = (value: number) => `$${value.toFixed(6)}`;
+const sourceUrl = `https://github.com/PolyAI-LDN/task-specific-datasets/tree/${study.source_revision}/banking_data`;
+---
+
+<Base title="Verdict — BANKING77 research results" description="A balanced exploratory comparison of OpenAI Decisions, Jev Direct, Clef, and Clef Flash on 154 BANKING77 messages across 77 intents.">
+  <p class="eyebrow">Verdict research · October 8, 2026 · Exploratory experiment</p>
+  <h1>Four decision APIs. The same 154 messages.</h1>
+  <p class="tagline">How do dedicated decision APIs compare when they receive the same labeled
+    tasks and allowed choices? We tested OpenAI Decisions, Jev Direct, Clef, and Clef Flash
+    on a balanced sample of BANKING77, using shared definitions and all 77 intent labels.</p>
+  <p class="links"><a href="/research/banking77-balanced.md">Read the full research report</a>
+    <a href="/playground">Try the local playground</a></p>
+
+  <div class="run-facts" aria-label="Experiment scope">
+    <div><strong>{study.n_messages}</strong><span>labeled messages per API</span></div>
+    <div><strong>{study.n_intents}</strong><span>intents · two messages each</span></div>
+    <div><strong>{study.n_attempts}</strong><span>attempts · no retries</span></div>
+  </div>
+
+  <p class="callout"><strong>A completed small sample, not the full BANKING77 benchmark.</strong>
+    Two messages per intent are too few for stable intent-level conclusions.
+    The design followed an earlier experiment; 12 messages were previously attempted.
+    All results below are new observations, with earlier outputs kept separate.</p>
+
+  <h2>Observed results</h2>
+  <p class="table-note">Each API attempted the same 154 messages. Accuracy counts failures as incorrect.
+    A valid wrong label reduces accuracy but is not a response failure. API order is fixed below;
+    it is not a ranking.</p>
+  <div class="table-scroll" role="region" aria-label="BANKING77 results" tabindex="0">
+    <table class="board">
+      <caption class="sr-only">Results from 154 messages per API, October 8, 2026</caption>
+      <thead><tr><th scope="col">API</th><th scope="col">Correct / attempted</th>
+        <th scope="col">Accuracy</th><th scope="col">Failures</th>
+        <th scope="col">Median / p95 latency</th><th scope="col">Cost / 154 attempts</th>
+        <th scope="col">Billing basis / coverage</th></tr></thead>
+      <tbody>{study.providers.map(provider => <tr>
+        <th scope="row">{provider.name}</th>
+        <td class="num">{provider.correct} / {provider.attempted}</td>
+        <td class="num">{percent(provider.accuracy)}</td>
+        <td class="num">{provider.failures}</td>
+        <td class="num">{Math.round(provider.median_valid_wall_ms)} / {Math.round(provider.p95_valid_wall_ms)} ms</td>
+        <td class="num">{provider.total_cost_usd === null
+          ? <><strong>Unknown total</strong><br />{money(provider.known_cost_subtotal_usd)} known subtotal</>
+          : money(provider.total_cost_usd)}</td>
+        <td class="billing">{provider.cost_basis.kind}<br />{provider.known_cost_count} / {provider.attempted} attempts priced</td>
+      </tr>)}</tbody>
+    </table>
+  </div>
+  <p class="table-note">Latency is median and p95 client wall time for valid responses from one Windows
+    machine in Bangladesh. It includes network and gateway overhead. Three-second scheduling
+    intervals and cooldown waits are excluded. The report also includes all-attempt latency.</p>
+  <p class="table-note">Costs include failed attempts when usage is known. OpenAI uses a published
+    input-token estimate; OpenRouter routes use reported charges. These are not verified invoice
+    totals. Flash’s two unpriced failures make its total unknown.</p>
+
+  <h2>What we observed</h2>
+  <ul>
+    <li>Clef returned 146 correct decisions and Clef Flash 145. A one-message difference
+      does not establish that one is better.</li>
+    <li>OpenAI had the lowest median latency in this run. Jev had the lowest reported charge.</li>
+    <li>OpenAI returned one refusal. Flash had a connection reset and a temporary-capacity
+      HTTP 429 rejection. Both failed attempts were retained; neither was retried.</li>
+  </ul>
+
+  <details>
+    <summary>How the sample and measurements were fixed</summary>
+    <p>We used the authors’ official test split: 3,080 messages, 40 per intent. A fixed
+      random seed ({study.seed}) selected two messages from each intent, then shuffled their
+      order before live calls. Shared definitions were developed from training examples and
+      stayed unchanged. Each request allowed all 77 labels.</p>
+    <p>Calls ran sequentially, with provider order rotated per message. No client retries,
+      cache, fallback, or escalation. After two access failures, saved evidence and billing
+      holds were audited before continuing only unattempted pairs. All 616 observations
+      passed offline source/request/reply verification, with zero unfinished starts.</p>
+    <p>Jev, Clef, and Flash used OpenRouter’s Decisions API; native OpenAI used its own
+      Decisions endpoint. Cloudflare was pinned with fallbacks disabled. Reported model IDs
+      are provider claims, not independent verification of model weights.</p>
+    <p><a href={sourceUrl}>BANKING77 source revision</a> · CC-BY-4.0 ·
+      Iñigo Casanueva, Tadas Temčinas, Daniela Gerz, Matthew Henderson, and Ivan Vulić,
+      <em>Efficient Intent Detection with Dual Sentence Encoders</em> (2020).</p>
+    <p class="fingerprint">Sample fingerprint: <code>{study.selection_sha256}</code></p>
+  </details>
+
+  <details>
+    <summary>Per-intent counts: two messages per API</summary>
+    <p class="table-note">Cells show correct / attempted, then failures. Two messages per intent
+      give limited evidence; these counts should not guide an intent-specific provider choice.</p>
+    <div class="table-scroll" role="region" aria-label="Per-intent results" tabindex="0">
+      <table class="board"><thead><tr><th scope="col">Intent</th>
+        {study.providers.map(provider => <th scope="col">{provider.name}</th>)}</tr></thead>
+        <tbody>{study.label_order.map(label => <tr><th scope="row">{label}</th>
+          {study.providers.map(provider => {
+            const counts = provider.by_intent[label];
+            return <td class="num">{counts.correct} / {counts.attempted} ({counts.failures} failures)</td>;
+          })}</tr>)}</tbody>
+      </table>
+    </div>
+  </details>
+
+  <p class="next-note">These saved results make no API calls when viewed.
+    <a href="/comparison">Earlier 24-ticket comparison</a> ·
+    <a href="/historical">Historical leaderboard</a> · <a href="/methodology">Methodology</a>.
+    A second domain and repeated runs would help test whether these findings generalize.</p>
+</Base>
+
+<style>
+  .eyebrow { color: var(--accent-2); margin-top: 30px; font-size: 13px; }
+  h1 { margin-top: 8px; }
+  .links { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+  .run-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 26px 0; }
+  .run-facts > div { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .run-facts strong { display: block; font-size: 26px; }
+  .run-facts span, .table-note, .next-note { color: var(--muted); font-size: 13px; }
+  .table-scroll { overflow-x: auto; }
+  .table-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  table.board th { cursor: default; }
+  table.board tbody th { text-transform: none; letter-spacing: normal; color: var(--text); }
+  table.board .billing { white-space: normal; min-width: 190px; text-align: left; font-size: 12px; }
+  details { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 20px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { color: var(--muted); font-size: 14px; }
+  .fingerprint code { overflow-wrap: anywhere; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  @media (max-width: 600px) { .run-facts { grid-template-columns: 1fr; } }
+</style>

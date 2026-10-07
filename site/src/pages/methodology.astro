@@ -46,6 +46,11 @@ const suiteRows = Object.entries(suites).map(([name, s]: [string, any]) => ({
   <p class="tagline">Verdict ran these experiments and calculated the reported metrics.
     This is an internal evaluation, not an independent assessment or a claim of production reliability.</p>
   <ul class="tagline">
+    <li><a href="/banking77">October 8 BANKING77 experiment</a>: 154 labeled test messages,
+      two per intent, with 616 attempts across four dedicated decision APIs. Frozen shared
+      definitions and all 77 choices; failures count as incorrect. This balanced sample
+      is exploratory, includes 12 previously attempted messages, and keeps earlier outputs separate.
+      <a href="/research/banking77-balanced.md">Read the complete report</a>.</li>
     <li><a href="/historical">Historical results</a>: six model/pipeline entries across four suites,
       totaling 4,746 saved observations. These records predate parser and accounting fixes.</li>
     <li><a href="/comparison">October 2 comparison</a>: Jev Direct, Clef, Clef Flash, and Nano

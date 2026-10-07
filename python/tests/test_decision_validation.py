@@ -17,6 +17,14 @@ from verdict_router.types import DatasetItem, DecisionRequest, DecisionResponse
 REQUEST = DecisionRequest("Which team?", ["billing", "technical"])
 
 
+def native_choice_body(answer="billing", confidence=0.9):
+    return {"answers": [{
+        "type": "choice", "name": "decision", "choice": answer, "confidence": confidence,
+        "probabilities": [{"value": "billing", "probability": 0.9},
+                          {"value": "technical", "probability": 0.1}],
+    }]}
+
+
 @pytest.mark.parametrize(
     "provider",
     [
@@ -78,7 +86,7 @@ def test_native_decisions_adapter_rejects_invalid_answer(monkeypatch, answer):
         "post",
         lambda *a, **kw: httpx.Response(
             200,
-            json={"answer": answer, "confidence": 0.9},
+            json=native_choice_body(answer),
         ),
     )
     response = OpenAIDecisionsProvider(api_key="test").decide(REQUEST)
@@ -91,7 +99,7 @@ def test_native_decisions_adapter_accepts_allowed_answer(monkeypatch):
         "post",
         lambda *a, **kw: httpx.Response(
             200,
-            json={"answer": "billing", "confidence": 0.9},
+            json=native_choice_body(),
         ),
     )
     response = OpenAIDecisionsProvider(api_key="test").decide(REQUEST)
@@ -101,7 +109,7 @@ def test_native_decisions_adapter_accepts_allowed_answer(monkeypatch):
 @pytest.mark.parametrize("confidence", ["NaN", "Infinity", "-Infinity", "invalid"])
 def test_native_adapter_sanitizes_invalid_confidence(monkeypatch, confidence):
     monkeypatch.setattr(httpx, "post", lambda *args, **kwargs: httpx.Response(
-        200, json={"answer": "billing", "confidence": confidence},
+        200, json=native_choice_body(confidence=confidence),
     ))
     response = OpenAIDecisionsProvider(api_key="test").decide(REQUEST)
     assert response.ok and response.confidence is None

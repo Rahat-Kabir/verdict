@@ -1,9 +1,9 @@
 """Command-line interface.
 
-    verdict providers                 # list configured providers
+    verdict providers                 # list available providers and suites
     verdict bench [--all] [--provider X]... [--suite Y]... [--limit N]
     verdict aggregate --results results --out site/src/data/results.json
-    verdict decide "question?" --answers a --answers b --context "..." [--router-config ...]
+    verdict decide "question?" --answers a --answers b --context "..."
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="verdict", description="Verdict: decision-API benchmark + router")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("providers", help="list configured providers and suites")
+    sub.add_parser("providers", help="list available providers and suites")
 
     p_bench = sub.add_parser("bench", help="run benchmark suites")
     p_bench.add_argument("--provider", action="append", dest="providers")
@@ -69,6 +69,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "bench":
+        if args.limit is not None and args.limit < 1:
+            parser.error("--limit must be at least 1")
+        if args.concurrency < 1:
+            parser.error("--concurrency must be at least 1")
         providers = BENCHMARK_PROVIDERS if args.all else (args.providers or ["jev-router"])
         suites = args.suites or BUNDLED_SUITES
         try:

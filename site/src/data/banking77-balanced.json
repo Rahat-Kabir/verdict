@@ -1,0 +1,1853 @@
+{
+  "run_date": "2026-10-08",
+  "kind": "balanced-exploratory-banking77",
+  "n_messages": 154,
+  "n_intents": 77,
+  "messages_per_intent": 2,
+  "n_attempts": 616,
+  "overlapping_messages": 12,
+  "seed": 20261008,
+  "selection_sha256": "a2d2043564ac9630ec0b15c90dd267def0cbd3a0437d784b9c8bea3d9091a8bf",
+  "definitions_sha256": "f76e0e34500207308ca2b13297867a30c7107a74931e67820d412bde460a1856",
+  "source_revision": "57ec275d8078af65b7731c2a98be812d844a6d6b",
+  "label_order": [
+    "card_arrival",
+    "card_linking",
+    "exchange_rate",
+    "card_payment_wrong_exchange_rate",
+    "extra_charge_on_statement",
+    "pending_cash_withdrawal",
+    "fiat_currency_support",
+    "card_delivery_estimate",
+    "automatic_top_up",
+    "card_not_working",
+    "exchange_via_app",
+    "lost_or_stolen_card",
+    "age_limit",
+    "pin_blocked",
+    "contactless_not_working",
+    "top_up_by_bank_transfer_charge",
+    "pending_top_up",
+    "cancel_transfer",
+    "top_up_limits",
+    "wrong_amount_of_cash_received",
+    "card_payment_fee_charged",
+    "transfer_not_received_by_recipient",
+    "supported_cards_and_currencies",
+    "getting_virtual_card",
+    "card_acceptance",
+    "top_up_reverted",
+    "balance_not_updated_after_cheque_or_cash_deposit",
+    "card_payment_not_recognised",
+    "edit_personal_details",
+    "why_verify_identity",
+    "unable_to_verify_identity",
+    "get_physical_card",
+    "visa_or_mastercard",
+    "topping_up_by_card",
+    "disposable_card_limits",
+    "compromised_card",
+    "atm_support",
+    "direct_debit_payment_not_recognised",
+    "passcode_forgotten",
+    "declined_cash_withdrawal",
+    "pending_card_payment",
+    "lost_or_stolen_phone",
+    "request_refund",
+    "declined_transfer",
+    "Refund_not_showing_up",
+    "declined_card_payment",
+    "pending_transfer",
+    "terminate_account",
+    "card_swallowed",
+    "transaction_charged_twice",
+    "verify_source_of_funds",
+    "transfer_timing",
+    "reverted_card_payment?",
+    "change_pin",
+    "beneficiary_not_allowed",
+    "transfer_fee_charged",
+    "receiving_money",
+    "failed_transfer",
+    "transfer_into_account",
+    "verify_top_up",
+    "getting_spare_card",
+    "top_up_by_cash_or_cheque",
+    "order_physical_card",
+    "virtual_card_not_working",
+    "wrong_exchange_rate_for_cash_withdrawal",
+    "get_disposable_virtual_card",
+    "top_up_failed",
+    "balance_not_updated_after_bank_transfer",
+    "cash_withdrawal_not_recognised",
+    "exchange_charge",
+    "top_up_by_card_charge",
+    "activate_my_card",
+    "cash_withdrawal_charge",
+    "card_about_to_expire",
+    "apple_pay_or_google_pay",
+    "verify_my_identity",
+    "country_support"
+  ],
+  "providers": [
+    {
+      "id": "openai-decisions",
+      "name": "OpenAI Decisions",
+      "attempted": 154,
+      "planned_items": 154,
+      "complete": true,
+      "correct": 122,
+      "accuracy": 0.7922077922077922,
+      "accuracy_wilson_95": [
+        0.7214025989940445,
+        0.848789799583815
+      ],
+      "failures": 1,
+      "valid_wrong_labels": 31,
+      "failures_by_kind": {
+        "refusal": 1
+      },
+      "median_valid_wall_ms": 537.5100999954157,
+      "p95_valid_wall_ms": 887.2675999955391,
+      "median_all_wall_ms": 536.7129499973089,
+      "p95_all_wall_ms": 887.2675999955391,
+      "median_failed_wall_ms": 499.9783000021125,
+      "known_cost_count": 154,
+      "known_cost_subtotal_usd": 0.038146700000000006,
+      "total_cost_usd": 0.038146700000000006,
+      "mean_cost_per_attempt_usd": 0.0002477058441558442,
+      "cost_basis": {
+        "kind": "published-input-token estimate",
+        "usd_per_million_input_tokens": 0.1,
+        "source": "https://developers.openai.com/api/docs/guides/decisions",
+        "checked_on": "2026-10-07",
+        "excludes": "account discounts, allowances, regional premiums and invoice adjustments"
+      },
+      "by_intent": {
+        "Refund_not_showing_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "activate_my_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "age_limit": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "apple_pay_or_google_pay": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "atm_support": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "automatic_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "balance_not_updated_after_bank_transfer": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "balance_not_updated_after_cheque_or_cash_deposit": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "beneficiary_not_allowed": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "cancel_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_about_to_expire": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_acceptance": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_arrival": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_delivery_estimate": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "card_linking": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "card_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_fee_charged": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_not_recognised": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_wrong_exchange_rate": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_swallowed": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "cash_withdrawal_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "cash_withdrawal_not_recognised": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "change_pin": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "compromised_card": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "contactless_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "country_support": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_card_payment": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_transfer": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "direct_debit_payment_not_recognised": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "disposable_card_limits": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "edit_personal_details": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "exchange_charge": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "exchange_rate": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "exchange_via_app": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "extra_charge_on_statement": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "failed_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "fiat_currency_support": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 1
+        },
+        "get_disposable_virtual_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "get_physical_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "getting_spare_card": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "getting_virtual_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "lost_or_stolen_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "lost_or_stolen_phone": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "order_physical_card": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "passcode_forgotten": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_card_payment": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pin_blocked": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "receiving_money": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "request_refund": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "reverted_card_payment?": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "supported_cards_and_currencies": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "terminate_account": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_bank_transfer_charge": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "top_up_by_card_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_cash_or_cheque": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "top_up_failed": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_limits": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_reverted": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "topping_up_by_card": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "transaction_charged_twice": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_fee_charged": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_into_account": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_not_received_by_recipient": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_timing": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "unable_to_verify_identity": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "verify_my_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_source_of_funds": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "virtual_card_not_working": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "visa_or_mastercard": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "why_verify_identity": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "wrong_amount_of_cash_received": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "wrong_exchange_rate_for_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        }
+      }
+    },
+    {
+      "id": "jev-direct",
+      "name": "Jev Direct",
+      "attempted": 154,
+      "planned_items": 154,
+      "complete": true,
+      "correct": 127,
+      "accuracy": 0.8246753246753247,
+      "accuracy_wilson_95": [
+        0.7569296654592067,
+        0.8766174440717481
+      ],
+      "failures": 0,
+      "valid_wrong_labels": 27,
+      "failures_by_kind": {},
+      "median_valid_wall_ms": 762.4288000006345,
+      "p95_valid_wall_ms": 1365.7810000004247,
+      "median_all_wall_ms": 762.4288000006345,
+      "p95_all_wall_ms": 1365.7810000004247,
+      "median_failed_wall_ms": null,
+      "known_cost_count": 154,
+      "known_cost_subtotal_usd": 0.020978748,
+      "total_cost_usd": 0.020978748,
+      "mean_cost_per_attempt_usd": 0.00013622563636363636,
+      "cost_basis": {
+        "kind": "reported account charge",
+        "source": "response.usage.cost"
+      },
+      "by_intent": {
+        "Refund_not_showing_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "activate_my_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "age_limit": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "apple_pay_or_google_pay": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "atm_support": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "automatic_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "balance_not_updated_after_bank_transfer": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "balance_not_updated_after_cheque_or_cash_deposit": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "beneficiary_not_allowed": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "cancel_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_about_to_expire": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_acceptance": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_arrival": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_delivery_estimate": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "card_linking": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "card_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_fee_charged": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_not_recognised": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_wrong_exchange_rate": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "card_swallowed": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "cash_withdrawal_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "cash_withdrawal_not_recognised": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "change_pin": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "compromised_card": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "contactless_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "country_support": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "declined_card_payment": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_transfer": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "direct_debit_payment_not_recognised": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "disposable_card_limits": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "edit_personal_details": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "exchange_charge": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "exchange_rate": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "exchange_via_app": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "extra_charge_on_statement": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "failed_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "fiat_currency_support": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "get_disposable_virtual_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "get_physical_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "getting_spare_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "getting_virtual_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "lost_or_stolen_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "lost_or_stolen_phone": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "order_physical_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "passcode_forgotten": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_card_payment": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pin_blocked": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "receiving_money": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "request_refund": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "reverted_card_payment?": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "supported_cards_and_currencies": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "terminate_account": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_bank_transfer_charge": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "top_up_by_card_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_cash_or_cheque": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "top_up_failed": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_limits": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_reverted": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "topping_up_by_card": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "transaction_charged_twice": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_fee_charged": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_into_account": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_not_received_by_recipient": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_timing": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "unable_to_verify_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_my_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_source_of_funds": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "virtual_card_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "visa_or_mastercard": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "why_verify_identity": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "wrong_amount_of_cash_received": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "wrong_exchange_rate_for_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        }
+      }
+    },
+    {
+      "id": "clef-openrouter",
+      "name": "Clef via OpenRouter",
+      "attempted": 154,
+      "planned_items": 154,
+      "complete": true,
+      "correct": 146,
+      "accuracy": 0.948051948051948,
+      "accuracy_wilson_95": [
+        0.9008499436378805,
+        0.9734450675148372
+      ],
+      "failures": 0,
+      "valid_wrong_labels": 8,
+      "failures_by_kind": {},
+      "median_valid_wall_ms": 1432.473700002447,
+      "p95_valid_wall_ms": 2228.2380999968154,
+      "median_all_wall_ms": 1432.473700002447,
+      "p95_all_wall_ms": 2228.2380999968154,
+      "median_failed_wall_ms": null,
+      "known_cost_count": 154,
+      "known_cost_subtotal_usd": 0.12534696,
+      "total_cost_usd": 0.12534696,
+      "mean_cost_per_attempt_usd": 0.0008139412987012987,
+      "cost_basis": {
+        "kind": "reported account charge",
+        "source": "response.usage.cost"
+      },
+      "by_intent": {
+        "Refund_not_showing_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "activate_my_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "age_limit": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "apple_pay_or_google_pay": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "atm_support": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "automatic_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "balance_not_updated_after_bank_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "balance_not_updated_after_cheque_or_cash_deposit": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "beneficiary_not_allowed": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "cancel_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_about_to_expire": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_acceptance": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_arrival": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_delivery_estimate": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "card_linking": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_fee_charged": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_not_recognised": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_wrong_exchange_rate": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_swallowed": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "cash_withdrawal_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "cash_withdrawal_not_recognised": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "change_pin": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "compromised_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "contactless_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "country_support": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_card_payment": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_transfer": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "direct_debit_payment_not_recognised": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "disposable_card_limits": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "edit_personal_details": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "exchange_charge": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "exchange_rate": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "exchange_via_app": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "extra_charge_on_statement": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "failed_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "fiat_currency_support": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "get_disposable_virtual_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "get_physical_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "getting_spare_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "getting_virtual_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "lost_or_stolen_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "lost_or_stolen_phone": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "order_physical_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "passcode_forgotten": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_card_payment": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pin_blocked": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "receiving_money": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "request_refund": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "reverted_card_payment?": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "supported_cards_and_currencies": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "terminate_account": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_bank_transfer_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_card_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_cash_or_cheque": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_failed": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_limits": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_reverted": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "topping_up_by_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transaction_charged_twice": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_fee_charged": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_into_account": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_not_received_by_recipient": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_timing": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "unable_to_verify_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_my_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_source_of_funds": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "virtual_card_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "visa_or_mastercard": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "why_verify_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "wrong_amount_of_cash_received": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "wrong_exchange_rate_for_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        }
+      }
+    },
+    {
+      "id": "clef-flash-openrouter",
+      "name": "Clef Flash via OpenRouter",
+      "attempted": 154,
+      "planned_items": 154,
+      "complete": true,
+      "correct": 145,
+      "accuracy": 0.9415584415584416,
+      "accuracy_wilson_95": [
+        0.8926717495554031,
+        0.9689523194066956
+      ],
+      "failures": 2,
+      "valid_wrong_labels": 7,
+      "failures_by_kind": {
+        "invalid_or_malformed_response": 1,
+        "http_error": 1
+      },
+      "median_valid_wall_ms": 830.8725999995659,
+      "p95_valid_wall_ms": 1593.29009999783,
+      "median_all_wall_ms": 838.8103500001307,
+      "p95_all_wall_ms": 2032.4507000041194,
+      "median_failed_wall_ms": 4045.3753499969025,
+      "known_cost_count": 152,
+      "known_cost_subtotal_usd": 0.04639518,
+      "total_cost_usd": null,
+      "mean_cost_per_attempt_usd": null,
+      "cost_basis": {
+        "kind": "reported account charge",
+        "source": "response.usage.cost"
+      },
+      "by_intent": {
+        "Refund_not_showing_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "activate_my_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "age_limit": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "apple_pay_or_google_pay": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "atm_support": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 1
+        },
+        "automatic_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "balance_not_updated_after_bank_transfer": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "balance_not_updated_after_cheque_or_cash_deposit": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "beneficiary_not_allowed": {
+          "attempted": 2,
+          "correct": 0,
+          "failures": 0
+        },
+        "cancel_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_about_to_expire": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_acceptance": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_arrival": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_delivery_estimate": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "card_linking": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_fee_charged": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_not_recognised": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_payment_wrong_exchange_rate": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "card_swallowed": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "cash_withdrawal_charge": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "cash_withdrawal_not_recognised": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "change_pin": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "compromised_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "contactless_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "country_support": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_card_payment": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "declined_transfer": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "direct_debit_payment_not_recognised": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "disposable_card_limits": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "edit_personal_details": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "exchange_charge": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 0
+        },
+        "exchange_rate": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "exchange_via_app": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "extra_charge_on_statement": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "failed_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "fiat_currency_support": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "get_disposable_virtual_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "get_physical_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "getting_spare_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "getting_virtual_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "lost_or_stolen_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "lost_or_stolen_phone": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "order_physical_card": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "passcode_forgotten": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_card_payment": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pending_transfer": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "pin_blocked": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "receiving_money": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "request_refund": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "reverted_card_payment?": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "supported_cards_and_currencies": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "terminate_account": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_bank_transfer_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_card_charge": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_by_cash_or_cheque": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_failed": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_limits": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "top_up_reverted": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "topping_up_by_card": {
+          "attempted": 2,
+          "correct": 1,
+          "failures": 1
+        },
+        "transaction_charged_twice": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_fee_charged": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_into_account": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_not_received_by_recipient": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "transfer_timing": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "unable_to_verify_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_my_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_source_of_funds": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "verify_top_up": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "virtual_card_not_working": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "visa_or_mastercard": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "why_verify_identity": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "wrong_amount_of_cash_received": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        },
+        "wrong_exchange_rate_for_cash_withdrawal": {
+          "attempted": 2,
+          "correct": 2,
+          "failures": 0
+        }
+      }
+    }
+  ],
+  "paired": [
+    {
+      "first": "openai-decisions",
+      "second": "jev-direct",
+      "first_correct_second_wrong": 4,
+      "second_correct_first_wrong": 9,
+      "accuracy_difference": -0.032467532467532464,
+      "approximate_paired_95": [
+        -0.07821688893311489,
+        0.01328182399804996
+      ],
+      "mcnemar_exact_p": 0.266845703125,
+      "choice_disagreements": 18,
+      "mcnemar_holm_p": 0.53369140625
+    },
+    {
+      "first": "openai-decisions",
+      "second": "clef-openrouter",
+      "first_correct_second_wrong": 1,
+      "second_correct_first_wrong": 25,
+      "accuracy_difference": -0.15584415584415584,
+      "approximate_paired_95": [
+        -0.21608652754436658,
+        -0.0956017841439451
+      ],
+      "mcnemar_exact_p": 8.046627044677734e-07,
+      "choice_disagreements": 26,
+      "mcnemar_holm_p": 4.827976226806641e-06
+    },
+    {
+      "first": "openai-decisions",
+      "second": "clef-flash-openrouter",
+      "first_correct_second_wrong": 3,
+      "second_correct_first_wrong": 26,
+      "accuracy_difference": -0.14935064935064934,
+      "approximate_paired_95": [
+        -0.21391077428866373,
+        -0.08479052441263497
+      ],
+      "mcnemar_exact_p": 1.5236437320709229e-05,
+      "choice_disagreements": 32,
+      "mcnemar_holm_p": 7.618218660354614e-05
+    },
+    {
+      "first": "jev-direct",
+      "second": "clef-openrouter",
+      "first_correct_second_wrong": 1,
+      "second_correct_first_wrong": 20,
+      "accuracy_difference": -0.12337662337662338,
+      "approximate_paired_95": [
+        -0.1785271251061054,
+        -0.06822612164714134
+      ],
+      "mcnemar_exact_p": 2.09808349609375e-05,
+      "choice_disagreements": 22,
+      "mcnemar_holm_p": 8.392333984375e-05
+    },
+    {
+      "first": "jev-direct",
+      "second": "clef-flash-openrouter",
+      "first_correct_second_wrong": 3,
+      "second_correct_first_wrong": 21,
+      "accuracy_difference": -0.11688311688311688,
+      "approximate_paired_95": [
+        -0.17663140103476793,
+        -0.05713483273146584
+      ],
+      "mcnemar_exact_p": 0.0002771615982055664,
+      "choice_disagreements": 27,
+      "mcnemar_holm_p": 0.0008314847946166992
+    },
+    {
+      "first": "clef-openrouter",
+      "second": "clef-flash-openrouter",
+      "first_correct_second_wrong": 4,
+      "second_correct_first_wrong": 3,
+      "accuracy_difference": 0.006493506493506494,
+      "approximate_paired_95": [
+        -0.027273262476282714,
+        0.040260275463295706
+      ],
+      "mcnemar_exact_p": 1.0,
+      "choice_disagreements": 9,
+      "mcnemar_holm_p": 1.0
+    }
+  ],
+  "completed_at": "2026-10-07T21:10:00.434592+00:00"
+}

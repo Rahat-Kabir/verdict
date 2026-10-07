@@ -3,7 +3,7 @@
 import pytest
 
 from verdict_router.providers.base import Provider, ProviderError
-from verdict_router.runner import run_provider_suite
+from verdict_router.runner import run_bench, run_provider_suite
 from verdict_router.types import DatasetItem, DecisionResponse
 
 ITEM = DatasetItem("ticket", "Which team?", ["billing", "tech"], "charged twice", "billing")
@@ -95,3 +95,21 @@ def test_without_retry_records_only_one_attempt(clock):
     provider, record = run([response(0.02, None, "failed")], clock, retries=0)
     assert provider.calls == 1 and record.cost_usd == 0.02
     assert record.latency_ms == pytest.approx(100.0)
+
+
+@pytest.mark.parametrize("options", [{"concurrency": 0}, {"retries": -1}])
+def test_invalid_suite_options_fail_before_provider_calls(clock, options):
+    provider = SequenceProvider([response(0.02)], clock)
+    with pytest.raises(ValueError, match="must be at least"):
+        run_provider_suite(provider, "routing", (ITEM,), **options)
+    assert provider.calls == 0
+
+
+@pytest.mark.parametrize("options", [{"limit": 0}, {"limit": -1}, {"concurrency": 0}])
+def test_invalid_benchmark_options_fail_before_loading_data(monkeypatch, options):
+    def unexpected_load(suite):
+        pytest.fail("Invalid options must fail before dataset loading or provider creation")
+
+    monkeypatch.setattr("verdict_router.runner.load_suite", unexpected_load)
+    with pytest.raises(ValueError, match="must be at least"):
+        run_bench(**options)

@@ -1,5 +1,254 @@
 # Verdict progress
 
+## Current status
+
+The completed research result is the [balanced BANKING77 experiment](BANKING77_BALANCED.md):
+154 messages, 77 intent labels, and 616 API attempts. The homepage displays these
+results. The full-test plan was closed; earlier pilots and partial runs remain
+separate evidence. The user reports that the first blog post is published.
+No live study is active.
+
+Start with the [README](../README.md) for setup, the [report](BANKING77_BALANCED.md)
+for findings and limits, and [RESEARCH.md](RESEARCH.md) for the study rules.
+The dated entries below record what was known at each stage.
+
+## Repository publication — 2026-10-08
+
+- User reported that the blog is published and authorized staging, committing
+  and pushing the accumulated Verdict work to `main`.
+- Publication scope: dedicated adapters, BANKING77 tooling and reports, saved
+  research frontend, regression checks and clearer project documentation.
+  Raw dataset messages, local run evidence and credentials stay outside Git.
+
+## Project clarity and command checks — 2026-10-08
+
+- Put the completed experiment and definitions of message, intent label,
+  attempt, wrong decision and failure near the top of the README. Correct stale
+  evaluation claims and the count of saved evaluations. Explain the different
+  provider lists used by the research, playground and generic benchmark.
+- Align the package README, vision, research design and technical spec with
+  the completed exploratory sample. Shorten current vision status while keeping
+  earlier reports linked. Keep dated progress and research artifacts intact.
+- Make the README aggregation example write a fresh review summary. Change
+  the reporter example to a fresh path instead of an existing research report.
+- Reject zero/negative benchmark limits and zero/negative concurrency before
+  calls; reject negative retry counts in the Python runner. Correct the balanced
+  CLI's existing-run check to inspect its actual `execution` directory before
+  dataset or budget access. Remove an unsupported CLI help example.
+- Offline verification: 614 Python tests, Ruff, eight frontend tests and the
+  13-page static build passed. All 50 local links in 17 Markdown files resolve.
+  The balanced report, its public copy, saved result JSON and frozen label
+  definitions retain their SHA-256 hashes. One existing Starlette deprecation
+  warning remains; no dependency change was needed.
+- This command fix changes current runner source fingerprints. Completed study
+  evidence retains its original code snapshot; do not substitute current code
+  or replay the prepared October 8 run. No inference, deployment, commit or push.
+- Next: review the README as a new visitor, then publish the existing research
+  post with the experiment's limits visible.
+
+## First research post — 2026-10-08
+
+- Wrote the first full Verdict experiment post from the verified balanced report,
+  in the user's simple first-person style. Includes scope, results, collection
+  failures, labeled costs, overlap and small-sample limitations. Edited with the
+  no-ai-slop skill; no unsupported vendor-release or general-winner claims.
+- User selected Blog. Added
+  `D:/A_Semester_Break_2/rahat-portfolio/portfolio/src/content/blog/verdict-banking77-first-experiment/index.mdx`,
+  dated October 8. Existing Verdict learning entry stays intact. Checked draft
+  retained at [FIRST_RESEARCH_POST.md](FIRST_RESEARCH_POST.md).
+- Portfolio type check/static build passed; browser verified the article and
+  four-provider results table. Local preview runs on port 3010. No deployment,
+  commit, push, social publication or paid call. Next: review the article, then
+  prepare a shorter LinkedIn version after the portfolio link is published.
+
+## BANKING77 frontend — 2026-10-08
+
+- Homepage `/` now renders the balanced experiment, also available at `/banking77`.
+  Static `banking77-balanced.json` preserves all four audited provider summaries,
+  sample fingerprints, source revision and per-intent counts. Verified every
+  exported metric against the completed local summary. No raw messages or keys.
+- Show accuracy including failures, failure counts, valid-response median/p95
+  latency, cost basis and coverage, and Flash's unknown total/known subtotal.
+  Explain 154 messages, 77 intents, 616 attempts, 12 overlapping messages,
+  post-exploratory design and limited intent-level evidence. No ranking claim.
+- Keep the 24-ticket run at `/comparison` and earlier leaderboard at `/historical`.
+  Update navigation/methodology; serve the exact research MD at
+  `/research/banking77-balanced.md`, verified byte-for-byte against the saved report.
+- Site build and all eight frontend tests passed. Browser check confirmed results,
+  unknown-cost display and expandable per-intent table (77 rows); report and linked
+  study/archive/methodology routes return HTTP 200. Local preview is running.
+  No new inference, dependency, deployment, commit or push.
+- Next: write the research post using the saved report and the local results page.
+
+## Balanced BANKING77 results — 2026-10-08
+
+- Completed exactly 616 attempts on the frozen balanced sample: 154 messages per
+  API, two from every one of 77 intents. Twelve messages overlap earlier attempts;
+  all new observations are separate. No prompts, definitions or sample changes.
+- Offline report audit verified all 616 observations against source and native
+  requests/raw replies, with zero unfinished starts. Exact two-per-intent counts
+  and six paired comparisons verified. This is a completed sample, not a full
+  official test evaluation. [Balanced report](BANKING77_BALANCED.md).
+- OpenAI: 122/154 correct (79.22%), one refusal, median valid latency 538 ms,
+  $0.03814670 estimate. Jev: 127/154 (82.47%), zero failures, 762 ms,
+  $0.020978748 reported charge. Clef: 146/154 (94.81%), zero failures, 1,432 ms,
+  $0.12534696 reported charge. Flash: 145/154 (94.16%), two failures, 831 ms,
+  $0.04639518 known subtotal (152/154 billed); total remains unknown.
+- Flash's connection reset stopped collection at 141; temporary upstream capacity
+  HTTP 429/code 3040 stopped it at 292. Operator audits verified all prior
+  observations, unchanged code and original ledger before continuing only new
+  pairs. No failed pair was retried; unknown holds and earlier summaries remain.
+  The generic classifier labels ConnectError as invalid/malformed; the report
+  explicitly identifies it as a transport failure. No parser/code changed.
+- Combined known charge/estimate subtotal $0.230867588. Ledger cumulative spending
+  and holds (including all previous experiments) $0.993401588, OpenAI $0.162338.
+  These are accounting bases, not invoice totals. No credit purchase.
+- Full 605-test offline suite and Ruff passed before live collection. Final audit
+  and document review completed. No live process remains; no site, hosting,
+  dependency, historical record, commit or push changes.
+- Next: use the balanced report for a short research write-up. State that this
+  exploratory design followed earlier observations and has only two messages per
+  intent. Clef and Flash differ by one correct answer; avoid a decisive winner.
+
+## Balanced BANKING77 preparation — 2026-10-08
+
+- Approved separate 154-message / 616-call study: two random messages per intent,
+  seed 20261008, shuffled order frozen before calls; 12 messages overlap earlier
+  attempted test items. No earlier observations enter this study.
+- Added preparation/live CLI and sample-aware offline report validation. Exact
+  source indices, unchanged definitions, source hashes and code are frozen.
+  Reports distinguish sample completion from full-test completion.
+- Full offline suite (605 tests) and Ruff passed. Prepared manifest and code
+  snapshot are outside Git. Live collection used the existing ledger,
+  conservative pacing and no retries; no site/hosting/commit/push changes.
+
+## BANKING77 exploratory wrap-up — 2026-10-08
+
+- User requested stopping near 400–500 calls and wrapping up. By the stop request,
+  the fresh OpenRouter-route test had reached 964 finished calls: 241 messages
+  attempted once by each provider. Stopped the process; no further live calls.
+- Offline audit matched all 964 saved requests/replies to the pinned source and
+  frozen contract. Zero unfinished starts. Original manifest, events, snapshots,
+  earlier results and budget holds remain intact; a separate closure-reviewed
+  artifact records the user stop and recomputed metrics.
+- This source-order prefix covers only 7/77 intents, not a balanced or random
+  sample. It is an exploratory subset, not a completed full-test benchmark or
+  provider ranking. Training pilot results are excluded.
+- OpenAI: 209/241 correct (86.72%), zero failures, median valid latency 542 ms,
+  $0.06010910 published-token estimate. Jev: 213/241 (88.38%), zero failures,
+  757 ms, $0.032839842 reported charge. Clef: 233/241 (96.68%), zero failures,
+  1,388 ms, $0.19621488 reported charge. Flash: 236/241 (97.93%), one retained
+  rate-limit failure, 936 ms, $0.07327503 known reported subtotal for 240/241;
+  its total cost is unknown. Scheduling/cooldown waits are excluded from latency.
+- [Exploratory report](BANKING77_OPENROUTER.md) includes uncertainty, valid/all
+  latency, billing coverage, model identities and observed intent counts.
+  Existing 602-test/Ruff verification remains; this closure changes only docs
+  and derived evidence. No site update, hosting, credit purchase, commit or push.
+- Next: explain these bounded findings. A separately approved, frozen balanced
+  sample across all 77 intents would support a stronger small study; another
+  dataset and hosting remain later decisions.
+
+## Full BANKING77 through OpenRouter — 2026-10-08
+
+- User dropped the smaller-sample proposal and authorized the full official
+  3,080-message test across four APIs. Clef and Clef Flash move to OpenRouter;
+  native OpenAI and Jev Direct remain. Earlier pilot/test evidence is preserved
+  separately; no previous test observations enter the new study.
+- Added explicit `clef-openrouter`/`clef-flash-openrouter` adapters and registry
+  entries. Preserve shared state, complete instructions and all choices; pin
+  Cloudflare, disable fallbacks, validate model/upstream, explicit choice and
+  complete distribution. Retain raw response, usage and reported account charge.
+- All four routes passed one shared 77-choice training request live. The largest
+  training/test states are 433/368 UTF-8 bytes; definitions stay in instructions.
+  OpenRouter's roughly 2K-token state-truncation warning does not establish a
+  general long-context guarantee. No prompt/definition or label changes.
+- New 77-item training pilot stopped after 109 calls at an upstream per-minute
+  rate limit (Cloudflare 3021), then continued only unattempted pairs. Preserve
+  that HTTP failure and its unknown-cost hold. Before primary testing, added
+  three-second call spacing and a 60-second cooldown for this specific rejection;
+  no failed attempt is replayed and scheduling waits are outside call latency.
+  Other unknown billing/access failures still stop. Original pilot manifest and
+  previous summary remain in dated continuation evidence.
+- User lifted initial budget concerns for full completion. Explicit operator
+  limits are $10 overall/$2 OpenAI, recorded with authorization in the existing
+  ledger while preserving all earlier charges and uncertain holds. User asked
+  to use existing OpenRouter credits first; no credit purchase is authorized or
+  performed. HTTP payment stops retain attempts and require funding resolution.
+- Windows progress-file reads briefly blocked snapshot replacement after 199
+  completed calls. Added bounded local write retries, with no provider retries.
+  Reparsed all 199 replies and native requests against source rows, verified
+  zero unfinished attempts, preserved earlier snapshots in recovery evidence,
+  and reconstructed only derived progress/summary before continuing.
+- The route-specific training pilot completed all 308 calls: OpenAI 62/77 correct
+  with two typed refusals; Jev 64/77; Clef 68/77; Flash 70/77 with one retained
+  rate-limit failure and unknown cost. Known charge/estimate subtotal $0.11559206;
+  Flash's total remains unknown. All 308 replies were verified offline. Pilot
+  results are training evidence and never enter primary test metrics.
+- Offline verification: 602 tests passed and Ruff passed. Route-specific replay,
+  exact shared payloads, no inferred answers/retries, unknown charges/holds,
+  pacing outside provider timing, constrained operational amendments and durable
+  HTTP continuation and bounded Windows write recovery are covered. The fresh
+  full 12,320-call test started; the later user-requested closure above supersedes its running status. No site data, historical records, dependencies,
+  hosting, commit or push changed.
+
+## Native OpenAI and BANKING77 study preparation — 2026-10-07
+
+- Replaced the provisional OpenAI payload/parser with the documented native
+  `gpt-6-luna` choice contract. Validate the matching named typed answer and
+  full distribution; refusals fail without inferring a label. Retain raw JSON,
+  usage, reported model and input-token cost estimate on parsed failures.
+- Imported the pinned authors' BANKING77 sources locally outside Git, retaining
+  hashes and CC-BY-4.0 attribution. Verified 10,003 train and 3,080 test rows,
+  77 labels, 40 test rows per label, zero exact split overlap, seven normalized
+  overlapping texts, four extra normalized train duplicates and one test
+  duplicate, with no normalized conflicting labels. Official labels are intact.
+- Reviewed candidate definitions against training examples; documented that
+  `get_physical_card` refers to PIN retrieval in this source. No test predictions
+  or examples informed definitions. All four providers accepted the same
+  77-choice training request live; first access checks totaled $0.001502648 on
+  their recorded charge/estimate bases, including $0.0002489 OpenAI estimate.
+- Added CLI preflight, study, persistent-budget and offline report/audit scripts.
+  Study evidence includes pinned sources, code/protocol/definition hashes,
+  native requests, raw replies, usage, wall timing and durable start/finish events.
+  Preserve uncertain-call holds; never automatically replay interrupted attempts.
+- User approved live study calls, then specified $5 overall/$1 OpenAI ceilings.
+  The shared ledger counts prior checks, pilot and final evaluation conservatively
+  using reported charges or published estimates, without assuming free credits
+  make token cost zero. Region/account invoice adjustments remain unverified.
+- Training pilot completed 308 calls: OpenAI 62/77 correct with two typed
+  refusals, Jev 64/77, Clef 68/77, Flash 71/77; the latter three had no response
+  failures. These training figures are not test rankings. Pilot cost was
+  $0.11589806 on separate provider bases; cumulative budget accounting was
+  $0.117400708 overall and $0.0194539 OpenAI. All pilot observations were
+  matched to source rows and raw responses were reparsed offline.
+- Fixed the pre-test readiness gate to allow typed refusals as measured failures,
+  while requiring compatible responses, known billing and frozen decision-code,
+  question, protocol and definition hashes. Both runner hashes record this gate
+  change. The full test run started with unchanged decision inputs and protocol.
+- Test evaluation stopped after 406 attempts when Clef returned HTTP 429 for the
+  account's exhausted 10,000-neuron daily free allocation. It contains 101 complete
+  matched items and two attempts on the next item, not a full-test ranking. All
+  406 observations were matched to official rows and reparsed offline. See
+  [incomplete test report](BANKING77.md); no test-based prompt or label tuning.
+- Shared budget accounting after the stop: $0.27487884 overall, $0.0446283 OpenAI,
+  including a retained $0.00539952 unknown-cost Clef hold. Known charge/estimate
+  subtotal is $0.26947932. Free quota, not the monetary cap, blocks completion;
+  Cloudflare resets the allocation at 00:00 UTC (06:00 Bangladesh).
+- Added explicit `--resume` for a documented quota stop: block same-day calls,
+  require frozen source/decision/protocol/definition fingerprints, reject uncertain
+  interrupted starts, append only unattempted pairs, retain failed attempts/holds,
+  and preserve original manifests/events plus previous summaries in dated
+  continuation notes. This is an operational protocol amendment for multi-day
+  collection; it does not replay failures or change decision inputs. Dry-run
+  confirms 11,914 remaining calls. No continuation calls made today.
+- Final verification: 565 offline tests passed, Ruff passed, documentation links
+  and Git whitespace checks passed. Pilot (308) and test-prefix (406) raw replies
+  were replayed offline with matching source rows and summary arithmetic; no
+  unfinished starts. Verified the existing budget ledger, rejected a fresh ledger
+  in offline tests, and confirmed the live CLI's same-day quota guard makes zero
+  new calls. No historical records, site data, new dependencies, hosting, commit
+  or push changed in this implementation slice.
+
 ## First research study narrowed to BANKING77 — 2026-10-07
 
 - Confirmed the first study: native OpenAI Decisions, Jev Direct, Clef, and

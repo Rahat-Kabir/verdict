@@ -2,6 +2,95 @@
 
 ## Offline first
 
+Run commands from `python/`. For the full offline check:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\ruff.exe check src tests scripts
+```
+
+Native OpenAI and BANKING77 study checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_openai_decisions.py tests/test_banking77_preflight.py tests/test_banking77_budget.py tests/test_banking77_study.py
+```
+
+They cover the typed 77-choice request, matching answer identity, refusals,
+invalid choices/distributions, retained raw/usage/known failure cost, separate
+input-only pricing, persistent $5 overall/$1 OpenAI limits, uncertain-call holds,
+durable start/finish evidence, rotated order, no replay, failed/wrong-label
+separation, timing, paired statistics and partial-run reporting. All use fake
+credentials/providers. Live access is separate evidence, not established by tests.
+
+## BANKING77 operator workflow
+
+The completed study is the [balanced 154-message experiment](BANKING77_BALANCED.md).
+The full-test runs below were stopped and remain separate evidence. These commands
+describe the operator tools; they are not instructions to restart those runs.
+Any new collection needs its own approved scope and fresh evidence directory.
+
+Run from `python/` using a permitted local source directory outside Git. Both
+commands default to offline inference mode, though missing pinned dataset sources
+are downloaded and checksum-verified. Use fresh output folders:
+
+```powershell
+$banking77Data = "C:\Users\User\.codex\private-datasets\verdict\banking77\57ec275d8078af65b7731c2a98be812d844a6d6b"
+$banking77Runs = "C:\Users\User\.codex\private-datasets\verdict\banking77\runs"
+.\.venv\Scripts\python.exe scripts/banking77_preflight.py --data-dir $banking77Data --out-dir "$banking77Runs\new-audit"
+.\.venv\Scripts\python.exe scripts/banking77_study.py --phase pilot --data-dir $banking77Data --out-dir "$banking77Runs\new-pilot-plan"
+```
+
+Approved live study commands add `--live --budget-db <shared-ledger>`. First
+ledger creation also needs `--seed-preflight <existing-evidence.log>` so prior
+checks count toward the same budget. Never create a fresh ledger to reset spend.
+The pilot makes 308 calls (one training example per intent across four providers).
+A test run uses `--phase test --pilot-evidence <completed-pilot-folder>` and checks
+matching decision-code, protocol, question and definition hashes, compatible
+responses and complete billing. Typed refusals remain counted failures; they do
+not require a perfect pilot. Both runner hashes are retained when the readiness
+gate changes. It evaluates all 12,320 planned provider/item calls, with no
+client retries or cached decisions. `manifest.log`, `events.log`, `status.log`
+and `summary.log` remain local; primary results are not the synthetic/site archive.
+
+An unknown charge or HTTP failure stops the study; budget holds persist after
+interruption. The byte-based pre-call holds are conservative planning estimates,
+not guaranteed invoice ceilings. Do not replay an interrupted started attempt.
+Inspect durable events and the ledger before considering further calls. See
+[Research design](RESEARCH.md) for the protocol and separate cost bases.
+
+After a documented Cloudflare daily quota stop, preview the remaining schedule
+without calls, using the existing test folder:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/banking77_study.py --phase test --data-dir $banking77Data --out-dir "$banking77Runs\2026-10-07-test-v1" --pilot-evidence "$banking77Runs\2026-10-07-pilot-v1" --resume
+```
+
+For the approved continuation after the daily reset, add `--live` and
+`--budget-db "C:\Users\User\.codex\private-datasets\verdict\banking77\research-budget.sqlite3"`.
+The command blocks same-UTC-day resumes before provider calls, validates frozen
+source/decision/protocol/definition fingerprints, rejects uncertain unfinished
+starts, and calls only unattempted pairs. The failed quota response remains a
+failure with unknown cost; its budget hold remains. Original manifests and
+raw events are preserved, events are appended, and a dated continuation note
+retains the previous summary and new runner fingerprints. This is a documented
+operational amendment for collection across daily windows, not an item retry.
+The October 7 stop left 11,914 calls. Do not restart in a new folder/ledger to
+replay completed items or reset spending.
+
+The saved-evidence audit/reporter makes no network requests or inference calls:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/banking77_report.py --run-dir "$banking77Runs\completed-study" --data-dir $banking77Data --out "$banking77Runs\new-reviewed-report.md"
+```
+
+It verifies source hashes, start/finish uniqueness, official row/label identity,
+native requests and raw response replay with fake credentials, then independently
+recomputes saved summaries. Partial or interrupted evidence is labeled explicitly.
+`tests/test_banking77_report.py` covers changed inputs, prompts, answers, billing,
+incorrect correctness flags, duplicate records and interrupted starts.
+
+## Existing adapter checks
+
 Cloudflare adapter checks: `python -m pytest tests/test_cloudflare.py`. Mocked
 Workers AI envelopes cover payloads for both models, distributions, confidence,
 estimated billing, missing credentials, account cache isolation, malformed/error
@@ -181,7 +270,47 @@ A live report must name the actual endpoint/model, dataset and run settings,
 success/error counts, pricing basis, and remaining uncertainty. Establish parser,
 accounting, dataset, and provenance quality before publishing stronger rankings.
 
-## Documentation-only changes
+## Full BANKING77 through OpenRouter (authorized October 8)
+
+The roster is native OpenAI Decisions, Jev Direct, `clef-openrouter` and
+`clef-flash-openrouter`. The pinned dataset and frozen definitions are unchanged;
+the October 7 pilot and quota-stopped test remain separate evidence. A fresh
+77-item training pilot gates a fresh 3,080-item test (12,320 primary calls).
+Run from `python/` with the existing environment:
+
+```powershell
+$bankingData = 'C:\Users\User\.codex\private-datasets\verdict\banking77\57ec275d8078af65b7731c2a98be812d844a6d6b'
+$bankingRuns = 'C:\Users\User\.codex\private-datasets\verdict\banking77\runs'
+$bankingLedger = 'C:\Users\User\.codex\private-datasets\verdict\banking77\research-budget.sqlite3'
+.\.venv\Scripts\python.exe scripts/banking77_study.py --phase pilot --data-dir $bankingData --out-dir "$bankingRuns\2026-10-08-openrouter-pilot-v1" --cloudflare-route openrouter --budget-db $bankingLedger --max-cost-usd 10 --live
+.\.venv\Scripts\python.exe scripts/banking77_study.py --phase test --data-dir $bankingData --out-dir "$bankingRuns\2026-10-08-openrouter-test-v1" --cloudflare-route openrouter --pilot-evidence "$bankingRuns\2026-10-08-openrouter-pilot-v1" --budget-db $bankingLedger --max-cost-usd 10 --live
+.\.venv\Scripts\python.exe scripts/banking77_report.py --run-dir "$bankingRuns\2026-10-08-openrouter-test-v1" --data-dir $bankingData --out "$bankingRuns\2026-10-08-openrouter-test-v1\report-reviewed.md"
+```
+
+Existing folders/reports are never replaced. These are the actual run paths;
+commands cannot start them again once created. Append `--resume` to the test
+command only after resolving a recorded HTTP access failure. The same option
+can continue an interrupted-by-HTTP pilot. Finished attempts,
+including failures, are never replayed; unresolved interrupted starts block
+continuation. Frozen fingerprints and the existing cumulative ledger are checked.
+For a fresh future run, use fresh pilot/test directories and repeat verification.
+
+The operator changed cumulative limits to $10 overall/$2 OpenAI using explicit
+`--overall-limit-usd`, `--openai-limit-usd`, and `--limit-authorization` options,
+following the user's full-study authorization. The ledger retains a dated limit
+change and every earlier charge/hold. Missing billing still stops the run.
+Existing credits are used first; the script never purchases credits. Default
+spacing is three seconds between call starts. A Cloudflare upstream HTTP 429
+with code 3021 and the explicit per-minute-limit message retains the failure
+and unknown-cost hold, cools down for 60 seconds, and continues only unattempted
+pairs. Other unknown billing/HTTP failures stop. The spacing/cooldown are outside
+provider wall timing; the manifest and continuation notes disclose the amendment.
+
+The model catalog's roughly 2K-token state-truncation warning applies to text
+state. Audited maximum training/test states are 433/368 UTF-8 bytes; definitions
+remain in question instructions. This does not verify arbitrary long-context use.
+
+### Documentation-only verification
 
 Check relative Markdown links, referenced paths, command working directories,
 and the diff. No runtime test rerun is needed unless code/configuration changed
@@ -199,3 +328,39 @@ or the documentation claims a newly verified behavior. Keep CLAUDE as `@AGENTS.m
 - Moderation data contains hate-speech examples. Future live runs may produce
   refusals even though the historical snapshot recorded none. Count refusals and
   failed responses explicitly; do not silently turn them into successful labels.
+
+## Separate balanced BANKING77 sample
+
+`python/scripts/banking77_balanced.py` prepares a frozen 154-message test sample
+without inference by default. Seed 20261008 selects two messages from each
+intent, then shuffles their order. Preparation records prior test overlap and
+verifies the completed compatible training pilot. Live execution consumes the
+prepared manifest and rejects changed inputs/code or an already-started run.
+It uses the existing budget ledger and the same sequential, paced call runner.
+No automatic sample restart is implemented; interrupted attempts require audit.
+
+Run from `python/`, using fresh external output paths. The example paths are
+placeholders; the October 8 prepared folder must not be reused for another run.
+
+```powershell
+.\.venv\Scripts\python.exe scripts/banking77_balanced.py --data-dir <pinned-data-folder> --out-dir <fresh-sample-folder> --pilot-evidence <completed-pilot-folder>
+# Separately authorized live phase, using that same prepared folder:
+.\.venv\Scripts\python.exe scripts/banking77_balanced.py --data-dir <pinned-data-folder> --out-dir <prepared-sample-folder> --pilot-evidence <completed-pilot-folder> --budget-db <existing-ledger> --live
+# Offline source/request/reply audit and fresh report:
+.\.venv\Scripts\python.exe scripts/banking77_report.py --data-dir <pinned-data-folder> --run-dir <prepared-sample-folder>\execution --out <fresh-report.md>
+```
+
+Sample reports validate deterministic selection and reject observations outside
+the frozen indices. They report paired comparisons and all intent counts when
+the sample completes, while always distinguishing it from the full test split.
+Only two messages per intent and previously observed overlap limit conclusions.
+
+October 8 operator continuations retained a finished ConnectError at 141 attempts
+and a temporary-capacity HTTP 429/code 3040 at 292 attempts. Each continuation
+replayed all saved replies offline, rejected unfinished starts, compared the
+recomputed summary, checked every manifest code hash and validated original
+ledger costs/holds. Continuation notes preserve prior summaries. The capacity
+stop had a 60-second pause; no failed pair was retried. This was a reviewed
+operator workflow, not an automatic CLI resume feature. The frozen runner's
+generic failure classifier puts ConnectError in invalid/malformed; the report
+explicitly labels its actual transport cause.

@@ -32,6 +32,10 @@ def run_provider_suite(
     retries: int = 1,
     progress: bool = True,
 ) -> list[Record]:
+    if concurrency < 1:
+        raise ValueError("concurrency must be at least 1")
+    if retries < 0:
+        raise ValueError("retries must be at least 0")
     records: list[Record] = [None] * len(items)  # type: ignore[list-item]
 
     def work(idx: int) -> None:
@@ -131,8 +135,11 @@ def run_bench(
     concurrency: int = 1,
     out_dir: Path = Path("results"),
 ) -> dict[str, list[Record]]:
-    """Run the matrix; skip providers that raise ProviderError (missing keys,
-    preview-gated endpoints) with a printed notice — never crash the run."""
+    """Run the matrix, skipping unavailable providers with a printed notice."""
+    if limit is not None and limit < 1:
+        raise ValueError("limit must be at least 1")
+    if concurrency < 1:
+        raise ValueError("concurrency must be at least 1")
     providers = providers or BENCHMARK_PROVIDERS
     suites = suites or BUNDLED_SUITES
     # Resolve every requested input before contacting any provider. Missing private
@@ -151,7 +158,7 @@ def run_bench(
             continue
         for suite in suites:
             items = suite_items[suite]
-            if limit:
+            if limit is not None:
                 items = items[:limit]
             print(f"[bench] {provider_name} on {suite} ({len(items)} items)")
             try:

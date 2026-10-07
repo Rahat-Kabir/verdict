@@ -42,8 +42,10 @@ adapter or passing test suite does not establish a trustworthy provider ranking.
 - `runner.py` evaluates bundled or explicitly configured local JSONL suites and writes per-provider/suite
   records to `results/`; `metrics.py` aggregates them.
 - `router.py` combines provider fallback, exact caching, and optional escalation.
-- `site/`: Astro 5 static site reading `site/src/data/results.json`; it makes no
-  inference calls for saved results. Aggregate results explicitly before rebuilding.
+- `site/`: Astro 5 static site. The homepage/BANKING77 page reads the separately
+  verified `site/src/data/banking77-balanced.json`; historical pages read
+  `site/src/data/results.json`. Saved pages make no inference calls. Preserve
+  study identities and cost bases; aggregate historical results explicitly before rebuilding.
 - Local playground: optional FastAPI API in `playground_api.py` and persistent
   SQLite limits in `playground_limits.py`; Astro dev proxies `/api` to localhost:8000.
   Default demo fixtures make no inference calls. Live mode requires explicit
@@ -100,6 +102,10 @@ See `docs/testing.md` for focused tests, previews, aggregation, and live command
   presented as calibrated correctness; keep it distinct from Jev Router results.
 - Clef/Flash are explicit-only Workers AI text-choice adapters. Their costs are
   published-input-token estimates; Cloudflare credentials remain server-side.
+- `clef-openrouter`/`clef-flash-openrouter` are separate native decision routes
+  with reported account charges. Keep their identity and gateway latency separate
+  from direct Workers AI evidence. BANKING77 records scheduling/cooldown rules
+  and retains every failed attempt and unknown-cost hold without retries.
 - Treat unknown cost or confidence as unknown; do not claim zero cost or a
   calibrated probability without evidence. Current code has exceptions listed
   in PROGRESS; those are bugs to fix, not conventions to copy.
@@ -172,8 +178,8 @@ IMPORTANT: follow these naming rules strictly. Clarity is the top priority.
   suggestions are welcome.
 - Do not run `verdict bench`, remote `verdict decide`, or the nightly workflow
   without approval for the provider, scope, and spend.
-- Do not describe the real OpenAI Decisions adapter as verified: its response
-  contract is provisional and there are no native benchmark records.
+- Distinguish native OpenAI adapter/access verification from completed study
+  evidence. Consult PROGRESS before claiming a full benchmark or provider ranking.
 - Do not present existing rankings, estimated prices, or ECE as proof of
   production reliability. Consult PROGRESS for their limitations.
 

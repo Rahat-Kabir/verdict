@@ -28,6 +28,11 @@ def test_adapters_keep_requested_and_reported_model_separate(monkeypatch, kind, 
         "choices": [{"message": {"content": '"billing"'}}],
         "message": {"content": '"billing"'},
         "answer": "billing",
+        "answers": [{"type": "choice", "name": "decision", "choice": "billing",
+                     "confidence": 0.9, "probabilities": [
+                         {"value": "billing", "probability": 0.9},
+                         {"value": "technical", "probability": 0.1},
+                     ]}],
         "usage": {"cost": 0},
     }
     if reported is not None:

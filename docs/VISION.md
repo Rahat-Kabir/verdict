@@ -5,10 +5,12 @@ compare on the same labeled finite-choice tasks. Verdict is a research project
 supported by a Python evaluation harness, router SDK, static results site, and
 local playground that developers can use to explore decisions.
 
-The first study compares OpenAI Decisions, Jev Direct, Clef, and Clef Flash on
-the untouched BANKING77 test split using frozen shared label definitions.
+The completed exploratory study compares OpenAI Decisions, Jev Direct, Clef,
+and Clef Flash on a balanced BANKING77 test sample with frozen shared label
+definitions. It uses 154 messages, two per intent, and makes 616 API attempts.
 Its four outcomes are accuracy, failures, latency, and clearly labeled cost.
-See [Research design](RESEARCH.md) for scope, fairness rules, and pending work.
+The original full-test plan was closed before this separate experiment.
+See the [results](BANKING77_BALANCED.md) and [research design](RESEARCH.md).
 
 ## Intended users and value
 
@@ -33,11 +35,19 @@ The local playground uses an Astro form, Python API, and SQLite call/spending
 controls. It defaults to demo fixtures and has limited live smoke evidence.
 Public hosting and visitor abuse controls remain unimplemented.
 
-Jev Direct, Clef, and Clef Flash have synthetic live evidence, including the
-October 2 pilot. Native OpenAI Decisions still has a provisional adapter with
-no verified successful native benchmark records. BANKING77 import and evaluation
-remain pending. Historical results are retained separately; the existing site
-does not yet answer the new research question.
+The [balanced BANKING77 report](BANKING77_BALANCED.md) is the current research
+result. Dataset inputs, shared definitions, selection and requests were frozen;
+all 616 observations were verified offline. Two messages per intent and 12
+previously attempted messages limit the conclusions. No live run remains active.
+
+Earlier evidence remains separate: the [direct Workers AI partial run](BANKING77.md),
+the [OpenRouter partial run](BANKING77_OPENROUTER.md), and the
+[synthetic comparison](decision_comparison.md). The full-test plan was closed
+before the balanced experiment. No earlier observations were pooled into it.
+
+The site presents the balanced experiment at `/` and `/banking77`. Earlier
+comparisons remain accessible. This provides initial evidence for the research
+question, not a complete benchmark or production-readiness claim.
 
 ## What would establish value
 
@@ -49,10 +59,12 @@ does not yet answer the new research question.
 
 ## Priorities and boundaries
 
-Correct measurement comes before more features. First audit BANKING77, align the
-native OpenAI contract, and verify evidence capture and run controls offline.
-Live access checks, pilots, and full evaluation require separate scope/spend
-approval. Keep previous measurements intact and write new study artifacts.
+Correct measurement comes before more features. BANKING77 source audit, native
+OpenAI alignment, and offline study evidence/run-control verification are done.
+The user approved the full live study and subsequently lifted the initial budget
+concerns. Retain cumulative accounting and uncertain holds; use existing credits
+first and stop on unknown billing/access failures. No automatic credit purchase.
+Keep previous measurements intact and write fresh study artifacts.
 
 After reporting BANKING77, select a second dataset to test generalization.
 Hosting, additional providers, confidence-based routing research, and product

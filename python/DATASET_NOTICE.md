@@ -12,10 +12,21 @@ IDs were not retained in the original samples. Source terms checked 2026-10-01:
 | routing / bundled | [Customer support tickets, Tobi Bueck](https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets) | [CC-BY-NC-4.0](https://creativecommons.org/licenses/by-nc/4.0/), separately from the code's MIT license. |
 | moderation / local only | [TweetEval, Cardiff NLP](https://huggingface.co/datasets/cardiffnlp/tweet_eval#licensing-information) | Hate/HateEval requires permission and refers to Twitter terms. Raw text is excluded from this repository, publishable history, and Python distributions. |
 | agent_next_action / bundled | Verdict's seeded tool-selection templates | Project-generated examples, covered by the MIT license. |
+| BANKING77 / local study only | [PolyAI-LDN task-specific datasets](https://github.com/PolyAI-LDN/task-specific-datasets/tree/57ec275d8078af65b7731c2a98be812d844a6d6b/banking_data) | [CC-BY-4.0](https://github.com/PolyAI-LDN/task-specific-datasets/blob/57ec275d8078af65b7731c2a98be812d844a6d6b/LICENSE). Pinned source CSVs and raw study evidence stay outside Git/packages. |
 
 Transformations include sampling, truncating text, mapping labels, and formatting
 finite-choice requests. Builders can fall back to generated examples, but the
 original files lack source manifests; do not infer permission from that fallback.
+
+The BANKING77 study separately preserves the complete official 3,080-row test
+split and original labels without truncation or relabeling. Its 77-item pilot
+selects the first training row per intent. Shared definitions are Verdict-authored,
+reviewed against training examples; source revision and file hashes are retained.
+Attribution: Iñigo Casanueva, Tadas Temčinas, Daniela Gerz, Matthew Henderson and
+Ivan Vulić, *Efficient Intent Detection with Dual Sentence Encoders*, 2020.
+Consult the [authors' repository](https://github.com/PolyAI-LDN/task-specific-datasets)
+for the paper and dataset notices. The code's MIT license does not relicense
+third-party dataset text.
 
 ## Attribution for the bundled routing samples
 

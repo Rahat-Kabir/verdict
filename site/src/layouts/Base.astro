@@ -6,11 +6,12 @@ interface Props {
   description?: string;
 }
 const { title, description = "Experimental finite-choice AI evaluation harness and router SDK, with historical benchmark results." } = Astro.props;
-const path = Astro.url.pathname === "/" ? "/comparison" : Astro.url.pathname;
+const path = Astro.url.pathname === "/" ? "/banking77" : Astro.url.pathname;
 const nav = [
+  ["/banking77", "Research results"],
   ["/playground", "Playground"],
   ["/historical", "Historical results"],
-  ["/comparison", "Comparison"],
+  ["/comparison", "Earlier comparison"],
   ["/methodology", "Methodology"],
 ];
 ---

@@ -13,10 +13,23 @@ from .ollama import OllamaProvider
 from .openai_chat import OpenAIChatProvider
 from .openai_decisions import OpenAIDecisionsProvider, OpenAIDecisionsProxyProvider
 from .openrouter import OpenRouterProvider
+from .openrouter_decisions import OpenRouterDecisionProvider
 
 # Human-facing metadata rendered on the site. `label` values with "proxy" get a
 # visible disclaimer badge so proxy numbers are never mistaken for the real API.
 PROVIDER_META: dict[str, dict] = {
+    "clef-openrouter": {
+        "display_name": "Clef via OpenRouter", "vendor": "Cloudflare (via OpenRouter)",
+        "model": "cloudflare/clef", "kind": "native-decision",
+        "description": "Cloudflare typed choices via OpenRouter Decisions; costs use reported account charges.",
+        "url": "https://openrouter.ai/cloudflare/clef", "labels": ["openrouter", "experimental"],
+    },
+    "clef-flash-openrouter": {
+        "display_name": "Clef Flash via OpenRouter", "vendor": "Cloudflare (via OpenRouter)",
+        "model": "cloudflare/clef-flash", "kind": "native-decision",
+        "description": "Cloudflare typed choices via OpenRouter Decisions; costs use reported account charges.",
+        "url": "https://openrouter.ai/cloudflare/clef-flash", "labels": ["openrouter", "experimental"],
+    },
     "clef": {
         "display_name": "Clef", "vendor": "Cloudflare", "model": "@cf/cloudflare/clef",
         "kind": "native-decision",
@@ -119,21 +132,24 @@ PROVIDER_META: dict[str, dict] = {
     "openai-decisions": {
         "display_name": "OpenAI Decisions API",
         "vendor": "OpenAI",
-        "model": "luna (provisional adapter)",
-        "kind": "provisional-adapter",
+        "model": "gpt-6-luna",
+        "kind": "native-decision",
         "description": (
-            "Provisional adapter for /v1/decisions. Successful live response handling "
-            "has not been verified; there are no native benchmark records. "
+            "Native typed choice adapter for /v1/decisions, aligned with the public-beta contract. "
+            "Costs are standard input-token estimates; live compatibility is recorded separately. "
+            "No full BANKING77 benchmark records. "
             "Excluded from the default benchmark roster."
         ),
-        "url": None,
-        "labels": ["provisional"],
+        "url": "https://developers.openai.com/api/docs/guides/decisions",
+        "labels": ["experimental"],
     },
 }
 
 
 def build_provider(name: str) -> Provider:
     """Construct a provider by friendly name. Raises ProviderError for unknown names."""
+    if name in ("clef-openrouter", "clef-flash-openrouter"):
+        return OpenRouterDecisionProvider(model=name.removesuffix("-openrouter"))
     if name in ("clef", "clef-flash"):
         return CloudflareDecisionProvider(model=name)
     if name == "jev-direct":
@@ -175,6 +191,7 @@ __all__ = [
     "OpenAIChatProvider",
     "OpenAIDecisionsProvider",
     "OpenAIDecisionsProxyProvider",
+    "OpenRouterDecisionProvider",
     "OpenRouterProvider",
     "Provider",
     "ProviderError",

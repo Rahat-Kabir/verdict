@@ -5,9 +5,32 @@
 Verdict is an experimental research project comparing dedicated decision APIs
 from OpenAI, TypeSafe/Jev, and Cloudflare on the same labeled finite-choice
 tasks. It measures decision accuracy, failures, latency, and cost, and provides
-a Python evaluation harness and playground for exploring the results. The same
-question, allowed answers, and input go to every provider; the comparison
-covers each model's choice, failures, response time, and cost.
+a Python evaluation harness and playground for exploring the results.
+Each provider receives the same question, input, and allowed answers.
+
+## Start with the research
+
+The completed [BANKING77 experiment](docs/BANKING77_BALANCED.md) compares
+OpenAI Decisions, Jev Direct, Clef, and Clef Flash. Clef and Clef Flash were
+accessed through OpenRouter. The experiment used 154 test messages, two for
+each of BANKING77's 77 intent labels.
+
+| Term | Meaning in this experiment |
+| --- | --- |
+| Message or test case | One banking request with a known correct label; 154 unique messages |
+| Intent label | One allowed answer; all 77 labels are available for every message |
+| API attempt | One API call for one message; 154 messages × 4 APIs = 616 attempts |
+| Correct decision | The API returns the expected label |
+| Wrong decision | The API returns a valid label, but it is not the expected label |
+| Failure | The API refuses, returns an invalid response, or fails to respond successfully |
+
+This is a small exploratory sample. It does not cover the full 3,080-message
+test split. Twelve messages were attempted in earlier runs; those earlier
+results were not pooled with this experiment. The report includes accuracy,
+failures, latency, cost sources, and missing billing information.
+
+Read the [results and limitations](docs/BANKING77_BALANCED.md), then the
+[research design](docs/RESEARCH.md) for the collection and analysis rules.
 
 For example:
 
@@ -53,17 +76,25 @@ for paid calls. SQLite persists call and spending limits. See
 [playground setup](docs/playground.md) for configuration and operating limits.
 Public hosting and visitor abuse controls remain unimplemented.
 
+The playground has a different provider list from the BANKING77 study. Nano
+is a chat baseline, and its Clef adapters use Workers AI directly. Playground
+outputs are separate from the saved research results.
+
 The dev server proxies `/api` to the Python service. A static build or
 `npm run preview` displays saved pages but does not provide the playground API.
 
 ## Explore saved results
 
-The site has two separate evaluations, both displayed without inference calls:
+The site displays three separate evaluations without inference calls:
 
 - **Historical results** (`/historical`): six model/pipeline entries across four task suites.
   These records predate parser and accounting fixes; raw outputs were not saved,
   so they cannot be revalidated with the current parser or repriced offline.
-- **Decision comparison** (`/`, also `/comparison`): an October 2, 2026 run on 24 authored
+- **BANKING77 research** (`/`, also `/banking77`): the October 8 balanced exploratory
+  study, with 154 messages across 77 intents and 616 verified attempts. Displays
+  accuracy, failures, latency, billing coverage and labeled costs. Includes
+  sample limitations, per-intent counts and the downloadable research report.
+- **Earlier decision comparison** (`/comparison`): an October 2, 2026 run on 24 authored
   synthetic tickets per model. Jev Direct, Clef, Clef Flash, and Nano each returned
   all 24 expected labels. This small set did not identify a quality winner. See the
   [run report](docs/decision_comparison.md).
@@ -97,21 +128,21 @@ uv run verdict bench --provider gpt-5.4-nano --suite routing --limit 5 --out ../
 ```
 
 Default suites are `routing` and `agent_next_action`. `--all` selects the benchmark
-roster; Jev Direct, Clef, Clef Flash, and the provisional OpenAI Decisions adapter
+roster; Jev Direct, Clef, Clef Flash, and the native OpenAI Decisions adapter
 require explicit selection. Saving overwrites an existing provider/suite file in
 the chosen output directory.
 
-Aggregation reads records without making inference calls. To display a new run,
+Aggregation reads records without making inference calls. To inspect a new run,
 from `python/`:
 
 ```powershell
-uv run verdict aggregate --results ../new-results --out ../site/src/data/results.json
-cd ../site
-npm run build
+uv run verdict aggregate --results ../new-results --out ../new-results/summary.json
 ```
 
-This replaces the site's historical results data with your run's summary. Keep
-review-only summaries in a scratch file instead. See [Testing](docs/testing.md)
+Review the summary before publishing it. The generic aggregator writes the
+historical leaderboard format. It does not update the BANKING77 research page.
+Writing to `site/src/data/results.json` replaces the historical site's saved
+summary, so use a fresh file for review. See [Testing](docs/testing.md)
 for the full workflow and [the dataset notice](python/DATASET_NOTICE.md) before
 using or rebuilding datasets.
 
@@ -154,15 +185,17 @@ answer. Parsing, cache policy, model identity, and accounting details are in the
 | --- | --- | --- |
 | `jev-direct` | Native typed choice through OpenRouter's alpha Decisions API | `OPENROUTER_API_KEY` |
 | `clef` / `clef-flash` | Native typed text choice through Cloudflare Workers AI; estimated cost | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_AUTH_TOKEN` |
+| `clef-openrouter` / `clef-flash-openrouter` | Cloudflare typed choices through OpenRouter Decisions; reported charge; separate route identity | `OPENROUTER_API_KEY` |
 | `jev-router` | Jev selects a downstream answering model; a complete routing pipeline | `OPENROUTER_API_KEY` |
 | `solar-mini4` | Chat baseline with JSON-object output | `OPENROUTER_API_KEY` |
 | `gpt-5.4-nano` / `gpt-5.4-mini` / `gpt-6-luna` | Chat baselines with strict answer-enum JSON schemas | `OPENAI_API_KEY` |
 | `openai-decisions-proxy` | Nano wrapper; shares the Nano backend and is not native Decisions evidence | `OPENAI_API_KEY` |
-| `openai-decisions` | Provisional native adapter; successful live handling is unverified, with no native benchmark records | `OPENAI_API_KEY` |
+| `openai-decisions` | Native `gpt-6-luna` typed choice; input-token cost estimate | `OPENAI_API_KEY` |
 | `ollama:<model>` | Local chat baseline with JSON output | Running Ollama server |
 
-Jev Direct and Clef/Flash have limited synthetic live evidence; representative
-evaluation remains pending. Jev Router results do not measure native Jev choices.
+OpenAI Decisions, Jev Direct, and the OpenRouter Clef routes have completed
+the balanced BANKING77 experiment. Direct Workers AI results are separate.
+Jev Router results measure a routing pipeline, not native Jev choices.
 
 ## Repository and development
 
@@ -176,7 +209,7 @@ verdict/
 │   │   ├── metrics.py            # summaries and offline escalation simulations
 │   │   ├── router.py, cache.py   # SDK fallback, escalation, and exact caching
 │   │   └── playground_*.py      # local API and persistent SQLite limits
-│   ├── scripts/                  # dataset builder and synthetic comparison
+│   ├── scripts/                  # BANKING77 studies, audits, and dataset tools
 │   └── tests/                    # offline tests with fake providers/mocked HTTP
 ├── site/src/                     # Astro pages, browser scripts, and saved data
 ├── results/                      # historical benchmark records
@@ -211,8 +244,9 @@ Further reading:
 - [Testing](docs/testing.md) — offline verification and approved live workflows.
 - [Agent instructions](AGENTS.md) — repository working rules.
 
-Next measurement priorities are representative labeled datasets, run/dataset and
-per-attempt provenance, and held-out confidence evaluation. Current model identity
+Next research steps are a study in another domain and separate repeat runs to
+check result stability. Both need a new protocol and approved call scope.
+Current model identity
 fields retain provider-reported IDs; they do not independently verify serving models.
 
 ## License and datasets
