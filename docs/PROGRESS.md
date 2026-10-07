@@ -1,5 +1,16 @@
 # Verdict progress
 
+## Comparison homepage — 2026-10-07
+
+- Root `/` now renders the existing comparison page; `/comparison` remains available.
+  Historical results moved to `/historical`, with navigation and incoming links updated.
+  Menu order is unchanged; Comparison is active on the homepage.
+- Verification: eight Node tests and the 12-page static build passed. Browser checks
+  confirmed root comparison content, its active menu item, historical navigation,
+  and the brand link returning home. Restarted the local dev server after its route
+  watcher missed the file replacement. Saved measurements are unchanged.
+- No paid calls, new dependencies, deployment, commit, or push.
+
 ## README onboarding cleanup — 2026-10-06
 
 - Reorganized the root README around a concrete decision example, local demo,

@@ -58,10 +58,10 @@ The dev server proxies `/api` to the Python service. A static build or
 
 The site has two separate evaluations, both displayed without inference calls:
 
-- **Historical results** (`/`): six model/pipeline entries across four task suites.
+- **Historical results** (`/historical`): six model/pipeline entries across four task suites.
   These records predate parser and accounting fixes; raw outputs were not saved,
   so they cannot be revalidated with the current parser or repriced offline.
-- **Decision comparison** (`/comparison`): an October 2, 2026 run on 24 authored
+- **Decision comparison** (`/`, also `/comparison`): an October 2, 2026 run on 24 authored
   synthetic tickets per model. Jev Direct, Clef, Clef Flash, and Nano each returned
   all 24 expected labels. This small set did not identify a quality winner. See the
   [run report](docs/decision_comparison.md).

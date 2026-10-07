@@ -270,7 +270,9 @@ Historical records are unchanged and lack token usage needed for repricing.
    direction and stable ties. Direction arrows and `aria-sort` identify the active
    sort; saved ranks remain the original benchmark ranks.
 
-The separate `/comparison` page reads `site/src/data/decision-comparison.json`,
+The homepage `/` and its existing `/comparison` route share the comparison page;
+
+historical results remain at `/historical`. The comparison page reads `site/src/data/decision-comparison.json`,
 an aggregate export of the approved October 2 synthetic ticket run. It displays
 all four providers without ranks, with cost bases, model identities, settings,
 and limitations. `decision-comparison-example.json` contains one original synthetic
